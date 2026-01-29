@@ -14,8 +14,8 @@ export const UserProvider = ({ children }) => {
     const [hasUserLoaded, setHasUserLoaded] = useState(false);
 
     // const apiurl = 'https://backend.gahiresync.com';
-    const apiurl = "http://192.168.0.132:8000";
-    // const apiurl = "https://annabella-paterfamiliar-judgmatically.ngrok-free.dev";
+    // const apiurl = "http://192.168.0.132:8000";
+    const apiurl = "https://annabella-paterfamiliar-judgmatically.ngrok-free.dev";
 
     // const apiurl = import.meta.env.VITE_BACKEND_URL;
 
