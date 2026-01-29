@@ -1,0 +1,91 @@
+{
+    "faqs": [
+      {
+        "question": "What is HireSync?",
+        "answer": "HireSync is an AI-powered recruitment platform designed to streamline hiring processes for businesses, recruiters, and candidates. It offers resume parsing, job posting, interview scheduling, AI-driven candidate matching, and analytics to optimize recruitment workflows"
+      },
+      {
+        "question": "Who can use HireSync?",
+        "answer": "HireSync is designed for:- Recruiters & HR Teams  To manage job postings, track candidates, and streamline hiring.- Businesses & Hiring Managers  To oversee recruitment, approve job postings, and manage talent pipelines.- Job Seekers  To apply for jobs, track applications, and engage with recruiters"
+      },
+      {
+        "question": "How does HireSync improve recruitment efficiency?",
+        "answer": "HireSync automates tedious hiring tasks using AI, such as resume parsing, candidate-job matching, and recruiter task suggestions. It also offers interview scheduling, in-app messaging, and data-driven hiring insights."
+      }
+      
+    ],
+    "general":[
+      {
+        "question": "How does the system post job openings on social platforms?",
+        "answer": "The system integrates with platforms like LinkedIn and Naukri to automatically post job openings when a recruiter creates a new job listing."
+      },
+      {
+        "question": "Can the system filter and rank candidates automatically?",
+        "answer": "Yes, it uses AI-driven screening to analyze resumes, match skills with job descriptions, and rank candidates based on relevance."
+      },
+      {
+        "question": "What is the Automated Recruitment Management System?",
+        "answer": "The Automated Recruitment Management System is a platform that streamlines the hiring process by automating job postings, candidate screening, interview scheduling, and applicant tracking."
+      },
+      {
+        "question": "Does it support interview scheduling?",
+        "answer": "Yes, the system provides automated interview scheduling with calendar integration, reducing manual effort for recruiters."
+      }
+    ],
+    "pricing":[
+      {
+        "question": "Is HireSync free to use?",
+        "answer": "HireSync offers different pricing plans based on business size and needs. We provide a free trial for new users to explore the platform."
+      },
+      {
+        "question": "What support options are available?",
+        "answer": "We offer customer support via email, live chat, and a knowledge base with guides and tutorials. Premium plans include dedicated account managers."
+      },
+      {
+        "question": "Can I customize HireSync for my companys needs?",
+        "answer": "Yes! HireSync allows businesses to tailor features, workflows, and dashboards to match their hiring processes"
+      },
+      {
+        "question": "How do I get started with HireSync?",
+        "answer": "Simply sign up on our platform, set up your profile, and start managing your recruitment process efficiently"
+      }
+    ],
+    "others": [
+      {
+        "question": "Is my data secure on HireSync?",
+        "answer": "Absolutely! We implement robust security measures, including data encryption, role-based access controls, and email proxying to protect user information."
+      },
+      {
+        "question": "Does HireSync comply with hiring regulations?",
+        "answer": "Yes, we support compliance tracking for diversity hiring and legal requirements, ensuring ethical and unbiased recruitment practices."
+      },
+      {
+        "question": " Can I prevent direct contact between candidates and recruiters?",
+        "answer": "Yes, HireSync offers email proxying and redacts personal contact details to maintain privacy and prevent unauthorized communication."
+      }
+      
+    ],
+    "functionality" :[
+      {
+        "question": " Does HireSync support resume parsing?",
+        "answer": "Yes, HireSync extracts key details (name, experience, skills) from resumes in PDF, DOC, and other formats to help recruiters quickly assess candidates."
+      },
+      {
+        "question": "Can I post jobs directly on HireSync?",
+        "answer": "Yes, recruiters and employers can create, edit, and manage job postings. The platform also allows for approval workflows before jobs go live."
+      },
+      {
+        "question": " How does AI candidate matching work?",
+        "answer": "Our AI-powered matching algorithm analyzes job descriptions and compares them with candidate resumes, ranking applicants based on skills, experience, and job requirements."
+      },
+      {
+        "question": " Does HireSync offer interview scheduling?",
+        "answer": "Yes! HireSync integrates with Google Calendar and Outlook, allowing recruiters to schedule interviews and send automated reminders."
+      },
+      {
+        "question": "  Can I communicate with candidates through HireSync?",
+        "answer": "Yes, recruiters and candidates can use in-app messaging and email integrations to communicate within the platform."
+      }
+    ]
+  }
+  
