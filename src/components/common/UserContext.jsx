@@ -14,10 +14,10 @@ export const UserProvider = ({ children }) => {
     const [hasUserLoaded, setHasUserLoaded] = useState(false);
 
     // const apiurl = 'https://backend.gahiresync.com';
-    const apiurl = "http://localhost:8000";
+    // const apiurl = "http://localhost:8000";
+    const apiurl = 'http://192.168.0.132:8000';
 
     // const apiurl = import.meta.env.VITE_BACKEND_URL;
-
     useEffect(() => {
         const storedToken =
             localStorage.getItem("hiresynctoken") ||

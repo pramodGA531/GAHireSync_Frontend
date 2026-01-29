@@ -7,6 +7,7 @@ export default defineConfig(async () => {
     return {
         plugins: [react(), tailwindcss()],
         server: {
+            host: true, 
             port: 3000,
         },
         optimizeDeps: {
