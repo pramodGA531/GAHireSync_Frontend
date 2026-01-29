@@ -1,0 +1,77 @@
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../common/useAuth";
+import { useParams } from "react-router-dom";
+import { message, Breadcrumb } from "antd";
+import Main from "./Layout";
+import Pageloading from "../../common/loading/Pageloading";
+import ViewApplication from "../../common/ViewApplication";
+import GoBack from "../../common/Goback";
+
+const CandidateCompleteApplication = () => {
+    const [data, setData] = useState(null);
+    const { apiurl, token } = useAuth();
+    const { application_id, job_id } = useParams();
+    const [loading, setLoading] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(
+                `${apiurl}/complete-application/?application_id=${application_id}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+            const data = await response.json();
+            if (data.error) {
+                message.error(data.error);
+            } else {
+                setData(data);
+            }
+        } catch (e) {
+            console.log(e);
+            message.error("Something went wrong while fetching data.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token) fetchData();
+    }, [token]);
+
+    if (loading || !data) return <Pageloading />;
+
+    const { application_data } = data;
+
+    return (
+        <Main defaultSelectedKey="2" className="complete-app-container">
+            <div className="mt-4 -ml-2 mb-4">
+                <GoBack />
+            </div>
+            <Breadcrumb
+                separator=">"
+                items={[
+                    {
+                        title: "Assigned jobs",
+                        href: "/recruiter/postings",
+                    },
+                    {
+                        title: "Applications",
+                        href: `/recruiter/job-applications/${job_id}`,
+                    },
+                    {
+                        title: "Complete Application",
+                    },
+                ]}
+            ></Breadcrumb>
+
+            <ViewApplication application_data={application_data} />
+        </Main>
+    );
+};
+
+export default CandidateCompleteApplication;

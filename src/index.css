@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+* {
+    font-family: "poppins";
+    /* background-color: transparent; */
+}
+
+:root {
+    --font-family-primary: "Mulish", sans-serif;
+    --font-family-secondary: "lexend", sans-serif;
+    --color-primary: #001744;
+    --color-white: #ffffff;
+    --color-secondary: #4c49ed;
+    --color-bg: #f8f8f8;
+    --color-logo-babypink: #f9b2bc;
+    --color-logo-blue: #56a8fd;
+    --color-logo-purple: #a16afe;
+    --color-logo-pink: #d142f5;
+    --color-logo-lightpink: #f46ebe;
+}
+
+@layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+/* 
+@layer base {
+   
+    button {
+        @apply text-white rounded-[10px] text-[12px] cursor-pointer bg-[#1681FF];
+    }
+} */
+
+ /* Global Styles migrated from App.css */
+/* @layer components {
+   
+    .flex-center {
+        @apply flex justify-center items-center;
+    }
+
+    .no_overflow {
+        @apply overflow-y-hidden min-w-[100vw] min-h-[100vh];
+    }
+
+    .green {
+        @apply text-green-600;
+    }
+    .red {
+        @apply text-red-600;
+    }
+
+    .data-overflow {
+        @apply w-[86vw] max-h-[89vh] overflow-auto;
+    }
+
+    .success {
+        @apply bg-[#EEFDF3] text-[#117B34];
+    }
+
+    .pending {
+        @apply bg-[#FEF9EE] text-[#98690C];
+    }
+
+    .failure {
+        @apply bg-[#F45B691A] text-[#F45B69];
+    }
+
+    .hold {
+        @apply bg-[#1681FF0D] text-[#1681FF];
+    }
+} */

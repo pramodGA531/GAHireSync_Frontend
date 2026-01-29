@@ -1,0 +1,105 @@
+{
+    "monthlyPlans": [
+      {
+        "key": "1",
+        "name": "Intro",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": false },
+          { "name": "Multiple Job opening", "enabled": false },
+          { "name": "Unlimited emails", "enabled": false, "disabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$123 /month"
+      },
+      {
+        "key": "2",
+        "name": "Base",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": false },
+          { "name": "Unlimited emails", "enabled": false, "disabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$199 /month"
+      },
+      {
+        "key": "3",
+        "name": "Pro",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": true },
+          { "name": "Unlimited emails", "enabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$299 /month",
+        "active":true
+      },
+      {
+        "key": "4",
+        "name": "Enterprise",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": true },
+          { "name": "Unlimited emails", "enabled": true },
+          { "name": "More recruiters", "enabled": true }
+        ],
+        "price": "$499 /month"
+      }
+    ],
+    "annualPlans": [
+      {
+        "key": "1",
+        "name": "Intro",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": false },
+          { "name": "Multiple Job opening", "enabled": false },
+          { "name": "Unlimited emails", "enabled": false, "disabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$999 /year"
+      },
+      {
+        "key": "2",
+        "name": "Base",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": false },
+          { "name": "Unlimited emails", "enabled": false, "disabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$1599 /year"
+      },
+      {
+        "key": "3",
+        "name": "Pro",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": true },
+          { "name": "Unlimited emails", "enabled": true },
+          { "name": "More recruiters", "enabled": false }
+        ],
+        "price": "$2499 /year",
+        "active":true
+      },
+      {
+        "key": "4",
+        "name": "Enterprise",
+        "features": [
+          { "name": "Upload 720p video resolution", "enabled": true },
+          { "name": "Unlimited resumes", "enabled": true },
+          { "name": "Multiple Job opening", "enabled": true },
+          { "name": "Unlimited emails", "enabled": true },
+          { "name": "More recruiters", "enabled": true }
+        ],
+        "price": "$3999 /year"
+      }
+    ]
+  }
+  
