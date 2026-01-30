@@ -15,7 +15,8 @@ export const UserProvider = ({ children }) => {
 
     // const apiurl = 'https://backend.gahiresync.com';
     // const apiurl = "http://192.168.0.132:8000";
-    const apiurl = "https://gahiresync-backend.onrender.com";
+    // const apiurl = "https://gahiresync-backend.onrender.com"
+   const apiurl = "https://gahiresync-backend-main.onrender.com";
 
     // const apiurl = import.meta.env.VITE_BACKEND_URL;
 
