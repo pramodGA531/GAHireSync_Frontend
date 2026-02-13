@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Table, message, Modal, Tag, Radio } from "antd";
+import { message, Modal, Tag, Radio, Select } from "antd"; // Added Select
 import { useAuth } from "../../../common/useAuth";
 import { SearchOutlined } from "@ant-design/icons";
 import CustomDatePicker from "../../../common/CustomDatePicker";
-import Pageloading from "../../../common/loading/Pageloading";
+// import Pageloading from "../../../common/loading/Pageloading";
 import { Check, CalendarClock, UserX } from "lucide-react";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import Main from "../Layout";
-import GoBack from "../../../common/Goback";
+// import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
+
+const { Option } = Select;
 
 const ClientSelectedCandidates = ({ selectedJob }) => {
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
     const [wantNewCandidate, setWantNewCandidate] = useState(false);
-    const [searchText, setSearchText] = useState("");
     const [confirmModal, setConfirmModal] = useState({
         visible: false,
         record: null,
@@ -24,10 +25,12 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
     const [updateDateLoading, setUpdateDateLoading] = useState(false);
     const [newDate, setNewDate] = useState();
     const [loading, setLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
+    console.log(data);
 
     const updateState = async () => {
         try {
-            setLoading(true);
+            // setLoading(true); // Don't block UI
             const response = await fetch(
                 `${apiurl}/update-notification-seen/`,
                 {
@@ -39,7 +42,7 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                     body: JSON.stringify({
                         category: ["candidate_accepted", "candidate_rejected"],
                     }),
-                }
+                },
             );
             const data = response.json();
             if (data.error) {
@@ -47,8 +50,6 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
             }
         } catch (e) {
             console.log(e);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -62,18 +63,14 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
                 message.error(result.error);
             } else {
-                const sortedData = result.sort(
-                    (a, b) =>
-                        new Date(a.joining_date) - new Date(b.joining_date)
-                );
-                setData(sortedData);
-                setFilteredData(sortedData);
+                // AppTable handles sorting
+                setData(result);
             }
         } catch (e) {
             message.error("Failed to fetch data.");
@@ -89,21 +86,6 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
         }
     }, [token, selectedJob]);
 
-    const handleSearch = (value) => {
-        setSearchText(value);
-        const filtered = data.filter(
-            (item) =>
-                item.candidate_name
-                    .toLowerCase()
-                    .includes(value.toLowerCase()) ||
-                item.job_title
-                    .toString()
-                    .toLowerCase()
-                    .includes(value.toLowerCase())
-        );
-        setFilteredData(filtered);
-    };
-
     const confirmJoining = async (record) => {
         try {
             setLoading(true);
@@ -116,7 +98,7 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ joining_status: "joined" }),
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
@@ -153,7 +135,7 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ updated_date: formattedDate }),
-                }
+                },
             );
 
             const data = await response.json();
@@ -189,7 +171,7 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                     body: JSON.stringify({
                         want_new_candidate: wantNewCandidate,
                     }),
-                }
+                },
             );
 
             const data = await response.json();
@@ -212,53 +194,52 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
 
     const columns = [
         {
-            title: "Joining Date",
-            dataIndex: "joining_date",
-            key: "joining_date",
-            sorter: (a, b) =>
-                new Date(a.joining_date) - new Date(b.joining_date),
+            header: "Joining Date",
+            accessorKey: "joining_date",
+            dateFilter: true,
         },
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            searchField: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
         },
         {
-            title: "Job Location",
-            dataIndex: "location",
-            key: "location",
+            header: "Job Location",
+            accessorKey: "location",
+            searchField: true,
         },
         {
-            title: "Job Location Status",
-            dataIndex: "location_status",
-            key: "location_status",
-            render: (location_status) =>
-                location_status === "opened" ? (
+            header: "Job Location Status",
+            accessorKey: "location_status",
+            cell: ({ getValue }) =>
+                getValue() === "opened" ? (
                     <div className="" style={{ color: "green" }}>
-                        {location_status}
+                        {getValue()}
                     </div>
                 ) : (
                     <div className="danger" style={{ color: "red" }}>
-                        {location_status}
+                        {getValue()}
                     </div>
                 ),
+            searchField: true,
         },
         {
-            title: "Joining Status",
-            dataIndex: "joining_status",
-            key: "joining_status",
+            header: "Joining Status",
+            accessorKey: "joining_status",
+            searchField: true,
         },
 
         {
-            title: "Action",
-            key: "action",
-            render: (_, record) =>
-                record.joining_status === "joined" ? (
+            header: "Action",
+            accessorKey: "action",
+            cell: ({ row }) => {
+                const record = row.original;
+                return record.joining_status === "joined" ? (
                     <Tag color="green">Joined</Tag>
                 ) : record.joining_status === "left" ? (
                     <Tag color="red">Left</Tag>
@@ -302,56 +283,53 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
                             <UserX size={16} /> Candidate Left
                         </button>
                     </div>
-                ),
+                );
+            },
         },
     ];
 
+    const filteredData = (data || []).filter((item) => {
+        if (statusFilter === "All") return true;
+        return (
+            item.joining_status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+    });
+
     return (
         <Main defaultSelectedKey="4" defaultSelectedChildKey="4-3">
-            {loading ? (
-                <Pageloading />
-            ) : (
-                
-                <div className="p-6">
-                    <div className="-mt-2 -ml-8">
-                        <GoBack />
-                    </div>
-                    <div className="flex flex-col md:flex-row pl-[15px] pr-[15px] py-2 md:py-0 rounded-[10px] border border-[#A2A1A866] outline-none text-[#16151C] text-sm font-light items-center h-auto md:h-[55px] gap-2.5">
-                        <SearchOutlined className="hidden md:block" />
-                        <input
-                            type="text"
-                            placeholder="Search candidates, agency, job title..."
-                            value={searchText}
-                            onChange={handleSearch}
-                            className="border-none outline-none text-[#16151C] w-full md:w-[90%] bg-transparent h-10 md:h-auto"
-                        />
-                    </div>
+            <div className="p-6">
+                <AppTable
+                    columns={columns}
+                    data={filteredData}
+                    isLoading={loading}
+                    customFilters={
+                        <Select
+                            defaultValue="All"
+                            style={{ width: 150 }}
+                            onChange={(value) => setStatusFilter(value)}
+                            className="custom-filter-select"
+                        >
+                            <Option value="All">All Status</Option>
+                            <Option value="joined">Joined</Option>
+                            <Option value="not_joined">Not Joined</Option>
+                            <Option value="pending">Pending</Option>
+                        </Select>
+                    }
+                />
 
-                    <div className="overflow-x-auto">
-                        <Table
-                            dataSource={filteredData}
-                            columns={columns}
-                            rowKey="selected_candidate_id"
-                            className="mt-5"
-                            scroll={{ x: 1000 }}
-                        />
-                    </div>
-
-                    <Modal
-                        title="Confirm Joining"
-                        open={
-                            confirmModal.visible &&
-                            confirmModal.action === "joined"
-                        }
-                        onOk={() => confirmJoining(confirmModal.record)}
-                        onCancel={() =>
-                            setConfirmModal({ visible: false, record: null })
-                        }
-                    >
-                        <p>Are you sure this candidate has joined?</p>
-                    </Modal>
-                </div>
-            )}
+                <Modal
+                    title="Confirm Joining"
+                    open={
+                        confirmModal.visible && confirmModal.action === "joined"
+                    }
+                    onOk={() => confirmJoining(confirmModal.record)}
+                    onCancel={() =>
+                        setConfirmModal({ visible: false, record: null })
+                    }
+                >
+                    <p>Are you sure this candidate has joined?</p>
+                </Modal>
+            </div>
 
             <Modal
                 open={confirmModal.visible && confirmModal.action === "update"}

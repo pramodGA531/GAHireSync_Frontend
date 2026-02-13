@@ -12,6 +12,7 @@ const NotAssignedJobs = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [recruiters, setRecruiters] = useState([]);
+    const [locationFilter, setLocationFilter] = useState("All");
     const [openModal, setOpenModal] = useState();
     const [selectedId, setSelectedId] = useState();
     const [selectedRecruiters, setSelectedRecruiters] = useState([]);
@@ -161,16 +162,42 @@ const NotAssignedJobs = () => {
         if (token) fetchData();
     }, [token]);
 
+    const filteredData = React.useMemo(() => {
+        if (locationFilter === "All") return data;
+        return data.filter((item) => item.location === locationFilter);
+    }, [data, locationFilter]);
+
+    const locationOptions = React.useMemo(() => {
+        const locations = new Set(
+            data.map((item) => item.location).filter(Boolean),
+        );
+        return [
+            { label: "All Locations", value: "All" },
+            ...Array.from(locations)
+                .sort()
+                .map((loc) => ({ label: loc, value: loc })),
+        ];
+    }, [data]);
+
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-2">
-            <div className="-ml-4 mt-4">
+            {/* <div className="-ml-4 mt-4">
                 <GoBack />
-            </div>
+            </div> */}
             <AppTable
                 title="Not Approved Jobs"
                 columns={columns}
-                data={data}
+                data={filteredData}
                 loading={loading}
+                customFilters={
+                    <Select
+                        value={locationFilter}
+                        onChange={setLocationFilter}
+                        options={locationOptions}
+                        style={{ width: 180 }}
+                        placeholder="Filter by Location"
+                    />
+                }
             />
 
             {/* Modal for Reject Feedback */}

@@ -11,7 +11,8 @@ import {
     PlusCircleOutlined,
     UserOutlined,
 } from "@ant-design/icons";
-import { Tooltip, Modal } from "antd";
+import { Tooltip, Modal, Breadcrumb } from "antd";
+import { Link } from "react-router-dom";
 import AddRecruiters from "../Recruiter/AddRecruiters";
 import { useAuth } from "../../../common/useAuth";
 import Pageloading from "../../../common/loading/Pageloading";
@@ -29,8 +30,8 @@ const Row = ({ job }) => {
         job["status"] < 25
             ? "bg-[#EF4444]"
             : job["status"] < 75
-            ? "bg-[#F59E0B]"
-            : "bg-[#10B981]";
+              ? "bg-[#F59E0B]"
+              : "bg-[#10B981]";
 
     return (
         <div className="flex items-center justify-between p-4 bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors gap-4">
@@ -128,7 +129,7 @@ const RecTaskTracking = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
 
             const data = await response.json();
@@ -179,9 +180,29 @@ const RecTaskTracking = () => {
 
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-5">
-            <div className="p-5 bg-[#F9FAFB] min-h-screen">
-                <div className="-ml-6 -mt-1">
-                    <GoBack />
+            <div className="m-4">
+                <div className="mb-4">
+                    <Breadcrumb
+                        items={[
+                            {
+                                title: (
+                                    <Link
+                                        to="/agency/jobs"
+                                        className="text-gray-400 text-sm"
+                                    >
+                                        Job Posts
+                                    </Link>
+                                ),
+                            },
+                            {
+                                title: (
+                                    <span className="text-gray-800 text-sm">
+                                        Task Tracking
+                                    </span>
+                                ),
+                            },
+                        ]}
+                    />
                 </div>
                 {loading ? (
                     <Pageloading />
@@ -204,7 +225,7 @@ const RecTaskTracking = () => {
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-3xl font-black text-[#071C50]">
+                                    <span className="text-3xl font-semibold text-gray-800">
                                         {mainComponents?.new}
                                     </span>
                                 </div>
@@ -221,7 +242,7 @@ const RecTaskTracking = () => {
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-3xl font-black text-[#071C50]">
+                                    <span className="text-3xl font-semibold text-gray-800">
                                         {mainComponents?.on_going}
                                     </span>
                                 </div>
@@ -238,7 +259,7 @@ const RecTaskTracking = () => {
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-3xl font-black text-[#071C50]">
+                                    <span className="text-3xl font-semibold text-gray-800">
                                         {mainComponents?.completed_posts}
                                     </span>
                                 </div>
@@ -255,7 +276,7 @@ const RecTaskTracking = () => {
                                             />
                                         </div>
                                     </div>
-                                    <span className="text-3xl font-black text-[#071C50]">
+                                    <span className="text-3xl font-semibold text-gray-800">
                                         {mainComponents?.completed_deadline}
                                     </span>
                                 </div>
@@ -264,7 +285,7 @@ const RecTaskTracking = () => {
                             {/* Job Tracking Section */}
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                                 <div className="flex justify-between items-center mb-6">
-                                    <span className="text-lg font-bold text-[#071C50]">
+                                    <span className="text-lg font-semibold text-gray-800">
                                         Job Tracking
                                     </span>
                                 </div>
@@ -307,7 +328,7 @@ const RecTaskTracking = () => {
                             {/* Recruiters Section */}
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                                 <div className="flex justify-between items-center mb-6">
-                                    <span className="text-lg font-bold text-[#071C50]">
+                                    <span className="text-lg font-semibold text-gray-800">
                                         Recruiters
                                     </span>
                                     <span className="text-xs text-[#1681FF] font-bold cursor-pointer hover:underline uppercase tracking-wider">
@@ -354,7 +375,7 @@ const RecTaskTracking = () => {
 
                             {/* Recent Activities Section */}
                             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex-1">
-                                <span className="text-lg font-bold text-[#071C50] mb-6 block">
+                                <span className="text-lg font-semibold text-gray-800 mb-6 block">
                                     Recent activities
                                 </span>
                                 <div className="flex flex-col gap-5">

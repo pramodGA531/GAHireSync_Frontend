@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 import { useAuth } from "../../../common/useAuth";
-import { useParams } from "react-router-dom";
-import { message } from "antd";
+import { useParams, Link } from "react-router-dom";
+import { message, Breadcrumb } from "antd";
 import Main from "../Layout";
 import Profile from "../../../../images/Client/profile.png";
 import Note from "../../../../images/Client/note.svg";
@@ -133,70 +133,93 @@ const ViewInterviewer = () => {
 
     return (
         <Main defaultSelectedKey="5">
-            <div className="mt-4 -ml-2 -mb-4">
+            <div className="m-4">
+                <div className="mb-4">
+                    <Breadcrumb
+                        items={[
+                            {
+                                title: (
+                                    <Link to="/client/interviewers">
+                                        Interviewers
+                                    </Link>
+                                ),
+                            },
+                            {
+                                title: "Interviewer Details",
+                            },
+                        ]}
+                    />
+                </div>
+                {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
+            </div> */}
+                {loading ? (
+                    <Pageloading />
+                ) : (
+                    <>
+                        {interviewerDetails && (
+                            <div className="p-2.5">
+                                <div className="flex items-start text-[32px] font-semibold text-[#171A1F]">
+                                    {interviewerDetails.interviewer_name}
+                                </div>
+                                <div className="flex w-full bg-[#1681FF0D] items-center p-5 rounded-[10px] gap-2.5 mt-2.5">
+                                    <img
+                                        src={Profile}
+                                        alt=""
+                                        className="h-[50px] w-[50px]"
+                                    />
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-semibold text-lg">
+                                            {
+                                                interviewerDetails.interviewer_name
+                                            }
+                                        </span>
+                                        <span className="font-light text-sm text-[#54577A] opacity-80">
+                                            {
+                                                interviewerDetails.interviewer_email
+                                            }
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300 ml-5">
+                                        <img src={Note} alt="" />
+                                        {interviewerDetails.alloted} Rounds
+                                        Alloted
+                                    </div>
+                                    <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300">
+                                        <img src={Note} alt="" />
+                                        {interviewerDetails.scheduled} Scheduled
+                                    </div>
+                                    <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300">
+                                        <img src={Note} alt="" />{" "}
+                                        {interviewerDetails.completed} Completed
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {filteredData && (
+                            <div className="border border-[#A2A1A833] mx-[30px] my-2.5 pt-2.5 rounded-[10px]">
+                                <div className="mx-[15px] my-2.5 p-2.5 flex border border-[#A2A1A866] text-[#16151C] rounded-[10px] gap-[5px] text-base w-fit items-center bg-white">
+                                    <SearchOutlined className="text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by Job Title"
+                                        value={searchTerm}
+                                        onChange={handleSearch}
+                                        className="outline-none border-none bg-white text-[#16151C] text-base w-[250px]"
+                                    />
+                                </div>
+                                <div className="mx-[15px] my-2.5">
+                                    <Table
+                                        columns={columns}
+                                        data={filteredData}
+                                        pagination={false}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
-            {loading ? (
-                <Pageloading />
-            ) : (
-                <>
-                    {interviewerDetails && (
-                        <div className="p-2.5">
-                            <div className="flex items-start text-[32px] font-semibold text-[#171A1F]">
-                                {interviewerDetails.interviewer_name}
-                            </div>
-                            <div className="flex w-full bg-[#1681FF0D] items-center p-5 rounded-[10px] gap-2.5 mt-2.5">
-                                <img
-                                    src={Profile}
-                                    alt=""
-                                    className="h-[50px] w-[50px]"
-                                />
-                                <div className="flex flex-col gap-1">
-                                    <span className="font-semibold text-lg">
-                                        {interviewerDetails.interviewer_name}
-                                    </span>
-                                    <span className="font-light text-sm text-[#54577A] opacity-80">
-                                        {interviewerDetails.interviewer_email}
-                                    </span>
-                                </div>
-                                <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300 ml-5">
-                                    <img src={Note} alt="" />
-                                    {interviewerDetails.alloted} Rounds Alloted
-                                </div>
-                                <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300">
-                                    <img src={Note} alt="" />
-                                    {interviewerDetails.scheduled} Scheduled
-                                </div>
-                                <div className="flex justify-center gap-2.5 items-center font-normal text-base text-[#54577A] pl-5 border-l border-gray-300">
-                                    <img src={Note} alt="" />{" "}
-                                    {interviewerDetails.completed} Completed
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {filteredData && (
-                        <div className="border border-[#A2A1A833] mx-[30px] my-2.5 pt-2.5 rounded-[10px]">
-                            <div className="mx-[15px] my-2.5 p-2.5 flex border border-[#A2A1A866] text-[#16151C] rounded-[10px] gap-[5px] text-base w-fit items-center bg-white">
-                                <SearchOutlined className="text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by Job Title"
-                                    value={searchTerm}
-                                    onChange={handleSearch}
-                                    className="outline-none border-none bg-white text-[#16151C] text-base w-[250px]"
-                                />
-                            </div>
-                            <div className="mx-[15px] my-2.5">
-                                <Table
-                                    columns={columns}
-                                    data={filteredData}
-                                    pagination={false}
-                                />
-                            </div>
-                        </div>
-                    )}
-                </>
-            )}
         </Main>
     );
 };

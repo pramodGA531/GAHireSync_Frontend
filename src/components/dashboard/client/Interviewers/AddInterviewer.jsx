@@ -10,6 +10,7 @@ import {
     Row,
     Col,
     message,
+    Select,
 } from "antd";
 import {
     InfoCircleOutlined,
@@ -28,8 +29,8 @@ const validateUsername = (_, value) => {
     }
     return Promise.reject(
         new Error(
-            "Username should contain only letters, numbers, and underscores."
-        )
+            "Username should contain only letters, numbers, and underscores.",
+        ),
     );
 };
 
@@ -44,6 +45,7 @@ const AddInterviewer = ({ onclose }) => {
     const [user, setUser] = useState({
         username: "",
         email: "",
+        designation: "",
     });
 
     const { apiurl, token } = useAuth();
@@ -74,13 +76,17 @@ const AddInterviewer = ({ onclose }) => {
                 body: JSON.stringify({
                     username: user.username,
                     email: user.email,
+                    designation: user.designation,
                 }),
             });
             // console.log(response.json());
             if (!response.ok) {
                 const errorData = await response.json();
                 // console.log(errorData.error.match(/string='([^']+)'/)?.[1]);
-                throw new Error(errorData.error.match(/string='([^']+)'/)?.[1] || "Failed to register user");
+                throw new Error(
+                    errorData.error.match(/string='([^']+)'/)?.[1] ||
+                        "Failed to register user",
+                );
             }
 
             onclose();
@@ -92,7 +98,6 @@ const AddInterviewer = ({ onclose }) => {
             setError(null);
         } catch (error) {
             setLoading(false);
-            
 
             setError(error.message);
             setSuccess("");
@@ -163,6 +168,33 @@ const AddInterviewer = ({ onclose }) => {
                                     />
                                 }
                             />
+                        </Form.Item>
+                    </Col>
+                    <Col span={24}>
+                        <Form.Item
+                            name="designation"
+                            rules={[
+                                {
+                                    required: true,
+                                    message: "Please select a designation",
+                                },
+                            ]}
+                        >
+                            <Select
+                                placeholder="Select Designation"
+                                className="w-full h-[45px] transition-all duration-300 ease"
+                                onChange={(val) =>
+                                    setUser((prev) => ({
+                                        ...prev,
+                                        designation: val,
+                                    }))
+                                }
+                            >
+                                <Select.Option value="Technical">
+                                    Technical
+                                </Select.Option>
+                                <Select.Option value="HR">HR</Select.Option>
+                            </Select>
                         </Form.Item>
                     </Col>
                     <Col className="flex items-end w-full" span={16} offset={6}>

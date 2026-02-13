@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     message,
     Tag,
@@ -8,6 +8,7 @@ import {
     Button,
     Input,
     Divider,
+    Select,
 } from "antd";
 import { useAuth } from "../../../common/useAuth";
 import InterviewerReview from "./reviewcard/InterviewerReview";
@@ -40,6 +41,7 @@ const ScheduledApplications = () => {
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [fromTime, setFromTime] = useState(null);
+    const [statusFilter, setStatusFilter] = useState("All");
     const navigate = useNavigate();
 
     const handleReview = (id) => {
@@ -54,7 +56,7 @@ const ScheduledApplications = () => {
                 `${apiurl}/recruiter/all-scheduled-interviews/`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const data = await response.json();
             if (data.error) message.error(data.error);
@@ -77,7 +79,7 @@ const ScheduledApplications = () => {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify(payload),
-                }
+                },
             );
 
             if (!response.ok) throw new Error("Fault in rescheduling sequence");
@@ -88,6 +90,35 @@ const ScheduledApplications = () => {
             message.error("System error: Unable to update schedule.");
         }
     };
+
+    const filteredInterviews = useMemo(() => {
+        let result = interviews;
+
+        // Apply Status filter
+        if (statusFilter !== "All") {
+            result = result.filter(
+                (item) =>
+                    item.status?.toLowerCase() === statusFilter.toLowerCase(),
+            );
+        }
+
+        return result;
+    }, [interviews, statusFilter]);
+
+    const customFilters = (
+        <Select
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+                { label: "All Status", value: "All" },
+                { label: "Scheduled", value: "scheduled" },
+                { label: "Pending", value: "pending" },
+                { label: "Completed", value: "completed" },
+            ]}
+            style={{ width: 150 }}
+            placeholder="Select Status"
+        />
+    );
 
     useEffect(() => {
         fetchData();
@@ -105,7 +136,7 @@ const ScheduledApplications = () => {
                     className="flex flex-col gap-1 cursor-pointer group"
                     onClick={() =>
                         navigate(
-                            `/recruiter/complete_job_post/${row.original.job_id}`
+                            `/recruiter/complete_job_post/${row.original.job_id}`,
                         )
                     }
                 >
@@ -241,13 +272,13 @@ const ScheduledApplications = () => {
                     {/* Header Section */}
                     <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <div className="-ml-6">
+                            {/* <div className="-ml-6">
                                 <GoBack />
-                            </div>
-                            <h1 className="text-3xl font-black text-[#071C50] tracking-tight mb-2 uppercase">
+                            </div> */}
+                            <h1 className="text-3xl font-black text-[#071C50] ">
                                 Scheduled Interviews
                             </h1>
-                            <p className="text-sm text-gray-400 font-bold uppercase tracking-[0.2em]">
+                            <p className="text-sm text-gray-400 font-bold ">
                                 Manage your upcoming and completed interviews
                             </p>
                         </div>
@@ -274,14 +305,15 @@ const ScheduledApplications = () => {
                             <Pageloading />
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6">
-                            <AppTable
-                                data={interviews}
-                                columns={columns}
-                                multiSelect={false}
-                                pageSize={15}
-                            />
-                        </div>
+                        // <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6">
+                        <AppTable
+                            data={filteredInterviews}
+                            columns={columns}
+                            multiSelect={false}
+                            pageSize={15}
+                            customFilters={customFilters}
+                        />
+                        // </div>
                     )}
 
                     {selectedId && (
@@ -334,7 +366,7 @@ const ScheduledApplications = () => {
                                         interview_scheduled_id:
                                             selectedApplication?.id,
                                         scheduled_date: dayjs(
-                                            values.scheduled_date
+                                            values.scheduled_date,
                                         ).format("YYYY-MM-DD"),
                                         from_time:
                                             values.from_time.format("HH:mm"),
@@ -366,7 +398,7 @@ const ScheduledApplications = () => {
                                             className="h-14 w-full rounded-2xl border-gray-100 shadow-sm"
                                             startDate={dayjs().subtract(
                                                 1,
-                                                "day"
+                                                "day",
                                             )}
                                             onChange={(date) =>
                                                 setSelectedDate(date)
@@ -419,7 +451,7 @@ const ScheduledApplications = () => {
                                                         value.isAfter(fromTime)
                                                             ? Promise.resolve()
                                                             : Promise.reject(
-                                                                  "Sequence fault"
+                                                                  "Sequence fault",
                                                               ),
                                                 },
                                             ]}

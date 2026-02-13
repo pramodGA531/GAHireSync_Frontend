@@ -34,7 +34,10 @@ const AppTable = ({
     onDeleteSelected,
     multiSelect = false,
     pageSize = 10,
+    customFilters,
+    expandable = {},
 }) => {
+    const [expandedRows, setExpandedRows] = useState({});
     const [globalFilter, setGlobalFilter] = useState("");
     const [sorting, setSorting] = useState([]);
     const [selectedRows, setSelectedRows] = useState({});
@@ -254,7 +257,7 @@ const AppTable = ({
 
                 return () => clearTimeout(timeoutId);
             },
-            [column, columnId]
+            [column, columnId],
         );
 
         if (columnDef.dateFilter) {
@@ -320,6 +323,7 @@ const AppTable = ({
                         value={dateRange}
                         onChange={setDateRange}
                     />
+                    {customFilters}
                 </div>
 
                 {getSelectedCount() > 0 && (
@@ -339,7 +343,7 @@ const AppTable = ({
 
             {/* Table */}
             <div
-                className="overflow-auto max-h-[600px] relative scroll-smooth no-scrollbar"
+                className="overflow-auto max-h-[600px] relative scroll-smooth "
                 style={{
                     overflowX:
                         table.getRowModel().rows.length > 0 ? "auto" : "hidden",
@@ -369,12 +373,12 @@ const AppTable = ({
                                                             (row) =>
                                                                 selectedRows[
                                                                     row.id
-                                                                ]
+                                                                ],
                                                         )
                                                 }
                                                 onChange={(e) =>
                                                     toggleAllRowsSelection(
-                                                        e.target.checked
+                                                        e.target.checked,
                                                     )
                                                 }
                                                 className="cursor-pointer scale-110 transition-all duration-200 hover:scale-125"
@@ -427,106 +431,141 @@ const AppTable = ({
                                                     {flexRender(
                                                         header.column.columnDef
                                                             .header,
-                                                        header.getContext()
+                                                        header.getContext(),
                                                     )}
                                                     {header.column.getCanSort() && (
                                                         <span className="text-gray-500 font-normal transition-all duration-200 opacity-70 shrink-0 group-hover:opacity-100 group-hover:scale-110">
                                                             {header.column.getIsSorted() ===
                                                             "asc"
-                                                                ? " ↑"
-                                                                : header.column.getIsSorted() ===
-                                                                  "desc"
                                                                 ? " ↓"
-                                                                : " ↕"}
+                                                                : header.column.getIsSorted() ===
+                                                                    "desc"
+                                                                  ? " ↑"
+                                                                  : " ↕"}
                                                         </span>
                                                     )}
                                                 </div>
                                             </th>
                                         );
                                     })}
+                                    {expandable.expandedRowRender && (
+                                        <th className="p-[8px_12px] text-left font-semibold text-gray-700 bg-[#f8f9fa] w-[100px]">
+                                            Actions
+                                        </th>
+                                    )}
                                 </tr>
                             </React.Fragment>
                         ))}
                     </thead>
                     <tbody className="bg-white">
                         {table.getRowModel().rows.map((row) => (
-                            <tr
-                                key={row.id}
-                                className={`bg-white transition-all duration-200 border-b border-[#f3f4f6] hover:bg-[#f8fafc] hover:-translate-y-px hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] even:bg-[#fafafa] even:hover:bg-[#f1f5f9] ${
-                                    hoveredRow === row.id ? "hovered" : ""
-                                }`}
-                                onMouseEnter={() => setHoveredRow(row.id)}
-                                onMouseLeave={() => setHoveredRow(null)}
-                            >
-                                {multiSelect && (
-                                    <td
-                                        className="w-[50px] min-w-[50px] max-w-[50px] text-center p-[8px_4px] border-r border-[#e9ecef] bg-inherit box-border md:sticky md:left-0 z-5 shadow-[2px_0_6px_rgba(59,130,246,0.1),1px_0_3px_rgba(0,0,0,0.05)] border-r-[rgba(59,130,246,0.2)] hover:shadow-[4px_0_12px_rgba(59,130,246,0.2),3px_0_6px_rgba(0,0,0,0.15)] hover:border-r-[3px_solid_rgba(59,130,246,0.4)]"
-                                        style={{ left: 0 }}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                selectedRows[row.id] || false
-                                            }
-                                            onChange={() =>
-                                                toggleRowSelection(row.id)
-                                            }
-                                            className="cursor-pointer scale-110 transition-all duration-200 hover:scale-125"
-                                        />
-                                    </td>
-                                )}
-                                {row.getVisibleCells().map((cell) => {
-                                    const {
-                                        leftSticky,
-                                        rightSticky,
-                                        leftOffset,
-                                        rightOffset,
-                                        width,
-                                    } = cell.column.columnDef.meta || {};
-
-                                    // Determine background color for sticky columns based on row state (even/odd/hover)
-                                    let stickyBgClass = "bg-white";
-                                    // Note: Tailwind arbitrary values for complex sticky logic might be verbose.
-                                    // For simplicity we use 'bg-inherit' but sticky usually needs explicitbg.
-                                    // We'll rely on the row background unless overridden.
-                                    // Actually sticky columns need explicit backgrounds to cover content behind them.
-                                    // We will use inline style or a utility class that forces background match.
-                                    // But since we have hover states, it's tricky.
-                                    // We'll use 'bg-inherit' but ensure the parent tr has the bg, AND we need to ensure sticky cells don't be transparent.
-                                    // Since 'bg-inherit' on a sticky element means it uses the TR's bg.
-
-                                    return (
+                            <React.Fragment key={row.id}>
+                                <tr
+                                    key={row.id}
+                                    className={`bg-white transition-all duration-200 border-b border-[#f3f4f6] hover:bg-[#f8fafc] hover:-translate-y-px hover:shadow-[0_2px_4px_rgba(0,0,0,0.05)] even:bg-[#fafafa] even:hover:bg-[#f1f5f9] ${
+                                        hoveredRow === row.id ? "hovered" : ""
+                                    }`}
+                                    onMouseEnter={() => setHoveredRow(row.id)}
+                                    onMouseLeave={() => setHoveredRow(null)}
+                                >
+                                    {multiSelect && (
                                         <td
-                                            key={cell.id}
-                                            className={`p-[8px_12px] border-r border-[#f3f4f6] align-middle bg-inherit transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis box-border ${
-                                                leftSticky
-                                                    ? "md:sticky md:left-0 z-5 md:shadow-[2px_0_6px_rgba(59,130,246,0.1),1px_0_3px_rgba(0,0,0,0.05)] md:border-r-[rgba(59,130,246,0.2)]"
-                                                    : ""
-                                            } ${
-                                                rightSticky
-                                                    ? "md:sticky md:right-0 z-5 md:shadow-[-2px_0_6px_rgba(59,130,246,0.1),-1px_0_3px_rgba(0,0,0,0.05)] md:border-l-[rgba(59,130,246,0.2)]"
-                                                    : ""
-                                            }`}
-                                            style={{
-                                                left: leftSticky
-                                                    ? `${leftOffset}px`
-                                                    : undefined,
-                                                right: rightSticky
-                                                    ? `${rightOffset}px`
-                                                    : undefined,
-                                                width: `${width || 150}px`,
-                                                minWidth: `${width || 150}px`,
-                                                maxWidth: `${width || 150}px`,
-                                            }}
+                                            className="w-[50px] min-w-[50px] max-w-[50px] text-center p-[8px_4px] border-r border-[#e9ecef] bg-inherit box-border md:sticky md:left-0 z-5 shadow-[2px_0_6px_rgba(59,130,246,0.1),1px_0_3px_rgba(0,0,0,0.05)] border-r-[rgba(59,130,246,0.2)] hover:shadow-[4px_0_12px_rgba(59,130,246,0.2),3px_0_6px_rgba(0,0,0,0.15)] hover:border-r-[3px_solid_rgba(59,130,246,0.4)]"
+                                            style={{ left: 0 }}
                                         >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    selectedRows[row.id] ||
+                                                    false
+                                                }
+                                                onChange={() =>
+                                                    toggleRowSelection(row.id)
+                                                }
+                                                className="cursor-pointer scale-110 transition-all duration-200 hover:scale-125"
+                                            />
                                         </td>
-                                    );
-                                })}
-                            </tr>
+                                    )}
+                                    {row.getVisibleCells().map((cell) => {
+                                        const {
+                                            leftSticky,
+                                            rightSticky,
+                                            leftOffset,
+                                            rightOffset,
+                                            width,
+                                        } = cell.column.columnDef.meta || {};
+
+                                        return (
+                                            <td
+                                                key={cell.id}
+                                                className={`p-[8px_12px] border-r border-[#f3f4f6] align-middle bg-inherit transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis box-border ${
+                                                    leftSticky
+                                                        ? "md:sticky md:left-0 z-5 md:shadow-[2px_0_6px_rgba(59,130,246,0.1),1px_0_3px_rgba(0,0,0,0.05)] md:border-r-[rgba(59,130,246,0.2)]"
+                                                        : ""
+                                                } ${
+                                                    rightSticky
+                                                        ? "md:sticky md:right-0 z-5 md:shadow-[-2px_0_6px_rgba(59,130,246,0.1),-1px_0_3px_rgba(0,0,0,0.05)] md:border-l-[rgba(59,130,246,0.2)]"
+                                                        : ""
+                                                }`}
+                                                style={{
+                                                    left: leftSticky
+                                                        ? `${leftOffset}px`
+                                                        : undefined,
+                                                    right: rightSticky
+                                                        ? `${rightOffset}px`
+                                                        : undefined,
+                                                    width: `${width || 150}px`,
+                                                    minWidth: `${width || 150}px`,
+                                                    maxWidth: `${width || 150}px`,
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                    {expandable.expandedRowRender && (
+                                        <td className="p-[8px_12px] border-r border-[#f3f4f6] align-middle bg-inherit transition-all duration-200 text-center">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setExpandedRows((prev) => ({
+                                                        ...prev,
+                                                        [row.id]: !prev[row.id],
+                                                    }));
+                                                }}
+                                                className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-black uppercase tracking-widest border border-blue-100 hover:bg-blue-100 transition-all"
+                                            >
+                                                {expandedRows[row.id]
+                                                    ? "Hide"
+                                                    : "Details"}
+                                            </button>
+                                        </td>
+                                    )}
+                                </tr>
+                                {expandable.expandedRowRender &&
+                                    expandedRows[row.id] && (
+                                        <tr className="bg-[#f8fafc]">
+                                            <td
+                                                colSpan={
+                                                    row.getVisibleCells()
+                                                        .length +
+                                                    (multiSelect ? 1 : 0) +
+                                                    1
+                                                }
+                                                className="p-4 border-b border-[#f3f4f6]"
+                                            >
+                                                <div className="animate-[slideDown_0.2s_ease-out]">
+                                                    {expandable.expandedRowRender(
+                                                        row.original,
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>
@@ -557,56 +596,104 @@ const AppTable = ({
                 )}
             </div>
 
-            {/* Pagination */}
-            <div className="flex justify-between items-center p-[8px_16px] bg-[#f8f9fa] border-t border-[#e9ecef] min-h-[40px] relative md:flex-col md:gap-3">
-                <div className="text-xs text-gray-500 animate-[fadeIn_0.3s_ease]">
-                    Showing{" "}
-                    {table.getState().pagination.pageIndex *
-                        table.getState().pagination.pageSize +
-                        1}{" "}
-                    to{" "}
-                    {Math.min(
-                        (table.getState().pagination.pageIndex + 1) *
-                            table.getState().pagination.pageSize,
-                        table.getFilteredRowModel().rows.length
-                    )}{" "}
-                    of {table.getFilteredRowModel().rows.length} entries
+            {/* Pagination & Legend */}
+            <div className="bg-[#f8f9fa] border-t border-[#e9ecef]">
+                <div className="flex justify-between items-center p-[8px_16px] min-h-[40px] relative md:flex-col md:gap-3">
+                    <div className="text-xs text-gray-500 animate-[fadeIn_0.3s_ease]">
+                        Showing{" "}
+                        {table.getState().pagination.pageIndex *
+                            table.getState().pagination.pageSize +
+                            1}{" "}
+                        to{" "}
+                        {Math.min(
+                            (table.getState().pagination.pageIndex + 1) *
+                                table.getState().pagination.pageSize,
+                            table.getFilteredRowModel().rows.length,
+                        )}{" "}
+                        of {table.getFilteredRowModel().rows.length} entries
+                    </div>
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                            className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {"<<"}
+                        </button>
+                        <button
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                            className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ml-1"
+                        >
+                            {"<"}
+                        </button>
+                        <span className="text-xs text-gray-700 mx-[6px] font-medium">
+                            Page {table.getState().pagination.pageIndex + 1} of{" "}
+                            {table.getPageCount()}
+                        </span>
+                        <button
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                            className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed mr-1"
+                        >
+                            {">"}
+                        </button>
+                        <button
+                            onClick={() =>
+                                table.setPageIndex(table.getPageCount() - 1)
+                            }
+                            disabled={!table.getCanNextPage()}
+                            className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {">>"}
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center">
-                    <button
-                        onClick={() => table.setPageIndex(0)}
-                        disabled={!table.getCanPreviousPage()}
-                        className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {"<<"}
-                    </button>
-                    <button
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                        className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed ml-1"
-                    >
-                        {"<"}
-                    </button>
-                    <span className="text-xs text-gray-700 mx-[6px] font-medium">
-                        Page {table.getState().pagination.pageIndex + 1} of{" "}
-                        {table.getPageCount()}
-                    </span>
-                    <button
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                        className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed mr-1"
-                    >
-                        {">"}
-                    </button>
-                    <button
-                        onClick={() =>
-                            table.setPageIndex(table.getPageCount() - 1)
-                        }
-                        disabled={!table.getCanNextPage()}
-                        className="p-[4px_8px] border border-gray-300 bg-white text-gray-700 rounded text-xs cursor-pointer transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {">>"}
-                    </button>
+
+                {/* Table Legend */}
+                <div className="flex justify-center gap-8 py-2 px-4 border-t border-[#f0f0f0] bg-[#fafafa]">
+                    <div className="flex items-center gap-4 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-gray-500">First</span>
+                            <span className="bg-gray-200 px-1 rounded text-gray-600">
+                                {"<<"}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-gray-500">Prev</span>
+                            <span className="bg-gray-200 px-1 rounded text-gray-600">
+                                {"<"}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-gray-500">Next</span>
+                            <span className="bg-gray-200 px-1 rounded text-gray-600">
+                                {">"}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-gray-500">Last</span>
+                            <span className="bg-gray-200 px-1 rounded text-gray-600">
+                                {">>"}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="w-[1px] bg-gray-200 h-3 self-center"></div>
+                    <div className="flex items-center gap-3 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                        <span className="text-gray-500">Sort icons:</span>
+                        <div className="flex items-center gap-1">
+                            <span className="text-gray-500 text-sm">↑</span>
+                            <span>Descending</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-gray-500 text-sm">↓</span>
+                            <span>Ascending</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-gray-500 text-sm">↕</span>
+                            <span>Normal</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
-import { message } from "antd";
+import { message, Select } from "antd";
 import Pageloading from "../../../common/loading/Pageloading";
 import AppTable from "../../../common/AppTable";
 import { useNavigate } from "react-router-dom";
@@ -17,11 +17,21 @@ const SelectedCandidates = () => {
     const [data, setData] = useState([]);
     const { token, apiurl } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [acceptanceFilter, setAcceptanceFilter] = useState("All");
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchData();
     }, []);
+
+    const filteredData = React.useMemo(() => {
+        if (acceptanceFilter === "All") return data;
+        return data.filter(
+            (item) =>
+                item.candidate_acceptance?.toLowerCase() ===
+                acceptanceFilter.toLowerCase(),
+        );
+    }, [data, acceptanceFilter]);
 
     const columns = [
         {
@@ -100,7 +110,7 @@ const SelectedCandidates = () => {
                     <CalendarOutlined className="text-blue-400" />
                     <span className="text-sm">
                         {new Date(
-                            row.getValue("joining_date")
+                            row.getValue("joining_date"),
                         ).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "short",
@@ -122,8 +132,8 @@ const SelectedCandidates = () => {
                             val === "accepted"
                                 ? "bg-green-50 text-green-600"
                                 : val === "pending"
-                                ? "bg-amber-50 text-amber-600"
-                                : "bg-red-50 text-red-600"
+                                  ? "bg-amber-50 text-amber-600"
+                                  : "bg-red-50 text-red-600"
                         }`}
                     >
                         {val || "Unknown"}
@@ -143,7 +153,7 @@ const SelectedCandidates = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
@@ -161,9 +171,9 @@ const SelectedCandidates = () => {
     return (
         <Main defaultSelectedKey="4">
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
-                <div className="-ml-6 -mt-1">
+                {/* <div className="-ml-6 -mt-1">
                     <GoBack />
-                </div>
+                </div> */}
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
                         <div>
@@ -188,7 +198,35 @@ const SelectedCandidates = () => {
                     ) : (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                             <div className="p-0">
-                                <AppTable columns={columns} data={data} />
+                                <AppTable
+                                    columns={columns}
+                                    data={filteredData}
+                                    customFilters={
+                                        <Select
+                                            value={acceptanceFilter}
+                                            onChange={setAcceptanceFilter}
+                                            style={{ width: 180 }}
+                                            options={[
+                                                {
+                                                    label: "All Acceptance",
+                                                    value: "All",
+                                                },
+                                                {
+                                                    label: "Accepted",
+                                                    value: "accepted",
+                                                },
+                                                {
+                                                    label: "Pending",
+                                                    value: "pending",
+                                                },
+                                                {
+                                                    label: "Rejected",
+                                                    value: "rejected",
+                                                },
+                                            ]}
+                                        />
+                                    }
+                                />
                             </div>
                         </div>
                     )}

@@ -312,56 +312,56 @@ const ConductInterview = () => {
                 <Pageloading></Pageloading>
             ) : (
                 data && (
-                    <div className="mt-[15px] p-5">
-                        <div className="p-[25px_15px] rounded-2xl border border-[#dee1e6] bg-white shadow-[0_0_11px_rgba(0,0,0,0.1)]">
-                            <div className="text-[#1681ff] text-2xl font-semibold leading-[22px]">
+                    <div className="mt-[15px] p-5 max-w-7xl mx-auto">
+                        <div className="p-8 rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                            <div className="text-[#1681ff] text-2xl font-bold tracking-tight leading-tight">
                                 {data.job_title}
                             </div>
-                            <div className="mt-[5px] text-black text-sm font-normal leading-[22px] border-b border-[#9f9f9f]">
-                                with{" "}
-                                <span className="text-[#1681ff] text-sm font-medium">
+                            <div className="mt-2 pb-4 text-gray-500 text-sm font-medium border-b border-gray-100">
+                                Interviewing{" "}
+                                <span className="text-[#1681ff] font-bold">
                                     {data.candidate_name}
                                 </span>
                             </div>
-                            <div className="mt-[15px] flex gap-5">
-                                <div className="flex flex-col items-start gap-2.5">
-                                    <span className="text-black text-base font-normal leading-[22px]">
+                            <div className="mt-8 flex flex-wrap gap-8">
+                                <div className="flex flex-col items-start gap-1">
+                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
                                         Job Department
                                     </span>
-                                    <span className="text-[#615f5f] text-sm font-normal leading-[22px]">
+                                    <span className="text-gray-700 text-base font-semibold">
                                         {data?.job_department}
                                     </span>
                                 </div>
-                                <div className="flex flex-col items-start gap-2.5">
-                                    <span className="text-black text-base font-normal leading-[22px]">
+                                <div className="flex flex-col items-start gap-1">
+                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
                                         Round Number
                                     </span>
-                                    <span className="text-[#615f5f] text-sm font-normal leading-[22px]">
+                                    <span className="text-gray-700 text-base font-semibold">
                                         {data.round_num}
                                     </span>
                                 </div>
-                                <div className="flex flex-col items-start gap-2.5">
-                                    <span className="text-black text-base font-normal leading-[22px]">
+                                <div className="flex flex-col items-start gap-1">
+                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
                                         Scheduled Date
                                     </span>
-                                    <span className="text-[#615f5f] text-sm font-normal leading-[22px]">
+                                    <span className="text-gray-700 text-base font-semibold">
                                         {dayjs(data.scheduled_date).format(
-                                            "YYYY-MM-DD",
+                                            "MMM DD, YYYY",
                                         )}
                                     </span>
                                 </div>
-                                <div className="flex flex-col items-start gap-2.5">
-                                    <span className="text-black text-base font-normal leading-[22px]">
+                                <div className="flex flex-col items-start gap-1">
+                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
                                         Scheduled Time
                                     </span>
-                                    <span className="text-[#615f5f] text-sm font-normal leading-[22px]">
+                                    <span className="text-gray-700 text-base font-semibold">
                                         {data.from_time} - {data.to_time}
                                     </span>
                                 </div>
                             </div>
-                            <div className="mt-[15px] flex gap-[15px]">
+                            <div className="mt-8 flex gap-4">
                                 <button
-                                    className="px-5 py-2.5"
+                                    className="px-6 h-10 border border-green-600 rounded-xl text-green-600 bg-green-50 font-bold text-xs uppercase tracking-widest hover:bg-green-100 transition-all shadow-sm hover:shadow-md cursor-pointer"
                                     onClick={() => {
                                         setAcceptAction(true);
                                         setRejectAction(false);
@@ -374,7 +374,7 @@ const ConductInterview = () => {
                                     Promote Candidate
                                 </button>
                                 <button
-                                    className="px-5 py-2.5 rounded-[11px] border border-[#ff0307] bg-[#ffefef] text-[#f00]"
+                                    className="px-6 h-10 rounded-xl border border-red-500 bg-red-50 text-red-500 font-bold text-xs uppercase tracking-widest hover:bg-red-100 transition-all shadow-sm hover:shadow-md cursor-pointer"
                                     type="primary"
                                     onClick={() => {
                                         setAcceptAction(false);
@@ -384,7 +384,7 @@ const ConductInterview = () => {
                                     Reject Candidate
                                 </button>
                                 <button
-                                    className="px-5 py-2.5 rounded-[11px] border border-[#ff0307] bg-[#ffefef] text-[#f00]"
+                                    className="px-6 h-10 rounded-xl border border-gray-400 bg-gray-50 text-gray-500 font-bold text-xs uppercase tracking-widest hover:bg-gray-100 transition-all shadow-sm hover:shadow-md cursor-pointer"
                                     type="primary"
                                     onClick={() => {
                                         setAcceptAction(false);
@@ -450,10 +450,10 @@ const ConductInterview = () => {
             )}
 
             {acceptAction && (
-                <div className="mt-[15px] p-5">
-                    <div className="flex gap-5">
-                        <div className="p-[25px] rounded-2xl border border-[#dee1e6] bg-white shadow-md w-[35%]">
-                            <div className="flex justify-between pb-2.5 border-b border-[#9f9f9f]">
+                <div className="mt-8 p-5 max-w-7xl mx-auto">
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        <div className="p-8 rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1">
+                            <div className="flex justify-between pb-4 border-b border-gray-100 mb-6">
                                 <span className="text-[#1681ff] text-base font-semibold">
                                     Primary Skills
                                 </span>
@@ -490,12 +490,12 @@ const ConductInterview = () => {
                                 ))}
                         </div>
 
-                        <div className="p-[25px] rounded-2xl border border-[#dee1e6] bg-white shadow-md w-[35%]">
-                            <div className="flex justify-between pb-2.5 border-b border-[#9f9f9f]">
-                                <span className="text-[#1681ff] text-base font-semibold">
+                        <div className="p-8 rounded-3xl border border-gray-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1">
+                            <div className="flex justify-between pb-4 border-b border-gray-100 mb-6">
+                                <span className="text-[#1681ff] text-base font-bold uppercase tracking-wider">
                                     Secondary Skills
                                 </span>
-                                <span className="text-black text-base font-normal">
+                                <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">
                                     Rate 1-10
                                 </span>
                             </div>

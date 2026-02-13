@@ -36,6 +36,17 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 const educationLevels = [
+    { value: "associate-degree", text: "Associate Degree" },
+    { value: "bachelors-degree", text: "Bachelor's Degree" },
+    { value: "post-graduate-diploma", text: "Post-Graduate Diploma" },
+    { value: "professional-certification", text: "Professional Certification" },
+    { value: "masters-degree", text: "Master's Degree" },
+    { value: "doctoral-degree", text: "Doctoral Degree (Ph.D., Ed.D., etc.)" },
+    {
+        value: "professional-degree",
+        text: "Professional Degree (MD, JD, DDS, etc.)",
+    },
+    { value: "post-doctoral", text: "Post-Doctoral Studies" },
     { value: "no-formal-education", text: "No Formal Education" },
     { value: "pre-primary-education", text: "Pre-Primary Education" },
     { value: "primary-education", text: "Primary Education" },
@@ -48,17 +59,7 @@ const educationLevels = [
     { value: "vocational-qualification", text: "Vocational Qualification" },
     { value: "technical-education", text: "Technical Education" },
     { value: "certificate-program", text: "Certificate Program" },
-    { value: "associate-degree", text: "Associate Degree" },
-    { value: "bachelors-degree", text: "Bachelor's Degree" },
-    { value: "post-graduate-diploma", text: "Post-Graduate Diploma" },
-    { value: "professional-certification", text: "Professional Certification" },
-    { value: "masters-degree", text: "Master's Degree" },
-    { value: "doctoral-degree", text: "Doctoral Degree (Ph.D., Ed.D., etc.)" },
-    {
-        value: "professional-degree",
-        text: "Professional Degree (MD, JD, DDS, etc.)",
-    },
-    { value: "post-doctoral", text: "Post-Doctoral Studies" },
+
     { value: "other", text: "Other" },
 ];
 
@@ -204,24 +205,28 @@ const UploadData = ({
             );
 
             const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
+
+            if (contentType && contentType.includes("application/json")) {
                 const result = await response.json();
+
                 if (!response.ok || result.error) {
                     message.error(
                         result.error ||
                             result.detail ||
                             "Server reported an error",
                     );
-                } else {
-                    message.success("Candidate record formalised.");
-                    form.resetFields();
-                    setAddApplication(false);
-                    setResume();
-                    setDraggedId();
+                    return; // ⛔ stop here on error
                 }
+
+                // ✅ success case
+                message.success("Candidate profile added successfully.");
+                form.resetFields();
+                setAddApplication(false);
+                setResume(undefined);
+                setDraggedId(undefined);
             } else {
                 const text = await response.text();
-                // Check if it is a common 500 error
+
                 if (response.status === 500) {
                     message.error(
                         "Internal Server Error (500). Please check backend logs.",
@@ -233,6 +238,7 @@ const UploadData = ({
                         `Unexpected response: ${response.status} ${response.statusText}`,
                     );
                 }
+
                 console.error("Server Error Response:", text);
             }
         } catch (error) {
@@ -248,11 +254,11 @@ const UploadData = ({
             {/* Form Header */}
             <div className="mb-12 border-b border-gray-50 pb-8 flex justify-between items-start">
                 <div>
-                    <h1 className="text-4xl font-black text-[#071C50] tracking-tight mb-2">
-                        Candidate Onboarding
+                    <h1 className="text-4xl font-black text-[#071C50] mb-2">
+                        Add Candidate Profile
                     </h1>
-                    <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">
-                        Processing Pipeline Entry for Job Assignment #{id}
+                    <p className="text-gray-400 font-bold text-[10px]">
+                        New Candidate Registration for Job #{id}
                     </p>
                 </div>
                 <div className="w-16 h-16 rounded-3xl bg-blue-50 flex items-center justify-center text-[#1681FF] shadow-inner">
@@ -271,16 +277,16 @@ const UploadData = ({
                 <div className="bg-gray-50/50 p-8 rounded-[32px] border border-gray-100/50 space-y-8">
                     <div className="flex items-center gap-3">
                         <IdcardOutlined className="text-blue-500" />
-                        <h2 className="text-lg font-black text-[#071C50] uppercase tracking-tighter m-0">
-                            Identification & Contact
+                        <h2 className="text-lg font-black text-[#071C50] m-0">
+                            Personal Information
                         </h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Full Legal Name
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Full Name
                                 </span>
                             }
                             name="candidate_name"
@@ -298,8 +304,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Primary Email
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Email Address
                                 </span>
                             }
                             name="candidate_email"
@@ -323,8 +329,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Phone Axis (Primary)
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Primary Phone Number
                                 </span>
                             }
                             name="contact_number"
@@ -340,8 +346,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Alternate Dial
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Alternate Phone Number
                                 </span>
                             }
                             name="alternate_contact_number"
@@ -360,16 +366,16 @@ const UploadData = ({
                 <div className="space-y-6">
                     <div className="flex items-center gap-3 px-4">
                         <RocketOutlined className="text-amber-500" />
-                        <h2 className="text-lg font-black text-[#071C50] uppercase tracking-tighter m-0">
-                            Diagnostic Assessment
+                        <h2 className="text-lg font-black text-[#071C50] m-0">
+                            Skills Assessment
                         </h2>
                     </div>
 
                     <div className="space-y-10">
                         <div className="bg-white p-2 rounded-[32px] border border-gray-100">
                             <div className="px-6 pt-6 pb-2">
-                                <h3 className="text-[10px] font-black text-[#1681FF] uppercase tracking-widest">
-                                    Primary Objectives
+                                <h3 className="text-[10px] font-black text-[#1681FF]">
+                                    Primary Skills
                                 </h3>
                             </div>
                             <PrimarySkillsForm primarySkills={primary_skills} />
@@ -377,8 +383,8 @@ const UploadData = ({
 
                         <div className="bg-white p-2 rounded-[32px] border border-gray-100">
                             <div className="px-6 pt-6 pb-2">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Secondary Objectives
+                                <h3 className="text-[10px] font-black text-gray-400">
+                                    Secondary Skills
                                 </h3>
                             </div>
                             <SecondarySkillsForm
@@ -392,15 +398,15 @@ const UploadData = ({
                 <div className="bg-gray-50/50 p-8 rounded-[32px] border border-gray-100/50 space-y-10">
                     <div className="flex items-center gap-3">
                         <TrophyOutlined className="text-green-500" />
-                        <h2 className="text-lg font-black text-[#071C50] uppercase tracking-tighter m-0">
-                            Employment Intel
+                        <h2 className="text-lg font-black text-[#071C50] m-0">
+                            Work Experience
                         </h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span className="text-[10px] font-black text-gray-400">
                                     Current Status
                                 </span>
                             }
@@ -409,24 +415,24 @@ const UploadData = ({
                         >
                             <Select
                                 className="h-14 custom-select-premium"
-                                placeholder="System status"
+                                placeholder="Select status"
                                 onChange={(val) => setJobStatus(val)}
                             >
                                 <Option value="available">
-                                    Actively Seeking
+                                    Actively Searching
                                 </Option>
                                 <Option value="not_available">
-                                    Employed / Passive
+                                    Currently Employed
                                 </Option>
                             </Select>
                         </Form.Item>
 
-                        {jobStatus === "available" && (
+                        {jobStatus === "not_available" && (
                             <>
                                 <Form.Item
                                     label={
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Latest Organisation
+                                        <span className="text-[10px] font-black text-gray-400">
+                                            Current Company
                                         </span>
                                     }
                                     name="current_organization"
@@ -443,8 +449,8 @@ const UploadData = ({
                                 </Form.Item>
                                 <Form.Item
                                     label={
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                            Employment Mode
+                                        <span className="text-[10px] font-black text-gray-400">
+                                            Job Type
                                         </span>
                                     }
                                     name="current_job_type"
@@ -454,10 +460,10 @@ const UploadData = ({
                                         placeholder="Contract type"
                                     >
                                         <Option value="permanent">
-                                            Full-Time Permanent
+                                            Full-Time
                                         </Option>
                                         <Option value="contract">
-                                            On-Contractual
+                                            Contract
                                         </Option>
                                     </Select>
                                 </Form.Item>
@@ -468,8 +474,8 @@ const UploadData = ({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Hub Location
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Current City
                                 </span>
                             }
                             name="current_job_location"
@@ -484,8 +490,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Notice Duration
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Notice Period
                                 </span>
                             }
                             name="notice_period"
@@ -503,8 +509,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Birth Registry
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Date of Birth
                                 </span>
                             }
                             name="date_of_birth"
@@ -522,8 +528,8 @@ const UploadData = ({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Work Tenure
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Total Experience
                                 </span>
                             }
                             name="experience"
@@ -543,8 +549,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Active Remuneration
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Current CTC
                                 </span>
                             }
                             name="current_ctc"
@@ -563,8 +569,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                    Target Valuation
+                                <span className="text-[10px] font-black text-gray-400">
+                                    Expected CTC
                                 </span>
                             }
                             name="expected_ctc"
@@ -588,24 +594,24 @@ const UploadData = ({
                 <div className="border-2 border-gray-200 text-black p-10 rounded-[40px] shadow-2xl shadow-blue-200 space-y-10">
                     <div className="flex items-center gap-3">
                         <CheckCircleOutlined className="text-black" />
-                        <h2 className="text-lg font-black text-blackuppercase tracking-tighter m-0">
-                            Credentials & Compliance
+                        <h2 className="text-lg font-black text-black m-0">
+                            Education & Resume
                         </h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-black uppercase tracking-widest">
-                                    Highest Pedigree
+                                <span className="text-[10px] font-black text-black ">
+                                    Highest Qualification
                                 </span>
                             }
                             name="highest_qualification"
                             rules={[{ required: true, message: "Required" }]}
                         >
                             <Select
-                                className="h-14 custom-select-white"
-                                placeholder="Academic level"
+                                className="h-14 custom-select-premium"
+                                placeholder="Select qualification"
                             >
                                 {educationLevels.map((item) => (
                                     <Option key={item.value} value={item.value}>
@@ -617,8 +623,8 @@ const UploadData = ({
 
                         <Form.Item
                             label={
-                                <span className="text-[10px] font-black text-black uppercase tracking-widest">
-                                    Joining Gap
+                                <span className="text-[10px] font-black text-black">
+                                    Notice Period (Days)
                                 </span>
                             }
                             name="joining_days_required"
@@ -631,14 +637,14 @@ const UploadData = ({
                                         Days
                                     </span>
                                 }
-                                className="h-14 custom-number-white w-full"
+                                className="h-14 custom-number-black w-full"
                             />
                         </Form.Item>
                     </div>
 
                     <Form.Item
                         label={
-                            <span className="text-[10px] font-black text-black uppercase tracking-widest">
+                            <span className="text-[10px] font-black text-black">
                                 Resume
                             </span>
                         }
@@ -669,19 +675,18 @@ const UploadData = ({
                                 <FilePdfOutlined className="text-black text-3xl" />
                             </p>
                             <p className="text-black font-bold text-sm">
-                                Transfer Document Here
+                                Upload Resume
                             </p>
-                            <p className="text-black/40 text-[10px] uppercase font-black tracking-widest mt-2 px-10">
-                                Select a verified PDF or Word file from your
-                                terminal
+                            <p className="text-black/40 text-[10px] font-black  mt-2 px-10">
+                                Select a PDF or Word file
                             </p>
                         </Upload.Dragger>
                     </Form.Item>
 
                     <Form.Item
                         label={
-                            <span className="text-[10px] font-black text-black uppercase tracking-widest">
-                                Strategic Intelligence (Other Details)
+                            <span className="text-[10px] font-black text-black">
+                                Additional Details
                             </span>
                         }
                         name="other_details"
@@ -689,24 +694,24 @@ const UploadData = ({
                         <Input.TextArea
                             rows={4}
                             className="bg-white/10 border-white/20 text-black placeholder-black/30 rounded-3xl p-6"
-                            placeholder="Document any standout tactical advantages..."
+                            placeholder="Enter any other relevant details..."
                         />
                     </Form.Item>
 
                     <div className="pt-6 flex justify-end gap-6">
                         <Button
                             onClick={() => setAddApplication(false)}
-                            className="h-16 px-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest"
+                            className="h-16 px-10 rounded-2xl text-lg bg-white/10 hover:bg-white/20 border-2 border-red-500 hover:border-red-700 transition-all text-red-500 hover:text-red-700 hover:shadow-xl "
                         >
-                            Abort Entry
+                            Cancel
                         </Button>
                         <Button
                             type="primary"
                             htmlType="submit"
                             loading={loading}
-                            className="h-16 px-16 rounded-2xl bg-white text-[#1681FF] hover:scale-105 shadow-xl shadow-blue-900 border-none font-black text-[10px] uppercase tracking-widest transition-all"
+                            className="h-16 px-16 rounded-2xl bg-white text-[#1681FF] hover:scale-105 shadow-xl shadow-blue-900 border-none font-black text-[10px] transition-all"
                         >
-                            Formalise Onboarding{" "}
+                            Add Candidate profile{" "}
                             {loading ? (
                                 <Btnloading spincolor="blue-spinner" />
                             ) : (

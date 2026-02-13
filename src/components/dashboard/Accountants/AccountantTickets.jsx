@@ -1,13 +1,17 @@
-import React from 'react'
-import Main from './Layout'
-import TicketMessages from '../../tickets/TicketMessages'
-import GoBack from '../../common/Goback'
+import React from "react";
+import Main from "./Layout";
+import TicketMessages from "../../tickets/TicketMessages";
+import GoBack from "../../common/Goback";
 const AccountantTickets = () => {
     return (
-        <Main><div className='-ml-2 mt-4'><GoBack /> </div>
+        <Main>
+            {/* //{" "}
+            <div className="-ml-2 mt-4">
+                <GoBack />{" "}
+            </div> */}
             <TicketMessages></TicketMessages>
         </Main>
-    )
-}
+    );
+};
 
-export default AccountantTickets
+export default AccountantTickets;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 // import "./CompleteJobPost.css";
-import { Button, Table, Modal, Select, message, Input } from "antd";
+import { Button, Table, Modal, Select, message, Input, Breadcrumb } from "antd";
 import DOMPurify from "dompurify";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
@@ -21,10 +21,8 @@ const CompleteJobPost = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [status, setStatus] = useState();
     const [interviewers, setInterviewers] = useState();
-    const [newData, setNewData] = useState([]);
+    const [editHistory, setEditHistory] = useState([]);
     const [openEditRequests, setOpenEditRequests] = useState(false);
-    const [oldData, setOldData] = useState([]);
-    const [fieldsRejected, setFieldsRejected] = useState([]);
     const [fieldOpen, setFieldOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
@@ -71,17 +69,11 @@ const CompleteJobPost = () => {
                 },
             );
             const data = await response.json();
-            if (data.new_fields) {
-                setNewData(data.new_fields);
+            if (data.edit_history) {
+                setEditHistory(data.edit_history);
             }
             if (data.status) {
                 setStatus(data.status);
-            }
-            if (data.old_fields) {
-                setOldData(data.old_fields);
-            }
-            if (data.fields_rejected) {
-                setFieldsRejected(data.fields_rejected);
             } else if (data.notFound) {
                 setStatus("not found");
             }
@@ -268,8 +260,31 @@ const CompleteJobPost = () => {
 
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-1">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
+            </div> */}
+            <div className="m-4">
+                <Breadcrumb
+                    items={[
+                        {
+                            title: (
+                                <span
+                                    onClick={() => navigate(-1)}
+                                    className="text-gray-400 text-sm cursor-pointer hover:underline"
+                                >
+                                    Job Posts
+                                </span>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span className="text-gray-800 text-sm">
+                                    Job Details
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
             </div>
             <div className="p-5 flex flex-col items-center">
                 {job && interviewers && (
@@ -279,7 +294,8 @@ const CompleteJobPost = () => {
                                 Job post Details
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
-                                {newData.length > 0 ? (
+                                {editHistory.length > 0 &&
+                                editHistory[0].status === "pending" ? (
                                     <button
                                         className="px-4 py-2 bg-[#EF4444] text-white rounded-md hover:bg-[#DC2626] transition-colors font-bold text-sm"
                                         onClick={() =>
@@ -391,7 +407,11 @@ const CompleteJobPost = () => {
                             </div>
                         </div>
                         <div className="w-full bg-white rounded-lg shadow-sm">
-                            <ViewJobPost id={id} job={job}></ViewJobPost>
+                            <ViewJobPost
+                                id={id}
+                                job={job}
+                                editHistory={editHistory}
+                            />
                         </div>
                     </div>
                 )}
@@ -486,7 +506,7 @@ const CompleteJobPost = () => {
                 <h3>Old Fields</h3>
                 <div style={{ width: "100px" }}>
                     <Table
-                        dataSource={oldData}
+                        dataSource={editHistory[0]?.old_fields || []}
                         columns={[
                             {
                                 title: "Field Name",
@@ -526,7 +546,7 @@ const CompleteJobPost = () => {
 
                 <h3 style={{ marginTop: 16 }}>New Fields</h3>
                 <Table
-                    dataSource={newData}
+                    dataSource={editHistory[0]?.new_fields || []}
                     columns={[
                         {
                             title: "Field Name",
@@ -570,7 +590,11 @@ const CompleteJobPost = () => {
                 width={1000}
             >
                 <Table
-                    dataSource={fieldsRejected}
+                    dataSource={
+                        editHistory[0]?.new_fields?.filter(
+                            (f) => f.status === "rejected",
+                        ) || []
+                    }
                     columns={[
                         {
                             title: "Field Name",

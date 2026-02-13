@@ -5,7 +5,7 @@ import GoBack from '../../common/Goback'
 const CandidateTickets = () => {
     return (
         <Main><div className='-ml-2 mt-4'><GoBack /> </div>
-            <TicketMessages></TicketMessages>
+            {/* <TicketMessages></TicketMessages> */}
         </Main>
     )
 }

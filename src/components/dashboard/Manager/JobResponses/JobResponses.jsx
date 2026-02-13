@@ -5,8 +5,8 @@ import backicon from "../../../../images/agency/backbutton.svg";
 import jobicon from "../../../../images/agency/jobicon.svg";
 import searchicon from "../../../../images/agency/Search.svg";
 import JobResponseCard from "../managercards/JobResponseCard";
-import { useNavigate, useParams } from "react-router-dom";
-import { Select } from "antd";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { Select, Breadcrumb } from "antd";
 
 import { useAuth } from "../../../common/useAuth";
 import Pageloading from "../../../common/loading/Pageloading";
@@ -137,21 +137,44 @@ const JobResponses = () => {
 
     return (
         <Main>
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
+            </div> */}
+            <div className="m-4">
+                <Breadcrumb
+                    items={[
+                        {
+                            title: (
+                                <Link
+                                    to="/agency/jobs"
+                                    className="text-gray-400 text-sm"
+                                >
+                                    Job Posts
+                                </Link>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span className="text-gray-800 text-sm">
+                                    Job Responses
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
             </div>
             {loading ? (
                 <Pageloading />
             ) : (
-                <div className="flex flex-col w-full h-screen">
+                <div className="flex flex-col w-full h-screen m-4">
                     <div className="flex justify-between items-center">
                         <div className="flex gap-2.5 flex-row items-center">
-                            <img
+                            {/* <img
                                 onClick={() => navigate(-1)}
                                 style={{ cursor: "pointer" }}
                                 src={backicon}
                                 alt="back"
-                            />
+                            /> */}
                             <div className="flex flex-col">
                                 <div className="flex flex-row items-center gap-2.5">
                                     <h3 className="text-[#171A1F] text-[20px] font-semibold p-0 m-[6px]">

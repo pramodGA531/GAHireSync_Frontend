@@ -377,11 +377,11 @@ const ClientJobs = () => {
                 <Pageloading />
             ) : (
                 <>
-                <div className="mt-4 -ml-4"><GoBack /></div>
+                {/* <div className="mt-4 -ml-4"><GoBack /></div> */}
                 
                     <div className="flex justify-between items-center m-2">
                         
-                        <span className="text-xl font-bold ">
+                        <span className="text-2xl mt-3 ml-1 font-bold ">
                             My Job Postings
                         </span>
                     </div>

@@ -50,9 +50,11 @@ const RecruiterCard = ({ item }) => {
     );
 };
 
-const SkillsList = ({ skill_type, skills }) => {
+const SkillsList = ({ skill_type, skills, containerStyle = "" }) => {
     return (
-        <div className="w-full md:w-[45%] rounded-[8px] border border-[#DEE1E6] bg-white shadow-[0px_0px_11px_0px_rgba(22,129,255,0.06)] p-[15px_10px]">
+        <div
+            className={`w-full md:w-[45%] rounded-[8px] border border-[#DEE1E6] bg-white shadow-[0px_0px_11px_0px_rgba(22,129,255,0.06)] p-[15px_10px] ${containerStyle}`}
+        >
             <div className="text-[#4A5768] text-[16px] font-semibold p-[10px] pb-[15px] w-full">
                 {skill_type}
             </div>
@@ -79,7 +81,7 @@ const SkillsList = ({ skill_type, skills }) => {
     );
 };
 
-const ViewJobPost = ({ id, job }) => {
+const ViewJobPost = ({ id, job, hideAssigned = false, editHistory = [] }) => {
     const navigate = useNavigate();
     id = parseInt(id);
 
@@ -114,32 +116,126 @@ const ViewJobPost = ({ id, job }) => {
     const handleOpenModal = () => {
         setDescriptionModalVisible(true);
     };
-    
+
     const handleChangeRecruiter = (value) => {
         console.log("Selected recruiter:", value);
     };
+
+    const getStylesForField = (fieldName) => {
+        // Find the most recent edit for this field in history
+        let fieldEdit = null;
+        if (editHistory && Array.isArray(editHistory)) {
+            for (const version of editHistory) {
+                // Check both 'fields' (client API) and 'new_fields' (manager API)
+                const fieldsToSearch =
+                    version.fields || version.new_fields || [];
+                const found = fieldsToSearch.find(
+                    (f) => f.field_name === fieldName,
+                );
+                if (found) {
+                    fieldEdit = found;
+                    break;
+                }
+            }
+        }
+
+        if (!fieldEdit) return "bg-[#136DD31C] text-[#555]";
+
+        if (fieldEdit.status === "pending") {
+            return "bg-purple-100 text-purple-700 border border-purple-200 shadow-sm";
+        }
+        if (fieldEdit.status === "rejected") {
+            return "bg-red-50 text-red-700 border border-red-200 shadow-sm";
+        }
+        if (fieldEdit.status === "accepted") {
+            return "bg-green-100 text-green-700 border border-green-200 shadow-sm";
+        }
+        return "bg-[#136DD31C] text-[#555]";
+    };
+
+    const getDescriptionStyles = () => {
+        const fieldName = "job_description";
+        let fieldEdit = null;
+        if (editHistory && Array.isArray(editHistory)) {
+            for (const version of editHistory) {
+                // Check both 'fields' (client API) and 'new_fields' (manager API)
+                const fieldsToSearch =
+                    version.fields || version.new_fields || [];
+                const found = fieldsToSearch.find(
+                    (f) => f.field_name === fieldName,
+                );
+                if (found) {
+                    fieldEdit = found;
+                    break;
+                }
+            }
+        }
+
+        if (fieldEdit?.status === "pending")
+            return "bg-purple-50 border border-purple-200 p-3 rounded-lg";
+        if (fieldEdit?.status === "rejected")
+            return "bg-red-50 border border-red-200 p-3 rounded-lg";
+        if (fieldEdit?.status === "accepted")
+            return "bg-green-50 border border-green-200 p-3 rounded-lg";
+        return "";
+    };
+
+    const hasEdits = editHistory && editHistory.length > 0;
+
     return (
         <div className="flex flex-col lg:flex-row p-2 md:p-4 mb-[25px] gap-[10px]">
             {job && (
                 <>
                     <div className="w-full lg:w-[70%]">
+                        {/* Legend for Edits */}
+                        {hasEdits && (
+                            <div className="mb-4 flex gap-4 text-sm bg-gray-50 p-2 rounded-md border border-gray-200">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-purple-100 border border-purple-200 rounded-sm"></div>
+                                    <span className="text-gray-600">
+                                        Pending Edit
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-green-100 border border-green-200 rounded-sm"></div>
+                                    <span className="text-gray-600">
+                                        Accepted
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></div>
+                                    <span className="text-gray-600">
+                                        Rejected
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="sec-1">
                             <div className="flex gap-[10px] items-center">
-                                <span className="text-[#171A1F] text-[20px] font-bold">
+                                <span
+                                    className={`text-[#171A1F] text-[20px] font-bold ${getStylesForField("job_title") !== "bg-[#136DD31C] text-[#555]" ? `${getStylesForField("job_title")} px-2 rounded` : ""}`}
+                                >
                                     {job.job_title}
                                 </span>
                                 <div className="text-[18px]">{job.status}</div>
                             </div>
-                            <div className="flex gap-[5px] text-[#57585a] text-[16px] font-normal">
+                            <div
+                                className={`flex gap-[5px] text-[#57585a] text-[16px] font-normal mt-1 p-1 rounded ${getStylesForField("organization")}`}
+                            >
                                 Opening at{" "}
                                 <span className="text-[#2A8CFF] text-[18px] font-normal">
                                     {job?.organization?.name}
                                 </span>{" "}
-                                <span className="pl-[20px]">
+                                <span
+                                    className={`pl-[20px] ${getStylesForField("job_close_duration") !== "bg-[#136DD31C] text-[#555]" ? `${getStylesForField("job_close_duration")} px-2 rounded` : ""}`}
+                                >
                                     Deadline : {job.job_close_duration}
                                 </span>
                             </div>
-                            <div className="company-name">
+                            <div
+                                className={`company-name mt-1 p-1 rounded w-fit ${getStylesForField("client_website")}`}
+                            >
                                 Website:{" "}
                                 <a
                                     href={
@@ -159,59 +255,75 @@ const ViewJobPost = ({ id, job }) => {
                                 <img src={jobDetailsicon} alt="" />
                                 Job Description
                             </div>
-                            <span
-                                className="text-[#323842] text-justify text-[14px] font-normal line-clamp-3 overflow-hidden text-ellipsis block"
-                                dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(
-                                        job?.job_description,
-                                    ),
-                                }}
-                            ></span>
+                            <div className={getDescriptionStyles()}>
+                                <span
+                                    className="text-[#323842] text-justify text-[14px] font-normal line-clamp-3 overflow-hidden text-ellipsis block"
+                                    dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            job?.job_description,
+                                        ),
+                                    }}
+                                ></span>
 
-                            {job?.job_description?.length > 0 && (
-                                <div style={{ marginTop: "8px" }}>
-                                    <button
-                                        onClick={handleOpenModal}
-                                        style={{
-                                            background: "none",
-                                            border: "none",
-                                            color: "#1890ff",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        View More
-                                    </button>
-                                </div>
-                            )}
+                                {job?.job_description?.length > 0 && (
+                                    <div style={{ marginTop: "8px" }}>
+                                        <button
+                                            onClick={handleOpenModal}
+                                            style={{
+                                                background: "none",
+                                                border: "none",
+                                                color: "#1890ff",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            View More
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex gap-[10px] flex-wrap mt-[10px]">
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("ctc")}`}
+                                >
                                     {job?.ctc && formattedCTC(job?.ctc)}
                                 </div>
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("years_of_experience")}`}
+                                >
                                     {job?.years_of_experience &&
                                         formattedExperience(
                                             job?.years_of_experience,
                                         )}
                                 </div>
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("job_level")}`}
+                                >
                                     Job Level - {job?.job_level}
                                 </div>
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("job_type")}`}
+                                >
                                     Job Type - {job?.job_type}
                                 </div>
                                 {job?.job_type === "probation" && (
                                     <>
-                                        <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                        <div
+                                            className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("probation_type")}`}
+                                        >
                                             {job?.probation_type}
                                         </div>
-                                        <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                        <div
+                                            className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("probation_period")}`}
+                                        >
                                             {job?.probation_period}
                                         </div>
                                     </>
                                 )}
                                 {job?.job_type === "Consultant" && (
                                     <>
-                                        <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                        <div
+                                            className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("time_period")}`}
+                                        >
                                             Consultant Time Period :{" "}
                                             {job?.time_period} Years
                                         </div>
@@ -219,26 +331,38 @@ const ViewJobPost = ({ id, job }) => {
                                 )}
 
                                 {job?.job_type == "Intern" && (
-                                    <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                    <div
+                                        className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("time_period")}`}
+                                    >
                                         {job?.time_period}
                                     </div>
                                 )}
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("notice_period")}`}
+                                >
                                     {job?.notice_period}
                                 </div>
                                 {job?.notice_time !== "" && (
-                                    <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                    <div
+                                        className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("notice_time")}`}
+                                    >
                                         Notice Time : {job?.notice_time} days
                                     </div>
                                 )}
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("timings")}`}
+                                >
                                     {job?.timings}
                                 </div>
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("working_days_per_week")}`}
+                                >
                                     {job?.working_days_per_week} Working days in
                                     week
                                 </div>
-                                <div className="rounded-[23px] bg-[#136DD31C] text-[#555] text-center text-[12.6px] font-medium p-[10px]">
+                                <div
+                                    className={`rounded-[23px] text-center text-[12.6px] font-medium p-[10px] ${getStylesForField("industry")}`}
+                                >
                                     Industry - {job?.industry}
                                 </div>
                             </div>
@@ -252,10 +376,16 @@ const ViewJobPost = ({ id, job }) => {
                                 <SkillsList
                                     skill_type="Primary Skills"
                                     skills={job.primary_skills}
+                                    containerStyle={getStylesForField(
+                                        "primary_skills",
+                                    )}
                                 />
                                 <SkillsList
                                     skill_type="Secondary Skills"
                                     skills={job.secondary_skills}
+                                    containerStyle={getStylesForField(
+                                        "secondary_skills",
+                                    )}
                                 />
                             </div>
                         </div>
@@ -269,18 +399,24 @@ const ViewJobPost = ({ id, job }) => {
                                     Preferences
                                 </span>
                                 <div className="mt-[10px] mb-[10px] flex gap-[15px] flex-wrap">
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("age")}`}
+                                    >
                                         {" "}
                                         Age limit :{" "}
                                         {job?.age || "Not mentioned"}
                                     </span>
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("differently_abled")}`}
+                                    >
                                         {" "}
                                         Differently abled Preference :{" "}
                                         {job?.differently_abled ||
                                             "Not mentioned"}{" "}
                                     </span>
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("gender")}`}
+                                    >
                                         {" "}
                                         Gender Preferences :{" "}
                                         {job?.gender || "Not mentioned"}{" "}
@@ -292,7 +428,9 @@ const ViewJobPost = ({ id, job }) => {
                                     Education
                                 </span>
                                 <div className="mt-[10px] mb-[10px] flex gap-[15px] flex-wrap">
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("qualifications")}`}
+                                    >
                                         {job?.qualifications}
                                     </span>
                                 </div>
@@ -303,7 +441,9 @@ const ViewJobPost = ({ id, job }) => {
                                 </span>
                                 <div className="mt-[10px] mb-[10px] flex gap-[15px] flex-wrap">
                                     {job?.languages?.split(",").map((lang) => (
-                                        <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                        <span
+                                            className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("languages")}`}
+                                        >
                                             {lang}
                                         </span>
                                     ))}
@@ -314,12 +454,16 @@ const ViewJobPost = ({ id, job }) => {
                                     Passport and Visa status
                                 </span>
                                 <div className="mt-[10px] mb-[10px] flex gap-[15px] flex-wrap">
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("passport_availability")}`}
+                                    >
                                         {job?.passport_availability === ""
                                             ? "Not Required"
                                             : job?.passport_availability}
                                     </span>
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("visa_status")}`}
+                                    >
                                         {job?.visa_status === ""
                                             ? "No Mention"
                                             : job?.visa_status}
@@ -331,10 +475,14 @@ const ViewJobPost = ({ id, job }) => {
                                     Decision Maker
                                 </span>
                                 <div className="mt-[10px] mb-[10px] flex gap-[15px] flex-wrap">
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("decision_maker")}`}
+                                    >
                                         {job?.decision_maker || "Not mentioned"}
                                     </span>
-                                    <span className="flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-[#555] text-center text-[12.6px] font-medium rounded-[23px] bg-[#136DD31C]">
+                                    <span
+                                        className={`flex px-[11.6px] py-[5.8px] items-center gap-[4px] text-center text-[12.6px] font-medium rounded-[23px] ${getStylesForField("decision_maker_email")}`}
+                                    >
                                         {job?.decision_maker_email ||
                                             "Not mentioned"}
                                     </span>
@@ -345,7 +493,9 @@ const ViewJobPost = ({ id, job }) => {
                             <div className="text-[#424955] text-[17px] font-medium">
                                 Other Benefits
                             </div>
-                            <span className="text-[#323842] text-justify text-[14px] font-normal">
+                            <span
+                                className={`text-justify text-[14px] font-normal p-1 px-2 rounded ${getStylesForField("other_benefits")}`}
+                            >
                                 {job.other_benefits}
                             </span>
                         </div>
@@ -355,14 +505,16 @@ const ViewJobPost = ({ id, job }) => {
                             </div>
                             <div className="flex flex-wrap gap-[20px]">
                                 {job?.locations?.map((item, index) => (
-                                    <div className="flex flex-col p-[10px] bg-[#136DD31C] rounded-[10px]">
-                                        <span className="text-[#424955] text-[14px] font-medium">
+                                    <div
+                                        className={`flex flex-col p-[10px] rounded-[10px] ${getStylesForField("job_locations")}`}
+                                    >
+                                        <span className="text-[14px] font-medium">
                                             Location : {item?.location}
                                         </span>
-                                        <span className="text-[#424955] text-[14px] font-medium">
+                                        <span className="text-[14px] font-medium">
                                             Positions : {item?.positions}
                                         </span>
-                                        <span className="text-[#424955] text-[14px] font-medium">
+                                        <span className="text-[14px] font-medium">
                                             Job Type : {item?.job_type}
                                         </span>
                                     </div>
@@ -370,46 +522,54 @@ const ViewJobPost = ({ id, job }) => {
                             </div>
                         </div>
                         <div className="mt-[15px] flex gap-[15px] flex-wrap">
-                            <div className="text-[14px] font-bold">
-                                <span className="color-[#5C6472] text-justify font-bold">
-                                    Rotational Shift :{" "}
-                                </span>{" "}
+                            <div
+                                className={`text-[14px] font-bold p-2 px-3 rounded-full flex gap-2 items-center ${getStylesForField("rotational_shift")}`}
+                            >
+                                <span className="text-justify font-bold">
+                                    Rotational Shift :
+                                </span>
                                 <span className="font-light">
                                     {job?.rotational_shift == true
                                         ? "Yes"
                                         : "No"}
                                 </span>
                             </div>
-                            <div className="text-[14px] font-bold">
-                                <span className="color-[#5C6472] text-justify font-bold">
-                                    Bond :{" "}
-                                </span>{" "}
+                            <div
+                                className={`text-[14px] font-bold p-2 px-3 rounded-full flex gap-2 items-center ${getStylesForField("bond")}`}
+                            >
+                                <span className="text-justify font-bold">
+                                    Bond :
+                                </span>
                                 <span className="font-light">
                                     {job?.bond || "No Bond"}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <div className="w-full lg:w-[30%]">
-                        <div className="text-[#171A1F] text-[20px] font-semibold">
-                            Interviewer Assigned
-                           
-                        </div>
-                        {job?.interview_details?.map((item, index) => (
-                            <InterviewsCard key={index} item={item} />
-                        ))}
+                    {!hideAssigned && (
+                        <div className="w-full lg:w-[30%]">
+                            <div className="text-[#171A1F] text-[20px] font-semibold">
+                                Interviewer Assigned
+                            </div>
+                            {job?.interview_details?.map((item, index) => (
+                                <InterviewsCard key={index} item={item} />
+                            ))}
 
-                        {job?.assigned_to && (
-                            <>
-                                <div className="text-[#171A1F] text-[20px] font-semibold mt-[15px]">
-                                    Recruiters Assigned
-                                </div>
-                                {job?.assigned_to?.map((item, index) => (
-                                    <RecruiterCard key={index} item={item} />
-                                ))}
-                            </>
-                        )}
-                    </div>
+                            {job?.assigned_to && (
+                                <>
+                                    <div className="text-[#171A1F] text-[20px] font-semibold mt-[15px]">
+                                        Recruiters Assigned
+                                    </div>
+                                    {job?.assigned_to?.map((item, index) => (
+                                        <RecruiterCard
+                                            key={index}
+                                            item={item}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </div>
+                    )}
                 </>
             )}
 
@@ -422,7 +582,7 @@ const ViewJobPost = ({ id, job }) => {
             >
                 <div>
                     <div
-                        className="text-[#323842] text-justify text-[14px] font-normal line-clamp-3 overflow-hidden text-ellipsis block"
+                        className={`text-[#323842] text-justify text-[14px] font-normal block ${getDescriptionStyles()}`}
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(job?.job_description),
                         }}

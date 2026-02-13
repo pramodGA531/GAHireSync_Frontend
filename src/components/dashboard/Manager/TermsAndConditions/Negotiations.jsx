@@ -36,7 +36,7 @@ const SeeNegotiations = () => {
                     body: JSON.stringify({
                         category: "negotiated_terms",
                     }),
-                }
+                },
             );
             const data = response.json();
             if (data.error) {
@@ -173,7 +173,7 @@ const SeeNegotiations = () => {
             cell: ({ row }) => (
                 <span className="font-bold text-[#071C50]">
                     {row.original.client_organization?.client?.username}
-                      {/* {row.getValue("client_organization.client.username")} */}
+                    {/* {row.getValue("client_organization.client.username")} */}
                 </span>
             ),
         },
@@ -189,7 +189,7 @@ const SeeNegotiations = () => {
                             row.original.client_organization?.client
                                 ?.name_of_organization
                         }
-                           {/* {row.getValue(
+                        {/* {row.getValue(
                             "client_organization.client.name_of_organization"
                         )} */}
                     </span>
@@ -200,61 +200,129 @@ const SeeNegotiations = () => {
             accessorKey: "ctc_range",
             header: "CTC Range",
             width: 120,
-            cell: ({ row }) => (
-                <span className="font-bold text-blue-600">
-                    {row.getValue("ctc_range")}
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    row.original.original_terms?.ctc_range !==
+                    row.original.ctc_range;
+                return (
+                    <span
+                        className={`font-bold ${
+                            isChanged
+                                ? "text-red-600 underline"
+                                : "text-blue-600"
+                        }`}
+                    >
+                        {row.getValue("ctc_range")}
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "service_fee",
-            header: "Fee (%)",
+            header: "Fee",
             width: 100,
-            cell: ({ row }) => (
-                <span className="font-bold text-gray-700">
-                    {row.getValue("service_fee")}%
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    Number(row.original.original_terms?.service_fee) !==
+                    Number(row.original.service_fee);
+                return (
+                    <span
+                        className={`font-bold ${
+                            isChanged
+                                ? "text-red-600 underline"
+                                : "text-gray-700"
+                        }`}
+                    >
+                        {row.original.service_fee_type === "percentage"
+                            ? `${row.getValue("service_fee")}%`
+                            : `₹${row.getValue("service_fee")}`}
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "replacement_clause",
             header: "Replacement",
             width: 120,
-            cell: ({ row }) => (
-                <span className="text-xs text-gray-500">
-                    {row.getValue("replacement_clause")} Days
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    row.original.original_terms?.replacement_clause !==
+                    row.original.replacement_clause;
+                return (
+                    <span
+                        className={`text-xs ${
+                            isChanged
+                                ? "text-red-500 font-bold underline"
+                                : "text-gray-500"
+                        }`}
+                    >
+                        {row.getValue("replacement_clause")} Days
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "invoice_after",
             header: "Invoice",
             width: 120,
-            cell: ({ row }) => (
-                <span className="text-xs text-gray-500">
-                    {row.getValue("invoice_after")} Days
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    row.original.original_terms?.invoice_after !==
+                    row.original.invoice_after;
+                return (
+                    <span
+                        className={`text-xs ${
+                            isChanged
+                                ? "text-red-500 font-bold underline"
+                                : "text-gray-500"
+                        }`}
+                    >
+                        {row.getValue("invoice_after")} Days
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "payment_within",
             header: "Payment",
             width: 120,
-            cell: ({ row }) => (
-                <span className="text-xs text-gray-500">
-                    {row.getValue("payment_within")} Days
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    row.original.original_terms?.payment_within !==
+                    row.original.payment_within;
+                return (
+                    <span
+                        className={`text-xs ${
+                            isChanged
+                                ? "text-red-500 font-bold underline"
+                                : "text-gray-500"
+                        }`}
+                    >
+                        {row.getValue("payment_within")} Days
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "interest_percentage",
             header: "Interest",
             width: 100,
-            cell: ({ row }) => (
-                <span className="text-red-500 font-bold">
-                    {row.getValue("interest_percentage")}%
-                </span>
-            ),
+            cell: ({ row }) => {
+                const isChanged =
+                    Number(row.original.original_terms?.interest_percentage) !==
+                    Number(row.original.interest_percentage);
+                return (
+                    <span
+                        className={`font-bold ${
+                            isChanged
+                                ? "text-red-600 underline"
+                                : "text-gray-500"
+                        }`}
+                    >
+                        {row.getValue("interest_percentage")}%
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "requested_date",
@@ -264,12 +332,12 @@ const SeeNegotiations = () => {
                 <div className="flex flex-col text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                     <span>
                         {new Date(
-                            row.getValue("requested_date")
+                            row.getValue("requested_date"),
                         ).toLocaleDateString()}
                     </span>
                     <span>
                         {new Date(
-                            row.getValue("requested_date")
+                            row.getValue("requested_date"),
                         ).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -327,20 +395,18 @@ const SeeNegotiations = () => {
                 } else {
                     return (
                         <div className="flex items-center gap-2">
-                            <Button
-                                size="small"
-                                className="bg-[#1681FF] text-white border-none font-bold text-[10px] px-3 h-7 rounded hover:bg-[#0061D5]"
+                            <button
+                                className="bg-green-600 text-white border-none font-bold text-[10px] px-3 h-7 cursor-pointer rounded hover:bg-green-700"
                                 onClick={() => handleAccept(record)}
                             >
                                 Accept
-                            </Button>
-                            <Button
-                                size="small"
-                                className="border-red-500 text-red-500 font-bold text-[10px] px-3 h-7 rounded hover:bg-red-50"
+                            </button>
+                            <button
+                                className="bg-red-600 text-white border-none font-bold text-[10px] px-3 h-7 cursor-pointer rounded hover:bg-red-700"
                                 onClick={() => handleReject(record)}
                             >
                                 Reject
-                            </Button>
+                            </button>
                         </div>
                     );
                 }
@@ -351,9 +417,9 @@ const SeeNegotiations = () => {
     return (
         <Main defaultSelectedKey="6" defaultSelectedChildKey="6-1">
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
-                <div className="-ml-6 -mt-2">
+                {/* <div className="-ml-6 -mt-2">
                     <GoBack />
-                </div>
+                </div> */}
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-2xl font-bold text-[#071C50]">

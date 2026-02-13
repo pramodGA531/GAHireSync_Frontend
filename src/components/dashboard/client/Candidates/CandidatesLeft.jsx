@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, message, Input } from "antd";
+import { Button, Modal, message, Select } from "antd"; // Added Select
 import { useAuth } from "../../../common/useAuth";
-import { SearchOutlined } from "@ant-design/icons";
 import Pageloading from "../../../common/loading/Pageloading";
 import Main from "../Layout";
-import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
+
 const CandidatesLeft = ({ selectedJob }) => {
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
-    const [searchText, setSearchText] = useState("");
     const [confirmModal, setConfirmModal] = useState({
         visible: false,
         record: null,
     });
     const { apiurl, token } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [eligibleFilter, setEligibleFilter] = useState("All");
+
+    const { Option } = Select;
 
     const fetchData = async () => {
         try {
@@ -37,7 +38,6 @@ const CandidatesLeft = ({ selectedJob }) => {
                         new Date(a.joining_date) - new Date(b.joining_date),
                 );
                 setData(sortedData);
-                setFilteredData(sortedData);
             }
         } catch (e) {
             message.error("Failed to fetch data.");
@@ -51,14 +51,6 @@ const CandidatesLeft = ({ selectedJob }) => {
             fetchData();
         }
     }, [token, selectedJob]);
-
-    const handleSearch = (value) => {
-        setSearchText(value);
-        const filtered = data.filter((item) =>
-            item.candidate_name.toLowerCase().includes(value.toLowerCase()),
-        );
-        setFilteredData(filtered);
-    };
 
     const handleConfirmReplacement = async () => {
         if (!confirmModal.record) return;
@@ -93,41 +85,49 @@ const CandidatesLeft = ({ selectedJob }) => {
 
     const columns = [
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            searchField: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
         },
         {
-            title: "Joining Date",
-            dataIndex: "joining_date",
-            key: "joining_date",
+            header: "Joining Date",
+            accessorKey: "joining_date",
+            dateFilter: true,
         },
         {
-            title: "Left Reason",
-            dataIndex: "left_reason",
-            key: "left_reason",
+            header: "Left Reason",
+            accessorKey: "left_reason",
+            searchField: true,
         },
         {
-            title: "Left Date",
-            dataIndex: "left_date",
-            key: "left_date",
+            header: "Left Date",
+            accessorKey: "left_date",
+            dateFilter: true,
         },
         {
-            title: "Replacement Eligible",
-            dataIndex: "is_replacement_eligible",
-            key: "is_replacement_eligible",
-            render: (eligible) => (eligible ? "Yes" : "No"),
+            header: "Replacement Eligible",
+            accessorKey: "is_replacement_eligible",
+            cell: ({ getValue }) => (getValue() ? "Yes" : "No"),
+            dropdownFilter: true,
+            dropdownOptions: [
+                { value: "true", label: "Yes" },
+                { value: "false", label: "No" },
+            ],
+            // Custom filter function to handle boolean/string mismatch if necessary
+            // AppTable's generic filter might compare strings, so user string input "true"/"false" matches stringified bools
         },
         {
-            title: "Actions",
-            key: "actions",
-            render: (record) =>
-                record.is_replacement_eligible ? (
+            header: "Actions",
+            accessorKey: "actions",
+            enableColumnFilter: false,
+            cell: ({ row }) => {
+                const record = row.original;
+                return record.is_replacement_eligible ? (
                     record.replacement_status == "no" ? (
                         <Button
                             type="primary"
@@ -142,57 +142,70 @@ const CandidatesLeft = ({ selectedJob }) => {
                     )
                 ) : (
                     <span style={{ color: "gray" }}>Not Eligible</span>
-                ),
+                );
+            },
         },
     ];
+
+    const filteredData = (data || []).filter((item) => {
+        if (eligibleFilter === "All") return true;
+        const isEligible = item.is_replacement_eligible;
+        if (eligibleFilter === "Yes") {
+            return isEligible === true || isEligible === "true";
+        }
+        if (eligibleFilter === "No") {
+            return (
+                isEligible === false || isEligible === "false" || !isEligible
+            );
+        }
+        return true;
+    });
 
     return (
         <Main defaultSelectedKey="4" defaultSelectedChildKey="4-5">
             {loading ? (
                 <Pageloading />
             ) : (
-                <>
-                    <div className="p-6">
-                        <div className="mt-6 -ml-10">
-                            <GoBack />
-                        </div>
-                        <div className="flex m-2 pl-[15px] rounded-[10px] border border-[#A2A1A866] outline-none text-[#16151C] text-sm font-light items-center h-[55px] gap-2.5">
-                            <SearchOutlined />
-                            <input
-                                type="text"
-                                placeholder="Search candidates, agency, job title..."
-                                value={searchText}
-                                onChange={handleSearch}
-                                className="border-none m-2 outline-none text-[#16151C] w-[90%]"
-                            />
-                        </div>
+                <div className="p-6">
+                    <AppTable
+                        columns={columns}
+                        data={filteredData}
+                        customFilters={
+                            <Select
+                                defaultValue="All"
+                                style={{ width: 200 }}
+                                onChange={(value) => setEligibleFilter(value)}
+                                className="custom-filter-select"
+                            >
+                                <Option value="All">
+                                    All Replacement Status
+                                </Option>
+                                <Option value="Yes">
+                                    Replacement Eligible
+                                </Option>
+                                <Option value="No">Not Eligible</Option>
+                            </Select>
+                        }
+                    />
 
-                        <Table
-                            dataSource={filteredData}
-                            columns={columns}
-                            rowKey="candidate_name"
-                            className="mt-5"
-                        />
-
-                        {/* Confirmation Modal */}
-                        <Modal
-                            title="Confirm Replacement Request"
-                            open={confirmModal.visible}
-                            onOk={handleConfirmReplacement}
-                            onCancel={() =>
-                                setConfirmModal({
-                                    visible: false,
-                                    record: null,
-                                })
-                            }
-                        >
-                            <p>
-                                Are you sure you want to request a replacement
-                                for {confirmModal.record?.candidate_name}?
-                            </p>
-                        </Modal>
-                    </div>
-                </>
+                    {/* Confirmation Modal */}
+                    <Modal
+                        title="Confirm Replacement Request"
+                        open={confirmModal.visible}
+                        onOk={handleConfirmReplacement}
+                        onCancel={() =>
+                            setConfirmModal({
+                                visible: false,
+                                record: null,
+                            })
+                        }
+                    >
+                        <p>
+                            Are you sure you want to request a replacement for{" "}
+                            {confirmModal.record?.candidate_name}?
+                        </p>
+                    </Modal>
+                </div>
             )}
         </Main>
     );

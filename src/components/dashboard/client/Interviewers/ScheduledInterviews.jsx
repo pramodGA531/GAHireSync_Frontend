@@ -158,9 +158,9 @@ const ScheduledInterviewsClient = () => {
                     <Pageloading />
                 ) : (
                     <>
-                    <div className="-ml-10 -mt-2">
+                    {/* <div className="-ml-10 -mt-2">
                         <GoBack />
-                    </div>
+                    </div> */}
                         <div className="mb-5 flex flex-col md:flex-row items-start md:items-center gap-2">
                             <label
                                 className="mr-2.5 text-black text-sm whitespace-nowrap"

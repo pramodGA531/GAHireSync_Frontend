@@ -172,9 +172,9 @@ const SelectedJobs = () => {
 
     return (
         <Main defaultSelectedKey={4}>
-            {/* <h1>List of Accepted Jobs</h1> */} <div className="mt-4 -mb-2 -ml-2">
-                    <GoBack />
-                </div>
+            {/* <h1>List of Accepted Jobs</h1> <div className="mt-4 -mb-2 -ml-2">
+                    <GoBack /> */}
+                {/* </div> */}
             <div className="flex flex-wrap gap-5 m-4 mb-5">
                
                 {data.length > 0 ? (

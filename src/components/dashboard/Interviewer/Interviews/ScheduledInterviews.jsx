@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../common/useAuth";
 import { Button, message, Modal, Spin } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Table from "../../../common/Table";
 import Main from "../Layout";
 // import "./ScheduledInterviews.css";
 import Pageloading from "../../../common/loading/Pageloading";
 import ResumeModal from "../../../common/ResumeModal";
-import GoBack from "../../../common/Goback"
+import GoBack from "../../../common/Goback";
 const apiurl = import.meta.env.VITE_BACKEND_URL;
 
 const ScheduledInterviews = () => {
@@ -23,6 +23,7 @@ const ScheduledInterviews = () => {
     const [viewResume, setViewResume] = useState(false);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const rowStyle = {
         display: "flex",
@@ -51,7 +52,7 @@ const ScheduledInterviews = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
 
             const data = await response.json();
@@ -82,7 +83,9 @@ const ScheduledInterviews = () => {
             render: (title, record) => (
                 <div
                     onClick={() => {
-                        navigate(`/interviewer/jobpost/${record.job_id}`);
+                        navigate(`/interviewer/jobpost/${record.job_id}`, {
+                            state: { from: location.pathname },
+                        });
                     }}
                     style={{
                         color: "#2C5F99",
@@ -181,7 +184,7 @@ const ScheduledInterviews = () => {
                         // disabled={!isPast}      //Enable in the live versioin
                         onClick={() =>
                             navigate(
-                                `/interviewer/conduct-interview/${interview_id}`
+                                `/interviewer/conduct-interview/${interview_id}`,
                             )
                         }
                     >
@@ -204,7 +207,7 @@ const ScheduledInterviews = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
 
             const data = await response.json();
@@ -230,10 +233,14 @@ const ScheduledInterviews = () => {
             {loading ? (
                 <Pageloading></Pageloading>
             ) : (
-                <><div className="-ml-4 mt-4">
+                <>
+                    {/* <div className="-ml-4 mt-4">
                     <GoBack />
-                </div>
-                <h1 className="m-2 text-xl mx-4 font-bold"> Scheduled Interviews </h1>
+                </div> */}
+                    <h1 className="m-2 text-xl mx-4 font-bold">
+                        {" "}
+                        Scheduled Interviews{" "}
+                    </h1>
                     {data && (
                         <div className="p-5">
                             <Table
@@ -346,7 +353,7 @@ const ScheduledInterviews = () => {
                                                 onClick={() => {
                                                     setViewResume(true);
                                                     setSelectedResume(
-                                                        resumeData.resume
+                                                        resumeData.resume,
                                                     );
                                                 }}
                                             >

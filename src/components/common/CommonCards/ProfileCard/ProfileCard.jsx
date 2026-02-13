@@ -164,16 +164,16 @@ const ProfileCard = ({ hideEdit }) => {
                                     </div>
 
                                     <div className="flex gap-3">
-                                        {!hideEdit && (
-                                            <Button
-                                                className="h-10 px-6 rounded-xl border-gray-200 text-gray-600 font-bold hover:text-[#1681FF] hover:border-[#1681FF] transition-all"
-                                                onClick={() =>
-                                                    navigate("/profile/edit")
-                                                }
-                                            >
-                                                Edit Profile
-                                            </Button>
-                                        )}
+                                        {/* {!hideEdit && (
+                                            // <Button
+                                            //     className="h-10 px-6 rounded-xl border-gray-200 text-gray-600 font-bold hover:text-[#1681FF] hover:border-[#1681FF] transition-all"
+                                            //     onClick={() =>
+                                            //         navigate("/profile/edit")
+                                            //     }
+                                            // >
+                                            //     Edit Profile
+                                            // </Button>
+                                        )} */}
                                         <Button
                                             danger
                                             className="h-10 px-6 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm shadow-red-50"

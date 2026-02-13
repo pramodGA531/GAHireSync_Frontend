@@ -326,9 +326,9 @@ export default function ClientInterviewersCalendar() {
             ) : (
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full flex flex-col">
                     <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
-                        <div className="-ml-6">
+                        {/* <div className="-ml-6">
                             <GoBack />
-                            </div>
+                            </div> */}
                         <div className="flex items-center gap-4">
                             
                             <span className="text-xl font-semibold text-gray-800 tracking-tight">

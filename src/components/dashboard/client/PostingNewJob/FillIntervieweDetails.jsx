@@ -57,6 +57,7 @@ const FillIntervieweDetails = ({
             }
             const formattedData = data.map((item) => ({
                 interviewer_name: item.interviewer_name,
+                designation: item.designation,
                 id: item.id,
             }));
             setInterviewers(formattedData);
@@ -132,14 +133,21 @@ const FillIntervieweDetails = ({
         if (interviewers.length > 0 && interviewRounds?.length > 0) {
             let changed = false;
             const hydrated = interviewRounds.map((r) => {
-                if (r.name && !r.interviewer_name) {
+                if (r.name) {
                     const found = interviewers.find((i) => i.id == r.name);
                     if (found) {
-                        changed = true;
-                        return {
-                            ...r,
-                            interviewer_name: found.interviewer_name,
-                        };
+                        // Ensure both interviewer_name AND id are synced with the actual interviewer user
+                        if (
+                            r.interviewer_name !== found.interviewer_name ||
+                            r.id !== r.name
+                        ) {
+                            changed = true;
+                            return {
+                                ...r,
+                                interviewer_name: found.interviewer_name,
+                                id: r.name, // Crucial: use the interviewer user id
+                            };
+                        }
                     }
                 }
                 return r;
@@ -153,13 +161,12 @@ const FillIntervieweDetails = ({
     }, [interviewers, interviewRounds, reset, setInterviewRounds]);
 
     return (
-        <div className="mt-5 p-5 rounded-md border border-[#BCC1CA] bg-white shadow-sm">
+        <div className="m-4 p-5 rounded-md border border-[#BCC1CA] bg-white shadow-sm">
             <button
                 onClick={() => setIsModalVisible(true)}
-                className="mb-5 h-[30px] flex items-center gap-2.5 bg-white border border-[#BCC1CA] px-3 rounded-md cursor-pointer hover:bg-gray-50"
+                className="mb-5 h-[30px]  gap-2.5 bg-white px-3  border border-[#BCC1CA] rounded-md cursor-pointer hover:bg-gray-100"
             >
-                <img src={PlusIcon} alt="" />
-                Add Interviewer
+                + Add Interviewer
             </button>
 
             <Modal
@@ -209,16 +216,15 @@ const FillIntervieweDetails = ({
                                     return (
                                         <Select
                                             {...field}
+                                            showSearch
+                                            placeholder="Select Interviewer"
+                                            optionFilterProp="label"
                                             value={
                                                 selectedInterviewer?.id ||
                                                 undefined
                                             }
                                             onChange={(val) => {
                                                 field.onChange(val);
-                                                console.log(
-                                                    val,
-                                                    " is the value changes",
-                                                );
                                                 setValue(
                                                     `rounds.${index}.id`,
                                                     val,
@@ -232,7 +238,6 @@ const FillIntervieweDetails = ({
                                                     selected?.interviewer_name,
                                                 );
                                             }}
-                                            placeholder="Select Interviewer"
                                             allowClear
                                             className="w-full"
                                         >
@@ -240,8 +245,16 @@ const FillIntervieweDetails = ({
                                                 <Select.Option
                                                     key={i.id}
                                                     value={i.id}
+                                                    label={`${i.interviewer_name} (${i.designation})`}
                                                 >
-                                                    {i.interviewer_name}
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span>
+                                                            {i.interviewer_name}-{i.designation?i.designation:"N/A"}
+                                                        </span>
+                                                        <span className="text-gray-400 text-[11px] bg-gray-100 px-1.5 py-0.5 rounded ml-2">
+                                                            {i.designation}
+                                                        </span>
+                                                    </div>
                                                 </Select.Option>
                                             ))}
                                         </Select>

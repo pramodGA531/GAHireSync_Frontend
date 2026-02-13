@@ -105,6 +105,49 @@ const Resumes = () => {
     const [descriptionModalVisible, setDescriptionModalVisible] =
         useState(false);
 
+    // Filter state
+    const [filters, setFilters] = useState({
+        status: "",
+        experience: "",
+        noticePeriod: "",
+    });
+
+    const handleFilterChange = (key, value) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
+    };
+
+    // Filtered data logic
+    const filteredData = data.filter((item) => {
+        // Status Filter
+        if (filters.status) {
+            const status = item?.job_application?.status;
+            if (status !== filters.status) return false;
+        }
+
+        // Experience Filter
+        if (filters.experience) {
+            const exp = parseInt(item.experience);
+            if (filters.experience === "0-2" && (exp < 0 || exp > 2))
+                return false;
+            if (filters.experience === "3-5" && (exp < 3 || exp > 5))
+                return false;
+            if (filters.experience === "5-8" && (exp < 5 || exp > 8))
+                return false;
+            if (filters.experience === "8+" && exp <= 8) return false;
+        }
+
+        // Notice Period Filter
+        if (filters.noticePeriod) {
+            const np = parseInt(item.notice_period);
+            if (filters.noticePeriod === "immediate" && np !== 0) return false;
+            if (filters.noticePeriod === "<15" && np >= 15) return false;
+            if (filters.noticePeriod === "<30" && np >= 30) return false;
+            if (filters.noticePeriod === "30+" && np < 30) return false;
+        }
+
+        return true;
+    });
+
     useEffect(() => {
         const storedData =
             JSON.parse(sessionStorage.getItem("compareList")) || {};
@@ -164,14 +207,11 @@ const Resumes = () => {
     return (
         <Main defaultSelectedKey="3">
             <div className="p-5">
-                <div className="mt-4 -ml-2 -mb-4">
+                {/* <div className="mt-4 -ml-2 -mb-4">
                     <GoBack />
-                </div>
+                </div> */}
                 <Breadcrumb
                     items={[
-                        {
-                            title: <Link to="/">Home</Link>,
-                        },
                         {
                             title: (
                                 <Link to="/client/applications">
@@ -184,6 +224,65 @@ const Resumes = () => {
                         },
                     ]}
                 />
+
+                {/* Filters */}
+                <div className="flex flex-wrap gap-4 mt-4 mb-4 items-center">
+                    <select
+                        className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none bg-white focus:border-blue-500"
+                        value={filters.status}
+                        onChange={(e) =>
+                            handleFilterChange("status", e.target.value)
+                        }
+                    >
+                        <option value="">All Status</option>
+                        <option value="processing">Shortlisted</option>
+                        <option value="selected">Selected</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="left">Left</option>
+                    </select>
+
+                    <select
+                        className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none bg-white focus:border-blue-500"
+                        value={filters.experience}
+                        onChange={(e) =>
+                            handleFilterChange("experience", e.target.value)
+                        }
+                    >
+                        <option value="">All Experience</option>
+                        <option value="0-2">0-2 Years</option>
+                        <option value="3-5">3-5 Years</option>
+                        <option value="5-8">5-8 Years</option>
+                        <option value="8+">8+ Years</option>
+                    </select>
+
+                    <select
+                        className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none bg-white focus:border-blue-500"
+                        value={filters.noticePeriod}
+                        onChange={(e) =>
+                            handleFilterChange("noticePeriod", e.target.value)
+                        }
+                    >
+                        <option value="">All Notice Periods</option>
+                        <option value="immediate">Immediate</option>
+                        <option value="<15">Less than 15 Days</option>
+                        <option value="<30">Less than 30 Days</option>
+                        <option value="30+">30+ Days</option>
+                    </select>
+
+                    <button
+                        onClick={() =>
+                            setFilters({
+                                status: "",
+                                experience: "",
+                                noticePeriod: "",
+                            })
+                        }
+                        className="text-sm text-red-500 hover:text-red-700 underline cursor-pointer bg-transparent border-none"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
+
                 {job && (
                     <div className="p-1.5">
                         <div className="flex justify-between">
@@ -274,8 +373,8 @@ const Resumes = () => {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {data &&
-                        data?.map((item, index) => (
+                    {filteredData &&
+                        filteredData?.map((item, index) => (
                             <ApplicationCard
                                 key={index}
                                 item={item}
@@ -285,10 +384,12 @@ const Resumes = () => {
                                 )} // Check if in compare list
                             />
                         ))}
-                    {data.length === 0 && (
+                    {filteredData.length === 0 && (
                         <div className="not-found">
                             <img src={NoCandidates} alt="No-candidates" />
-                            <div className="text">No Applications received</div>
+                            <div className="text">
+                                No Applications found matching criteria
+                            </div>
                         </div>
                     )}
                 </div>

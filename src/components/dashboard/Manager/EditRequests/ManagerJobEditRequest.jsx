@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import DOMPurify from "dompurify";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
-import { useParams, useNavigate } from "react-router-dom";
-import { message, Modal } from "antd";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { message, Modal, Breadcrumb } from "antd";
 // import "./JobEditRequest.css";
 import jobDetailsicon from "./../../../../images/Client/CreateJob/Jobdetails.svg";
 import jobDescriptionicon from "./../../../../images/Client/CreateJob/Jobdescription.svg";
@@ -133,43 +133,83 @@ const ManagerJobEditRequest = () => {
             }));
         };
 
-        if (editedField) {
-            return (
-                <div>
-                    <span className="relative inline-block ml-2 text-red-600">
-                        <span
-                            style={{ color: "red" }}
-                            className="text-[#323842] text-justify text-sm font-normal overflow-hidden text-ellipsis line-clamp-2"
-                            dangerouslySetInnerHTML={{
-                                __html: DOMPurify.sanitize(
-                                    editedField?.field_value,
-                                ),
-                            }}
-                        ></span>
+        // If no edit and no value, don't render anything
+        if (
+            !editedField &&
+            (!job?.job_description || job?.job_description.trim() === "")
+        ) {
+            return null;
+        }
 
-                        {editedField?.field_value.length > 0 && (
-                            <div style={{ marginTop: "8px" }}>
-                                <button
-                                    onClick={handleOpenModal}
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        color: "#1890ff",
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    View More
-                                </button>
-                            </div>
-                        )}
+        if (editedField) {
+            const borderColor = isAccepted
+                ? "border-green-200"
+                : "border-purple-200";
+            const bgColor = isAccepted ? "bg-green-50" : "bg-purple-50";
+            const hoverColor = isAccepted
+                ? "hover:bg-green-100"
+                : "hover:bg-purple-100";
+            const textColor = isAccepted ? "text-green-700" : "text-purple-700";
+            const titleColor = isAccepted
+                ? "text-green-600"
+                : "text-purple-600";
+            const dotColor = isAccepted ? "bg-green-500" : "bg-purple-500";
+            const statusText = isAccepted ? "Accepted" : "New Update";
+
+            return (
+                <div
+                    className={`border ${borderColor} rounded-lg p-4 ${bgColor} mt-2 ${hoverColor} transition-colors cursor-pointer`}
+                    onClick={handleCheckboxChange}
+                >
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                            <span
+                                className={`h-2.5 w-2.5 rounded-full ${dotColor}`}
+                            ></span>
+                            <span
+                                className={`text-xs ${titleColor} font-bold uppercase`}
+                            >
+                                {statusText}
+                            </span>
+                        </div>
+
                         <input
                             type="checkbox"
                             checked={isAccepted}
                             onChange={handleCheckboxChange}
-                            className="absolute -top-5 -right-3 h-5 w-5 scale-75 cursor-pointer"
-                            style={{ top: "0px" }}
+                            className="h-5 w-5 cursor-pointer accent-green-600"
+                            onClick={(e) => e.stopPropagation()} // Prevent double toggle
                         />
-                    </span>
+                    </div>
+
+                    <span
+                        className={`text-[#323842] text-justify text-sm font-normal overflow-hidden text-ellipsis line-clamp-2`}
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(
+                                editedField?.field_value,
+                            ),
+                        }}
+                    ></span>
+
+                    {editedField?.field_value.length > 0 && (
+                        <div style={{ marginTop: "8px" }}>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenModal();
+                                }}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#1890ff",
+                                    cursor: "pointer",
+                                    padding: 0,
+                                }}
+                            >
+                                View More
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -192,6 +232,7 @@ const ManagerJobEditRequest = () => {
                                 border: "none",
                                 color: "#1890ff",
                                 cursor: "pointer",
+                                padding: 0,
                             }}
                         >
                             View More
@@ -214,6 +255,14 @@ const ManagerJobEditRequest = () => {
                 [fieldName]: !isAccepted,
             }));
         };
+
+        // If no edit and no value, don't render anything
+        if (
+            !editedField &&
+            (!value || (typeof value === "string" && value.trim() === ""))
+        ) {
+            return null;
+        }
 
         if (editedField) {
             let displayValue = editedField.field_value;
@@ -244,26 +293,58 @@ const ManagerJobEditRequest = () => {
                 );
             }
 
+            const borderColor = isAccepted
+                ? "border-green-200"
+                : "border-purple-200";
+            const bgColor = isAccepted ? "bg-green-50" : "bg-purple-50";
+            const hoverColor = isAccepted
+                ? "hover:bg-green-100"
+                : "hover:bg-purple-100";
+            const textColor = isAccepted ? "text-green-800" : "text-purple-800";
+            const labelColor = isAccepted
+                ? "text-green-600"
+                : "text-purple-600";
+            const dotColor = isAccepted ? "bg-green-500" : "bg-purple-500";
+            const statusText = isAccepted ? "Accepted" : "New Update";
+
             return (
-                <div className="px-[11.646px] py-[5.823px] flex items-center gap-[3.882px] text-[#555] text-center text-[12.616px] font-medium rounded-[23.292px] bg-[rgba(19,109,211,0.108)] h-auto">
-                    <span className="relative inline-block ml-2 text-red-600">
-                        <strong className="text-black mr-1 uppercase">
-                            {editedField.field_name.replace(/_/g, " ")}:
-                        </strong>
-                        {displayValue}
+                <div
+                    className={`px-[12px] py-[8px] flex justify-between items-start gap-3 text-center text-[13px] font-medium rounded-[8px] h-auto border ${borderColor} ${bgColor} cursor-pointer ${hoverColor} transition-colors min-w-[200px]`}
+                    onClick={handleCheckboxChange}
+                >
+                    <div className="flex flex-col items-start w-full">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span
+                                className={`h-2 w-2 rounded-full ${dotColor}`}
+                            ></span>
+                            <span
+                                className={`text-[10px] ${labelColor} font-bold uppercase`}
+                            >
+                                {statusText}
+                            </span>
+                        </div>
+
+                        <span
+                            className={`${textColor} text-left break-words w-full`}
+                        >
+                            {displayValue}
+                        </span>
+                    </div>
+                    <div className="pl-2 ml-1">
                         <input
                             type="checkbox"
                             checked={isAccepted}
                             onChange={handleCheckboxChange}
-                            className="absolute -top-5 -right-3 h-5 w-5 scale-75 cursor-pointer"
+                            className="h-4 w-4 cursor-pointer accent-green-600 mt-1"
+                            onClick={(e) => e.stopPropagation()}
                         />
-                    </span>
+                    </div>
                 </div>
             );
         }
 
         return (
-            <div className="px-[11.646px] py-[5.823px] flex items-center gap-[3.882px] text-[#555] text-center text-[12.616px] font-medium rounded-[23.292px] bg-[rgba(19,109,211,0.108)]">
+            <div className="px-[12px] py-[8px] flex items-center gap-[4px] text-[#555] text-center text-[13px] font-medium rounded-[23px] bg-gray-50 border border-gray-200">
                 {value}
             </div>
         );
@@ -272,25 +353,24 @@ const ManagerJobEditRequest = () => {
     const SkillsList = ({ skill_type, skills }) => {
         if (!skills) return null;
         return (
-            <div className="w-[45%] rounded-lg border border-[#DEE1E6] bg-white shadow-[0px_0px_11px_0px_rgba(22,129,255,0.06)] px-2.5 py-[15px]">
-                <div className="text-[#4A5768] text-base font-semibold px-2.5 pb-[15px] w-full">
+            <div className="w-[49%] rounded-xl border border-[#DEE1E6] bg-white shadow-sm px-4 py-4">
+                <div className="text-[#4A5768] text-base font-semibold pb-3 w-full border-b border-gray-100">
                     {skill_type}
                 </div>
-                <div className="line"></div>
-                <div className="">
+                <div className="mt-3 flex flex-col gap-2">
                     {skills.map((skill) => (
                         <div
                             key={skill.id}
-                            className="flex justify-between rounded-[10px] bg-[#f1f2f4] px-2.5 py-2.5 mt-2.5 text-sm"
+                            className="flex justify-between items-center rounded-lg bg-[#f8f9fa] px-3 py-2 text-sm border border-gray-100"
                         >
-                            <span className="skill-name">
+                            <span className="skill-name font-medium text-gray-700">
                                 {skill.skill_name}
                             </span>
-                            <div className="flex gap-2.5">
-                                <span className="text-sm">
+                            <div className="flex gap-3 items-center">
+                                <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
                                     {skill.metric_value}
                                 </span>
-                                <span className="text-[#555] text-base font-bold">
+                                <span className="text-[#555] text-xs font-bold uppercase tracking-wider">
                                     {skill.metric_type}
                                 </span>
                             </div>
@@ -380,92 +460,145 @@ const ManagerJobEditRequest = () => {
 
     return (
         <Main>
-            <div className="mt-4 -ml-2 -mb-4 pl-4">
-                <GoBack />
+            <div className="mt-4 ml-4">
+                <div>
+                    <Breadcrumb
+                        items={[
+                            {
+                                title: (
+                                    <Link
+                                        to="/agency/jobs"
+                                        className="text-gray-400 text-sm"
+                                    >
+                                        Job Posts
+                                    </Link>
+                                ),
+                            },
+                            {
+                                title: (
+                                    <span className="text-gray-800 text-sm">
+                                        Edit Request
+                                    </span>
+                                ),
+                            },
+                        ]}
+                    />
+                </div>
             </div>
             {loading ? (
                 <Pageloading />
             ) : (
-                <div className="flex flex-row mb-6 w-full p-6">
+                <div className="flex flex-row mb-6 w-full p-6 gap-6">
                     {job && (
                         <>
                             <div className="w-full">
-                                <div className="sec-1">
-                                    <div className="text-[#171A1F] text-xl font-bold flex justify-between">
-                                        <div className="flex gap-[18px] items-center">
-                                            {job.job_title}
-                                            <button
-                                                className="px-[15px] py-2 bg-blue-100 text-blue-600 rounded"
-                                                onClick={handleAcceptAllChanges}
-                                            >
-                                                Select all changes
-                                            </button>
-                                        </div>
-                                        <div className="flex gap-[15px]">
-                                            <button
-                                                className="bg-[#FF7676] text-white px-[15px] py-2 rounded"
-                                                onClick={() => handleReject()}
-                                            >
-                                                Reject Request
-                                                {btnLoading && (
-                                                    <Btnloading
-                                                        spincolor={
-                                                            "white-spinner"
-                                                        }
-                                                    />
-                                                )}
-                                            </button>
-                                            <button
-                                                className="bg-green-500 text-white px-[15px] py-2 rounded"
-                                                onClick={() => handleSubmit()}
-                                            >
-                                                Accept Selected
-                                                {btnLoading && (
-                                                    <Btnloading
-                                                        spincolor={
-                                                            "white-spinner"
-                                                        }
-                                                    />
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-[5px] text-[#57585a] text-base font-normal mt-[15px]">
-                                        Opening at{" "}
-                                        <span className="text-[#2A8CFF] text-lg font-normal">
-                                            {job.organization_name ||
-                                                "Organization"}
-                                        </span>
-                                        <SmallComponent
-                                            fieldName="job_close_duration"
-                                            value={job.job_close_duration}
-                                        ></SmallComponent>
-                                    </div>
-                                </div>
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                    <div className="sec-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="text-[#171A1F] text-2xl font-bold mb-1">
+                                                    {job.job_title}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[#57585a] text-sm">
+                                                    <span>Opening at</span>
+                                                    <span className="text-[#2A8CFF] font-medium">
+                                                        {job.organization_name ||
+                                                            "Organization"}
+                                                    </span>
+                                                    {job.job_close_duration && (
+                                                        <>
+                                                            <span className="text-gray-300">
+                                                                •
+                                                            </span>
+                                                            <span className="text-gray-500">
+                                                                Last date:{" "}
+                                                                {
+                                                                    job.job_close_duration
+                                                                }
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
 
-                                <div className="mt-6">
-                                    <div className="flex items-center text-[#424955] text-lg gap-2.5 font-bold mb-2.5">
-                                        <img src={jobDetailsicon} alt="" />
-                                        Job Description
+                                            <div className="flex gap-3">
+                                                <button
+                                                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-medium transition-colors"
+                                                    onClick={
+                                                        handleAcceptAllChanges
+                                                    }
+                                                >
+                                                    Select All
+                                                </button>
+                                                <button
+                                                    className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium transition-colors"
+                                                    onClick={() =>
+                                                        handleReject()
+                                                    }
+                                                >
+                                                    Reject
+                                                </button>
+                                                <button
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                                                    onClick={() =>
+                                                        handleSubmit()
+                                                    }
+                                                >
+                                                    Accept Selected
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="line-clamp-2 overflow-hidden text-ellipsis">
+
+                                    {/* Color Legend */}
+                                    {editedValues.length > 0 && (
+                                        <div className="mt-6 flex items-center gap-6 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                            <span className="text-sm font-semibold text-gray-700">
+                                                Legend:
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                                                <span className="text-sm text-gray-600">
+                                                    Accepted
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+                                                <span className="text-sm text-gray-600">
+                                                    New Update
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-8">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <img
+                                                src={jobDetailsicon}
+                                                alt=""
+                                                className="w-5 h-5 opacity-70"
+                                            />
+                                            <span className="text-[#171A1F] text-lg font-bold">
+                                                Job Description
+                                            </span>
+                                        </div>
                                         <JobDescriptionComponent
                                             value={job?.job_description}
                                         ></JobDescriptionComponent>
                                     </div>
 
-                                    <div className="flex gap-2.5 flex-wrap mt-2.5">
+                                    <div className="flex gap-3 flex-wrap mt-6">
                                         <SmallComponent
                                             fieldName="ctc"
                                             value={job.ctc}
                                         />
                                         <SmallComponent
                                             fieldName="years_of_experience"
-                                            value={`${job.years_of_experience} of experience`}
+                                            value={`${job.years_of_experience}`}
                                         />
                                         <SmallComponent
                                             fieldName="job_level"
-                                            value={`Job Level - ${job.job_level}`}
+                                            value={`${job.job_level}`}
                                         />
                                         <SmallComponent
                                             fieldName="job_type"
@@ -484,37 +617,34 @@ const ManagerJobEditRequest = () => {
                                                 />
                                             </>
                                         )}
-
-                                        {job.time_period !== " " && (
-                                            <SmallComponent
-                                                fieldName="time_period"
-                                                value={job.time_period}
-                                            />
-                                        )}
-
+                                        {job.time_period &&
+                                            job.time_period !== " " && (
+                                                <SmallComponent
+                                                    fieldName="time_period"
+                                                    value={job.time_period}
+                                                />
+                                            )}
                                         <SmallComponent
                                             fieldName="notice_period"
                                             value={job.notice_period}
                                         />
-
-                                        {job.notice_time !== "" && (
+                                        {job.notice_time && (
                                             <SmallComponent
                                                 fieldName="notice_time"
                                                 value={job.notice_time}
                                             />
                                         )}
-
                                         <SmallComponent
                                             fieldName="timings"
                                             value={job.timings}
                                         />
                                         <SmallComponent
                                             fieldName="working_days_per_week"
-                                            value={`${job.working_days_per_week} Working days in week`}
+                                            value={`${job.working_days_per_week} Days/Week`}
                                         />
                                         <SmallComponent
                                             fieldName="industry"
-                                            value={`${job.industry} Industry`}
+                                            value={job.industry}
                                         />
                                     </div>
                                 </div>

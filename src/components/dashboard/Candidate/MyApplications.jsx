@@ -142,9 +142,9 @@ const CandidateApplications = () => {
 
     return (
         <Main defaultSelectedKey="2">
-            <div className="mt-4 -ml-2">
+            {/* <div className="mt-4 -ml-2">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="p-5">
                 <h2 className="text-black text-xl font-bold mb-4">Candidate Applications</h2>
                 <Table

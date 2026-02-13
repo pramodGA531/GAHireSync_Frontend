@@ -5,7 +5,8 @@ import TicketMessages from '../../tickets/TicketMessages'
 import GoBack from '../../common/Goback'
 const InterviewerTickets = () => {
     return (
-        <Main><div className='-ml-2 mt-4'><GoBack /> </div>
+        <Main>
+            {/* <div className='-ml-2 mt-4'><GoBack /> </div> */}
             <TicketMessages></TicketMessages>
         </Main>
     )

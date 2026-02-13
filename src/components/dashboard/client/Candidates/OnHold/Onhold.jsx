@@ -1,26 +1,29 @@
-import React, { useEffect, useState, useSyncExternalStore } from "react";
-import { Button, Modal, Form, Input, message, Table } from "antd";
+import React, { useEffect, useState } from "react";
+import { Button, Modal, Form, Input, message, Select } from "antd"; // Added Select
 import { useAuth } from "../../../../common/useAuth";
 import dayjs from "dayjs";
-import { SearchOutlined } from "@ant-design/icons";
+// import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import CustomDatePicker from "../../../../common/CustomDatePicker";
 
 import Pageloading from "../../../../common/loading/Pageloading";
-import { EyeOutlined } from "@ant-design/icons";
+// import { EyeOutlined } from "@ant-design/icons";
 import Main from "../../Layout";
-import Goback from "../../../../common/Goback";
+// import Goback from "../../../../common/Goback";
+import AppTable from "../../../../common/AppTable";
+
+const { Option } = Select; // Destructure Option
+
 const Onhold = ({ selectedJob }) => {
     const { token, apiurl } = useAuth();
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
     const yesterday = new Date();
+    const [jobStatusFilter, setJobStatusFilter] = useState("All"); // Add filter state
     yesterday.setDate(yesterday - 1);
 
     const fetchData = async () => {
@@ -31,7 +34,7 @@ const Onhold = ({ selectedJob }) => {
                 {
                     method: "GET",
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
@@ -41,8 +44,6 @@ const Onhold = ({ selectedJob }) => {
             }
 
             setData(result);
-
-            setFilteredData(result);
         } catch (e) {
             console.log(e);
         } finally {
@@ -52,7 +53,7 @@ const Onhold = ({ selectedJob }) => {
 
     const updateState = async () => {
         try {
-            setLoading(true);
+            // setLoading(true); // Don't block UI
             const response = await fetch(
                 `${apiurl}/update-notification-seen/`,
                 {
@@ -64,7 +65,7 @@ const Onhold = ({ selectedJob }) => {
                     body: JSON.stringify({
                         category: "onhold_candidate",
                     }),
-                }
+                },
             );
             const data = response.json();
             if (data.error) {
@@ -72,8 +73,6 @@ const Onhold = ({ selectedJob }) => {
             }
         } catch (e) {
             console.log(e);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -83,20 +82,6 @@ const Onhold = ({ selectedJob }) => {
             updateState();
         }
     }, [token, selectedJob]);
-
-    const handleSearch = (e) => {
-        const value = e.target.value.toLowerCase();
-        setSearchTerm(value);
-        const filtered = data.filter(
-            (item) =>
-                item.candidate_name.toLowerCase().includes(value) ||
-                item.organization_name.toLowerCase().includes(value) ||
-                item.job_title.toLowerCase().includes(value) ||
-                (item.job_department &&
-                    item.job_department.toLowerCase().includes(value))
-        );
-        setFilteredData(filtered);
-    };
 
     // Select candidate
     const handleSelect = (candidate) => {
@@ -108,7 +93,7 @@ const Onhold = ({ selectedJob }) => {
         try {
             setLoading(true);
             const formattedDate = dayjs(values.joining_date).format(
-                "YYYY-MM-DD"
+                "YYYY-MM-DD",
             );
             const payload = {
                 ...values,
@@ -124,7 +109,7 @@ const Onhold = ({ selectedJob }) => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify(payload),
-                }
+                },
             );
             const result = await response.json();
             console.log("result", result);
@@ -147,10 +132,9 @@ const Onhold = ({ selectedJob }) => {
     // Table columns
     const columns = [
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
-            render: (name, application) => (
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            cell: ({ row }) => (
                 <div
                     className="name"
                     style={{
@@ -160,54 +144,55 @@ const Onhold = ({ selectedJob }) => {
                     }}
                     onClick={() => {
                         navigate(
-                            `/client/application/${application.application_id}`
+                            `/client/application/${row.original.application_id}`,
                         );
                     }}
                 >
-                    {name}
+                    {row.original.candidate_name}
                 </div>
             ),
+            searchField: true,
         },
         {
-            title: "Agency",
-            dataIndex: "organization_name",
-            key: "organization_name",
+            header: "Agency",
+            accessorKey: "organization_name",
+            searchField: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
         },
         {
-            title: "Location",
-            dataIndex: "location",
-            key: "location",
+            header: "Location",
+            accessorKey: "location",
+            searchField: true,
         },
         {
-            title: "Job Department",
-            dataIndex: "job_department",
-            key: "job_department",
-            render: (text) => text || "N/A",
+            header: "Job Department",
+            accessorKey: "job_department",
+            cell: ({ getValue }) => getValue() || "N/A",
+            searchField: true,
         },
         {
-            title: "Job Status",
-            dataIndex: "job_status",
-            key: "job_status",
+            header: "Job Status",
+            accessorKey: "job_status",
+            searchField: true,
         },
         {
-            title: "Job Location Status",
-            dataIndex: "location_status",
-            key: "location_status",
+            header: "Job Location Status",
+            accessorKey: "location_status",
+            searchField: true,
         },
         {
-            title: "Action",
-            key: "action",
-            render: (_, record) =>
-                record.job_status === "opened" ? (
+            header: "Action",
+            accessorKey: "action",
+            cell: ({ row }) =>
+                row.original.job_status === "opened" ? (
                     <Button
-                        disabled={record.location_status === "closed"}
+                        disabled={row.original.location_status === "closed"}
                         type="primary"
-                        onClick={() => handleSelect(record)}
+                        onClick={() => handleSelect(row.original)}
                     >
                         Select
                     </Button>
@@ -217,6 +202,11 @@ const Onhold = ({ selectedJob }) => {
         },
     ];
 
+    const filteredData = (data || []).filter((item) => {
+        if (jobStatusFilter === "All") return true;
+        return item.job_status?.toLowerCase() === jobStatusFilter.toLowerCase();
+    });
+
     return (
         <Main defaultSelectedKey="4" defaultSelectedChildKey="4-2">
             {loading ? (
@@ -224,25 +214,29 @@ const Onhold = ({ selectedJob }) => {
             ) : (
                 <>
                     <div>
-                        <div className="mt-4 -ml-2"> 
+                        {/* <div className="mt-4 -ml-2"> 
                             <Goback />
-                        </div>
-                        <div className="flex m-2 mt-5 pl-[15px] rounded-[10px] border border-[#A2A1A866] outline-none text-[#16151C] text-sm font-light items-center h-[55px] gap-2.5">
-                            <SearchOutlined />
-                            <input
-                                type="text"
-                                placeholder="Search candidates, agency, job title..."
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                className="border-none outline-none text-[#16151C] w-[90%] m-2"
-                            />
-                        </div>
-
-                        <div className="custom-table-container onhold-table-wrapper">
-                            <Table
-                                dataSource={filteredData}
+                        </div> */}
+                        <div className="p-5">
+                            <AppTable
+                                data={filteredData}
                                 columns={columns}
-                                rowKey="selected_candidate_id"
+                                customFilters={
+                                    <Select
+                                        defaultValue="All"
+                                        style={{ width: 150 }}
+                                        onChange={(value) =>
+                                            setJobStatusFilter(value)
+                                        }
+                                        className="custom-filter-select"
+                                    >
+                                        <Option value="All">
+                                            All Job Status
+                                        </Option>
+                                        <Option value="opened">Opened</Option>
+                                        <Option value="closed">Closed</Option>
+                                    </Select>
+                                }
                             />
                         </div>
 

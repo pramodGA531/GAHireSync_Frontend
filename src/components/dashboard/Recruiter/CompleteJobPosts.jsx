@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import Main from "./Layout";
 import { useAuth } from "../../common/useAuth";
 import ViewJobPost from "../../common/ViewJobPost";
@@ -47,51 +47,47 @@ const CompleteJobPostRecruiter = () => {
 
     return (
         <Main>
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-10">
                 <div className="max-w-7xl mx-auto space-y-8">
                     {/* Navigation Row */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex flex-col gap-4">
                             <Breadcrumb
-                                className="custom-breadcrumb-premium"
                                 items={[
+                                    
                                     {
                                         title: (
-                                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[9px]">
-                                                Recruiter Hub
+                                            <span
+                                                onClick={() => navigate(-1)}
+                                                className="text-gray-400 text-sm cursor-pointer hover:underline"
+                                            >
+                                                Assigned Jobs
                                             </span>
                                         ),
                                     },
                                     {
                                         title: (
-                                            <span className="text-gray-400 font-bold uppercase tracking-widest text-[9px]">
-                                                Assigned Job
-                                            </span>
-                                        ),
-                                    },
-                                    {
-                                        title: (
-                                            <span className="text-[#1681FF] font-black uppercase tracking-widest text-[9px]">
-                                                Specification
+                                            <span className="text-gray-800 text-sm font-medium">
+                                                Job Details
                                             </span>
                                         ),
                                     },
                                 ]}
                             />
                             <div className="flex items-center gap-4">
-                                <Button
+                                {/* <Button
                                     onClick={() => navigate(-1)}
                                     icon={<ArrowLeftOutlined />}
                                     className="w-12 h-12 rounded-2xl flex items-center justify-center border-gray-100 shadow-sm hover:text-[#1681FF] transition-all"
-                                />
+                                /> */}
                                 <div>
-                                    <h1 className="text-3xl font-black text-[#071C50] tracking-tighter uppercase leading-none m-0">
-                                        Post Specification
+                                    <h1 className="text-3xl Text-black font-bold m-0">
+                                        Job Details
                                     </h1>
-                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mt-2">
+                                    <p className="text-[10px] font-black text-gray-300 mt-2">
                                         Job ID: {id}
                                     </p>
                                 </div>

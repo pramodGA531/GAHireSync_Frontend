@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Table, message, Modal, Tag } from "antd";
+import { message, Modal, Tag, Select } from "antd"; // Added Select
 import { useAuth } from "../../../common/useAuth";
-import { SearchOutlined } from "@ant-design/icons";
-
+import { EyeOutlined } from "@ant-design/icons";
+// import "./ShortlistedCandidates.css"; // Assuming CSS might be needed or ignored
 import Main from "../Layout";
 import { useNavigate } from "react-router-dom";
-import Pageloading from "../../../common/loading/Pageloading";
-import { EyeOutlined } from "@ant-design/icons";
-import GoBack from "../../../common/Goback";
+// import Pageloading from "../../../common/loading/Pageloading";
+// import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
+
+const { Option } = Select; // Destructure Option
+
 const ShortlistedCandidates = ({ selectedJob }) => {
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
-    const [searchText, setSearchText] = useState("");
     const [confirmModal, setConfirmModal] = useState({
         visible: false,
         record: null,
@@ -19,6 +20,7 @@ const ShortlistedCandidates = ({ selectedJob }) => {
     const { apiurl, token } = useAuth();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [jobStatusFilter, setJobStatusFilter] = useState("All");
 
     const fetchData = async () => {
         try {
@@ -30,18 +32,18 @@ const ShortlistedCandidates = ({ selectedJob }) => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
                 message.error(result.error);
             } else {
+                // AppTable handles sorting, but initial sort by date is fine.
                 const sortedData = result.sort(
                     (a, b) =>
-                        new Date(a.joining_date) - new Date(b.joining_date)
+                        new Date(a.joining_date) - new Date(b.joining_date),
                 );
                 setData(sortedData);
-                setFilteredData(sortedData);
             }
         } catch (e) {
             message.error("Failed to fetch data.");
@@ -61,21 +63,6 @@ const ShortlistedCandidates = ({ selectedJob }) => {
         }
     }, [token, selectedJob]);
 
-    const handleSearch = (value) => {
-        setSearchText(value);
-        const filtered = data.filter(
-            (item) =>
-                item.candidate_name
-                    .toLowerCase()
-                    .includes(value.toLowerCase()) ||
-                item.job_title
-                    .toString()
-                    .toLowerCase()
-                    .includes(value.toLowerCase())
-        );
-        setFilteredData(filtered);
-    };
-
     const confirmJoining = async (record) => {
         try {
             const response = await fetch(
@@ -87,7 +74,7 @@ const ShortlistedCandidates = ({ selectedJob }) => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ joining_status: "joined" }),
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
@@ -103,10 +90,9 @@ const ShortlistedCandidates = ({ selectedJob }) => {
 
     const columns = [
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
-            render: (candidate, record) => (
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            cell: ({ row }) => (
                 <span
                     style={{
                         cursor: "pointer",
@@ -116,19 +102,21 @@ const ShortlistedCandidates = ({ selectedJob }) => {
                     }}
                     className="name"
                     onClick={() =>
-                        navigate(`/client/application/${record.application_id}`)
+                        navigate(
+                            `/client/application/${row.original.application_id}`,
+                        )
                     }
                 >
-                    {candidate}&nbsp;&nbsp;
+                    {row.original.candidate_name}&nbsp;&nbsp;
                     <EyeOutlined />
                 </span>
             ),
+            searchField: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
-            render: (job_title, record) => (
+            header: "Job Title",
+            accessorKey: "job_title",
+            cell: ({ row }) => (
                 <span
                     style={{
                         cursor: "pointer",
@@ -138,83 +126,91 @@ const ShortlistedCandidates = ({ selectedJob }) => {
                     }}
                     className="name"
                     onClick={() =>
-                        navigate(`/client/complete_job_post/${record.job_id}`)
+                        navigate(
+                            `/client/complete_job_post/${row.original.job_id}`,
+                        )
                     }
                 >
-                    {job_title}&nbsp;&nbsp;
+                    {row.original.job_title}&nbsp;&nbsp;
                     <EyeOutlined />
                 </span>
             ),
+            searchField: true,
         },
         {
-            title: "Agency",
-            dataIndex: "agency",
-            key: "agency",
+            header: "Agency",
+            accessorKey: "agency",
+            searchField: true,
         },
         {
-            title: "Current Round ",
-            dataIndex: "current_status",
-            key: "current_status",
+            header: "Current Round ",
+            accessorKey: "current_status",
+            searchField: true,
         },
         {
-            title: "Next Interview",
-            dataIndex: "next_interview",
-            key: "next_interview",
+            header: "Next Interview",
+            accessorKey: "next_interview",
+            dateFilter: true, // Assuming this is a date field or date string
         },
         {
-            title: "Job Location",
-            dataIndex: "job_location",
-            key: "job_location",
+            header: "Job Location",
+            accessorKey: "job_location",
+            searchField: true,
         },
         {
-            title: "Job Status",
-            dataIndex: "location_status",
-            key: "location_status",
-            render: (job_status) => (
-                <Tag color={job_status === "opened" ? "green" : "red"}>
-                    {job_status}
+            header: "Job Status",
+            accessorKey: "location_status",
+            cell: ({ getValue }) => (
+                <Tag color={getValue() === "opened" ? "green" : "red"}>
+                    {getValue()}
                 </Tag>
             ),
+            searchField: true,
         },
     ];
 
+    const filteredData = (data || []).filter((item) => {
+        if (jobStatusFilter === "All") return true;
+        return (
+            item.location_status?.toLowerCase() ===
+            jobStatusFilter.toLowerCase()
+        );
+    });
+
     return (
         <Main defaultSelectedKey="4" defaultSelectedChildKey="4-1">
-            {loading ? (
-                <Pageloading />
-            ) : (
-                <>
-                <div className="mt-4 -ml-2">
+            <div className="p-5">
+                {/* <div className="mt-4 -ml-2">
                     <GoBack />
-                </div>
-                    <div className="flex m-2 mt-5 pl-[15px] rounded-[10px] border border-[#A2A1A866] outline-none text-[#16151C] text-sm font-light items-center h-[55px] gap-2.5">
-                        <SearchOutlined />
-                        <input
-                            type="text"
-                            placeholder="Search candidates, agency, job title..."
-                            value={searchText}
-                            onChange={handleSearch}
-                            className="border-none m-2 outline-none text-[#16151C] w-[90%]"
-                        />
-                    </div>
-                    <Table
-                        dataSource={filteredData}
-                        columns={columns}
-                        rowKey="selected_candidate_id"
-                        className="mt-5"
-                    />
-                    <Modal
-                        title="Confirm Joining"
-                        visible={confirmModal.visible}
-                        onOk={() => confirmJoining(confirmModal.record)}
-                        onCancel={() =>
-                            setConfirmModal({ visible: false, record: null })
-                        }
-                    >
-                        <p>Are you sure this candidate has joined?</p>
-                    </Modal>
-                </>
-            )}
+                </div> */}
+                <AppTable
+                    columns={columns}
+                    data={filteredData}
+                    isLoading={loading}
+                    customFilters={
+                        <Select
+                            defaultValue="All"
+                            style={{ width: 150 }}
+                            onChange={(value) => setJobStatusFilter(value)}
+                            className="custom-filter-select"
+                        >
+                            <Option value="All">All Job Status</Option>
+                            <Option value="opened">Opened</Option>
+                            <Option value="closed">Closed</Option>
+                        </Select>
+                    }
+                />
+                <Modal
+                    title="Confirm Joining"
+                    visible={confirmModal.visible}
+                    onOk={() => confirmJoining(confirmModal.record)}
+                    onCancel={() =>
+                        setConfirmModal({ visible: false, record: null })
+                    }
+                >
+                    <p>Are you sure this candidate has joined?</p>
+                </Modal>
+            </div>
         </Main>
     );
 };

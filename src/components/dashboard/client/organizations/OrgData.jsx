@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Main from "../Layout";
-import { Table, Input, Button, Dropdown, Menu } from "antd";
+import { Table, Input, Button, Dropdown, Menu, Breadcrumb } from "antd";
 import { useAuth } from "../../../common/useAuth";
 import {
     SearchOutlined,
@@ -13,7 +13,7 @@ import {
     SyncOutlined,
 } from "@ant-design/icons";
 // import "./ClientData.css";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import GoBack from "../../../common/Goback";
 const OrgData = () => {
     const [searchText, setSearchText] = useState("");
@@ -130,10 +130,24 @@ const OrgData = () => {
 
     return (
         <Main defaultSelectedKey="9">
-            <div className="mt-4 -ml-2 -mb-4">
-                <GoBack />
-            </div>
+            
             <div className="p-5">
+                <div className="mb-4">
+                    <Breadcrumb
+                        items={[
+                            {
+                                title: (
+                                    <Link to="/client/organizations">
+                                        Organizations
+                                    </Link>
+                                ),
+                            },
+                            {
+                                title: "Organization Details",
+                            },
+                        ]}
+                    />
+                </div>
                 <div className="flex flex-row gap-5 max-lg:flex-col">
                     <div className="flex-1 flex flex-col gap-5">
                         {/* Client Information Card */}

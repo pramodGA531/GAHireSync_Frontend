@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import MainLayout from "../../common/Layout/MainLayout2";
 import dashboard_active from "../../../images/SideBar/dashboard-active.svg";
 import dashboard from "../../../images/SideBar/dashboard.svg";
@@ -79,6 +80,50 @@ const Layout = ({
         }
     };
 
+    const markAsSeen = async (categories) => {
+        try {
+            await fetch(`${apiurl}/update-notification-seen/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category: categories }),
+            });
+            fetchBadges(); // Refresh badges after marking as seen
+        } catch (error) {
+            console.error("Error marking notifications as seen:", error);
+        }
+    };
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (!token) return;
+        const path = location.pathname;
+
+        if (
+            path.startsWith("/client/mypostings") ||
+            path.startsWith("/client/postjob") ||
+            path.startsWith("/client/edit-requests")
+        ) {
+            markAsSeen(["accept_job", "reject_job"]);
+        } else if (path.startsWith("/client/applications")) {
+            markAsSeen(["send_application"]);
+        } else if (path.startsWith("/client/candidates")) {
+            markAsSeen([
+                "onhold_candidate",
+                "candidate_accepted",
+                "candidate_rejected",
+            ]);
+        } else if (
+            path.startsWith("/client/finalized-tandc") ||
+            path.startsWith("/client/negotiated-terms")
+        ) {
+            markAsSeen(["accept_terms", "reject_terms"]);
+        }
+    }, [location.pathname, token]);
+
     useEffect(() => {
         if (token) {
             fetchBadges();
@@ -94,13 +139,19 @@ const Layout = ({
                 active_logo: dashboard_active,
                 path: "/",
                 badge: false,
+                tooltip: "View your dashboard overview",
             },
             {
                 key: "2",
                 label: "Job Postings",
                 active_logo: jobpostings_active,
                 logo: jobpostings,
-                badge: false,
+                tooltip:"You can view your job post details,create new job and edit job requests",
+                badge:
+                    badgesData &&
+                    badgesData.accept_job + badgesData.reject_job > 0
+                        ? true
+                        : false,
                 children: [
                     {
                         key: "2-1",
@@ -125,10 +176,11 @@ const Layout = ({
 
             {
                 key: "3",
-                label: "Recruite Summary",
+                label: "Profiles Received",
                 logo: recruiter_summary,
                 active_logo: recruiter_summary_active,
                 path: "/client/applications",
+                tooltip:"You can view profiles received from recruiters and shortlist them or reject them",
                 badge: (badgesData?.send_application || 0) > 0,
             },
 
@@ -137,6 +189,7 @@ const Layout = ({
                 label: "Recruite Flow",
                 logo: recriute_flow,
                 active_logo: recruite_flow_active,
+                tooltip:"You can view the list of candidates that are under screening, onhold, selected, joined and candidates left",
                 badge:
                     badgesData?.onhold_candidate +
                         badgesData?.candidate_accepted +
@@ -182,6 +235,7 @@ const Layout = ({
                 logo: interviewer,
                 active_logo: interviewer_active,
                 badge: false,
+                tooltip:"You can view the list of interviewers and scheduled interviews",
                 children: [
                     {
                         key: "5-1",
@@ -210,6 +264,7 @@ const Layout = ({
                 logo: replacement,
                 active_logo: replacement_active,
                 path: "/client/replacements",
+                tooltip:"You can view the replacement requests raised by you",
             },
 
             {
@@ -218,18 +273,25 @@ const Layout = ({
                 logo: service_agreement,
                 active_logo: service_agreement_active,
                 badge: badgesData?.accept_terms + badgesData?.reject_terms > 0,
+                tooltip:"You can view the finalized T&C and negotiated T&C with Organizations",
                 children: [
                     {
                         key: "7-1",
                         label: "Finalized T&C",
                         path: "/client/finalized-tandc",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.accept_terms > 0
+                                ? true
+                                : false,
                     },
                     {
                         key: "7-2",
                         label: "T&C Negotiations",
                         path: "/client/negotiated-terms",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.reject_terms > 0
+                                ? true
+                                : false,
                     },
                 ],
             },
@@ -241,6 +303,7 @@ const Layout = ({
                 active_logo: invoice_active,
                 path: "/client/invoices",
                 badge: false,
+                tooltip:"You can view the invoices generated for the services",
             },
 
             {
@@ -250,9 +313,10 @@ const Layout = ({
                 active_logo: organizations_active,
                 path: "/client/organizations",
                 badge: false,
+                tooltip:"You can view the list of organizations that you are associated with"
             },
         ],
-        [badgesData]
+        [badgesData],
     );
 
     return (

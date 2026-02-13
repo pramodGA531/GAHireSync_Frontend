@@ -186,9 +186,9 @@ const UpcomingInterviews = () => {
 
     return (
         <Main defaultSelectedKey="3">
-            <div className="mt-2 -ml-2 -mb-4">
+            {/* <div className="mt-2 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="p-5">
                 <h1 className="text-2xl font-semibold mb-4 text-[#000000] font-bold">
                     Interviews

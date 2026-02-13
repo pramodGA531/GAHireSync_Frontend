@@ -220,9 +220,9 @@ const AgencyResumeBank = () => {
 
     return (
         <Main defaultSelectedKey="8">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
                 <div className="max-w-7xl mx-auto">
                     {/* Header with Storage Info */}
@@ -273,18 +273,18 @@ const AgencyResumeBank = () => {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-2 rounded-2xl p-6 text-white flex flex-col justify-center relative overflow-hidden">
+                        <div className="lg:col-span-2 bg-white rounded-2xl p-6 flex flex-col justify-center relative border-1 border-gray-100 shadow-sm overflow-hidden">
                             <div className="relative z-10">
-                                <h1 className="text-2xl font-bold mb-2">
+                                <h1 className="text-2xl text-black font-bold mb-2">
                                     Resume Bank
                                 </h1>
-                                <p className="text-blue-100/70 text-sm max-w-md">
+                                <p className="text-black text-sm max-w-md">
                                     Manage all resumes collected across your
                                     organization. Search, view, and organize
                                     candidate data efficiently.
                                 </p>
                             </div>
-                            <div className="absolute -right-10 -bottom-10 text-9xl opacity-10">
+                            <div className="absolute right-10 bottom-10 text-9xl opacity-10">
                                 <FilePdfOutlined />
                             </div>
                         </div>

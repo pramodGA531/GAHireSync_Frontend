@@ -89,7 +89,7 @@ const CandidateDetails = () => {
     };
 
     return (
-        <div>
+        <div className="m-2">
             {message && message.success && (
                 <div className="text-green-600">{message.success}</div>
             )}

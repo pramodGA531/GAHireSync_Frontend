@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../../common/useAuth";
-import { message, Button, Modal, Radio, Empty, Input, Table } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { message, Button, Modal, Radio, Select } from "antd"; // Added Select
+// import { SearchOutlined } from "@ant-design/icons";
 
 import Pageloading from "../../../../common/loading/Pageloading";
 import Main from "../../Layout";
-import GoBack from "../../../../common/Goback";
+// import GoBack from "../../../../common/Goback";
+import AppTable from "../../../../common/AppTable";
 
-const { Search } = Input;
+const { Option } = Select; // Added Option
 
 const JoinedCandidates = ({ selectedJob }) => {
     const { token, apiurl } = useAuth();
     const [data, setData] = useState([]);
-    const [searchText, setSearchText] = useState("");
-    const [filteredData, setFilteredData] = useState([]);
+    // const [searchText, setSearchText] = useState("");
+    // const [filteredData, setFilteredData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedCandidate, setSelectedCandidate] = useState(null);
     const [selectedReason, setSelectedReason] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All"); // Added state
 
     const fetchData = async () => {
         setLoading(true);
@@ -27,7 +29,7 @@ const JoinedCandidates = ({ selectedJob }) => {
                 {
                     method: "GET",
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) {
@@ -35,7 +37,7 @@ const JoinedCandidates = ({ selectedJob }) => {
             }
             if (result.length > 0) {
                 setData(result || []);
-                setFilteredData(result || []);
+                // setFilteredData(result || []);
             }
         } catch (e) {
             message.error("Failed to fetch data.");
@@ -67,7 +69,7 @@ const JoinedCandidates = ({ selectedJob }) => {
                         candidate_id: selectedCandidate,
                         reason: selectedReason,
                     }),
-                }
+                },
             );
             const result = await response.json();
             if (result.message) {
@@ -82,22 +84,22 @@ const JoinedCandidates = ({ selectedJob }) => {
         }
     };
 
-    const handleSearch = (value) => {
-        setSearchText(value);
-        const filtered = data.filter(
-            (candidate) =>
-                candidate.candidate_name
-                    .toLowerCase()
-                    .includes(value.toLowerCase()) ||
-                candidate.job_title
-                    .toLowerCase()
-                    .includes(value.toLowerCase()) ||
-                candidate.organization_name
-                    .toLowerCase()
-                    .includes(value.toLowerCase())
-        );
-        setFilteredData(filtered);
-    };
+    // const handleSearch = (value) => {
+    //     setSearchText(value);
+    //     const filtered = data.filter(
+    //         (candidate) =>
+    //             candidate.candidate_name
+    //                 .toLowerCase()
+    //                 .includes(value.toLowerCase()) ||
+    //             candidate.job_title
+    //                 .toLowerCase()
+    //                 .includes(value.toLowerCase()) ||
+    //             candidate.organization_name
+    //                 .toLowerCase()
+    //                 .includes(value.toLowerCase()),
+    //     );
+    //     setFilteredData(filtered);
+    // };
 
     useEffect(() => {
         if (token) fetchData();
@@ -105,64 +107,64 @@ const JoinedCandidates = ({ selectedJob }) => {
 
     const columns = [
         {
-            title: "Joined Date",
-            dataIndex: "created_at",
-            key: "created_at",
-            render: (text) => new Date(text).toLocaleDateString(),
+            header: "Joined Date",
+            accessorKey: "created_at",
+            dateFilter: true,
+            cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
         },
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            searchField: true,
         },
         {
-            title: "Organization Name",
-            dataIndex: "organization_name",
-            key: "organization_name",
+            header: "Organization Name",
+            accessorKey: "organization_name",
+            searchField: true,
         },
         {
-            title: "Joined Date",
-            dataIndex: "joined_date",
-            key: "joined_date",
+            header: "Joined Date (Official)",
+            accessorKey: "joined_date",
+            dateFilter: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
         },
         {
-            title: "Job Location Status",
-            dataIndex: "location_status",
-            key: "location_status",
+            header: "Job Location Status",
+            accessorKey: "location_status",
+            searchField: true,
         },
         {
-            title: "Joining Status",
-            dataIndex: "joining_status",
-            key: "joining_status",
-            render: (text) => (
+            header: "Joining Status",
+            accessorKey: "joining_status",
+            searchField: true,
+            cell: ({ getValue }) => (
                 <span
                     className={
-                        text === "joined"
+                        getValue() === "joined"
                             ? "text-green-600 font-medium"
                             : "text-red-600 font-medium"
                     }
                 >
-                    {text}
+                    {getValue()}
                 </span>
             ),
         },
         {
-            title: "Action",
-            key: "action",
-            render: (_, record) => (
+            header: "Action",
+            accessorKey: "action",
+            cell: ({ row }) => (
                 <div>
-                    {record.joining_status === "joined" && (
+                    {row.original.joining_status === "joined" && (
                         <Button
                             type="primary"
                             danger
                             size="small"
                             onClick={() =>
-                                handleCandidateLeft(record.candidate_id)
+                                handleCandidateLeft(row.original.candidate_id)
                             }
                         >
                             Candidate Left
@@ -173,34 +175,43 @@ const JoinedCandidates = ({ selectedJob }) => {
         },
     ];
 
+    const filteredData = (data || []).filter((item) => {
+        if (statusFilter === "All") return true;
+        return (
+            item.joining_status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+    });
+
     return (
         <Main defaultSelectedKey="4" defaultSelectedChildKey="4-4">
             {loading ? (
                 <Pageloading />
             ) : (
-                <div>
-                    <div className="mt-4 -ml-2">
+                <div className="p-5">
+                    {/* <div className="mt-4 -ml-2">
                         <GoBack />
                         
-                    </div>
+                    </div> */}
                     <h1 className="text-2xl font-semibold m-2  text-[#16151C]">
-                            Joined Candidates
-                        </h1>
-                    <div className="flex m-2 mt-5 pl-[15px] rounded-[10px] border border-[#A2A1A866] outline-none text-[#16151C] text-sm font-light items-center h-[55px] gap-2.5">
-                        <SearchOutlined />
-                        <input
-                            type="text"
-                            placeholder="Search candidates, agency, job title..."
-                            value={searchText}
-                            onChange={handleSearch}
-                            className="border-none outline-none m-2 text-[#16151C] w-[90%]"
-                        />
-                    </div>
+                        Joined Candidates
+                    </h1>
 
-                    <Table
+                    <AppTable
                         columns={columns}
-                        dataSource={filteredData}
+                        data={filteredData}
                         rowKey="candidate_id"
+                        customFilters={
+                            <Select
+                                defaultValue="All"
+                                style={{ width: 150 }}
+                                onChange={(value) => setStatusFilter(value)}
+                                className="custom-filter-select"
+                            >
+                                <Option value="All">All Status</Option>
+                                <Option value="joined">Joined</Option>
+                                <Option value="left">Left</Option>
+                            </Select>
+                        }
                     />
 
                     <Modal

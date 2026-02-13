@@ -209,7 +209,8 @@ import TicketMessages from '../../tickets/TicketMessages'
 import GoBack from '../../common/Goback'
 const AdminTickets = () => {
     return (
-        <Main defaultSelectedKey="2"><div className='-ml-2 mt-4'><GoBack /> </div>
+        <Main defaultSelectedKey="2">
+            {/* <div className='-ml-2 mt-4'><GoBack /> </div> */}
             <TicketMessages></TicketMessages>
         </Main>
     )

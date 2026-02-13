@@ -13,15 +13,17 @@ import { useNavigate } from "react-router-dom";
 
 const InterviewerCard = ({ item }) => {
     return (
-        <div className="border border-[#E4E4E4] shadow-md p-[20px_10px_10px_20px] flex flex-col justify-center mt-2.5 w-full md:w-[280px] rounded-2xl bg-white">
+        <div className="border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 flex flex-col justify-center mt-2.5 w-full md:w-[300px] rounded-2xl bg-white transition-all duration-300 hover:shadow-[0_12px_45px_rgb(0,0,0,0.08)] hover:-translate-y-0.5">
             <div className="flex gap-[50px] items-start">
                 <img src={item.icon} className="h-[50px] mt-2" alt="" />
                 <img src={item.illustration} className="h-[100px]" alt="" />
             </div>
-            <div className="text-[#4798FC] text-5xl font-semibold -mt-5">
+            <div className="text-[#4798FC] text-5xl font-bold -mt-4">
                 {item.value}
             </div>
-            <span className="query">{item.query}</span>
+            <span className="text-gray-500 text-sm font-medium mt-1">
+                {item.query}
+            </span>
         </div>
     );
 };
@@ -29,7 +31,7 @@ const InterviewerCard = ({ item }) => {
 const TodayUpcomingInterviews = ({ item }) => {
     const navigate = useNavigate();
     return (
-        <div className="m-[5px_5px_8px] flex justify-between items-center p-[10px] rounded-lg bg-[#F7F7F7] border-2 border-black/10 border-l-[5px] border-l-[#1681FF]">
+        <div className="m-2 flex justify-between items-center p-4 rounded-xl bg-gray-50/50 border border-gray-100 border-l-[4px] border-l-[#1681FF] shadow-sm transition-all hover:shadow-md">
             <div className="text-xs text-[#16151C] flex flex-col">
                 <span className="text">
                     {item.candidate_name} - {item.job_title} - Round{" "}
@@ -40,10 +42,10 @@ const TodayUpcomingInterviews = ({ item }) => {
                 </span>
             </div>
             <button
-                className="bg-[#1681FF] text-white rounded px-2.5 py-[7px] text-[10px] font-normal border-none cursor-pointer"
+                className="bg-[#1681FF] text-white rounded-lg px-4 h-9 text-[11px] font-bold border-none cursor-pointer shadow-sm hover:bg-[#0066FF] transition-all"
                 onClick={() =>
                     navigate(
-                        `/interviewer/conduct-interview/${item.interview_id}`
+                        `/interviewer/conduct-interview/${item.interview_id}`,
                     )
                 }
                 disabled={item.status === "completed"}
@@ -56,7 +58,7 @@ const TodayUpcomingInterviews = ({ item }) => {
 
 const MissedInterviews = ({ item }) => {
     return (
-        <div className="m-[5px_5px_8px] flex justify-between items-center p-[10px] rounded-lg bg-[#F7F7F7] border-2 border-black/10 border-l-[5px] border-l-[#1681FF]">
+        <div className="m-2 flex justify-between items-center p-4 rounded-xl bg-gray-50/50 border border-gray-100 border-l-[4px] border-l-[#1681FF] shadow-sm transition-all hover:shadow-md">
             <div className="text-xs text-[#16151C] flex flex-col">
                 <span className="text">
                     {item.candidate_name} - {item.job_title} - Round{" "}
@@ -66,7 +68,7 @@ const MissedInterviews = ({ item }) => {
                     {item.from_time} - {item.to_time}
                 </span>
             </div>
-            <button className="bg-[#1681FF] text-white rounded px-2.5 py-0 text-[10px] font-normal border-none cursor-pointer">
+            <button className="bg-[#1681FF] text-white rounded-lg px-4 h-9 text-[11px] font-bold border-none cursor-pointer shadow-sm hover:bg-[#0066FF] transition-all">
                 Enter Remarks
             </button>
         </div>
@@ -105,7 +107,7 @@ const Interviewer = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
 
@@ -171,7 +173,7 @@ const Interviewer = () => {
                                 <div
                                     onClick={() =>
                                         navigate(
-                                            "/interviewer/interviews/upcoming"
+                                            "/interviewer/interviews/upcoming",
                                         )
                                     }
                                     className="text-[#1681FF] text-sm font-medium cursor-pointer"
@@ -188,7 +190,7 @@ const Interviewer = () => {
                                         />
                                     ))
                                 ) : (
-                                    <p className="no-data">
+                                    <p className="ml-2 mb-2">
                                         No interviews scheduled for today.
                                     </p>
                                 )}
@@ -213,7 +215,7 @@ const Interviewer = () => {
                                         />
                                     ))
                                 ) : (
-                                    <p className="no-data">
+                                    <p className="ml-2 mb-2">
                                         No missed interviews.
                                     </p>
                                 )}

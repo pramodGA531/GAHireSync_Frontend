@@ -13,7 +13,7 @@ const DashaBoardCard = ({ count, text, imgSrc }) => {
         } else if (text === "Approval Pending") {
             Navigate("/agency/jobs");
         } else if (text === "Recrutier Allocation Pending") {
-            Navigate("/agency/recruiters/");
+            Navigate("/agency/jobs/not-assigned");
         }
     };
 

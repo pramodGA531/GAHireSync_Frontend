@@ -17,6 +17,10 @@ const TermsModal = ({ open, onClose, terms }) => {
             title: "Service Fee",
             dataIndex: "service_fee",
             key: "service_fee",
+            render: (fee, record) =>
+                record.service_fee_type === "percentage"
+                    ? `${fee}%`
+                    : `₹${fee}`,
         },
         {
             title: "Invoice After",
@@ -32,13 +36,13 @@ const TermsModal = ({ open, onClose, terms }) => {
             title: "Interest %",
             dataIndex: "interest_percentage",
             key: "interest_percentage",
+            render: (val) => (val ? `${val}%` : "0%"),
         },
         {
             title: "Is Negotiated",
             dataIndex: "is_negotiated",
             key: "is_negotiated",
-            render: (val) =>
-                val ? "True" : "False"
+            render: (val) => (val ? "Yes" : "No"),
         },
         {
             title: "Created At",

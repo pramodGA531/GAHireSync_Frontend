@@ -6,8 +6,8 @@ import IntProfileCard from "../../../common/CommonCards/ProfileCard/IntProfileCa
 import GoBack from "../../../common/Goback";
 const InterviewerProfile = () => {
     return (
-        <Main>  <div className="mt-4 -mb-6 -ml-2"><GoBack />
-                </div>
+        <Main>  {/* <div className="mt-4 -mb-6 -ml-2"><GoBack />
+                </div> */}
             <IntProfileCard></IntProfileCard>
         </Main>
     );

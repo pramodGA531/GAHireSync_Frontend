@@ -23,7 +23,7 @@ const InterviewerCard = ({ item, removeInterviewer }) => {
     const navigate = useNavigate();
 
     return (
-        <div className="bg-blue-50 w-full md:w-[300px] xl:w-[250px] shadow-sm rounded-[15px] p-5 pb-5">
+        <div className="bg-blue-50 w-full md:w-[300px] xl:w-[300px] shadow-sm rounded-[15px] p-5 pb-5">
             <div className="flex justify-between items-center w-full pt-2.5 pb-[5px]">
                 <div className="flex gap-2.5 pt-[5px] flex-row items-center justify-center">
                     <img src={Profile} alt="" className="h-[50px] w-[50px]" />
@@ -37,7 +37,7 @@ const InterviewerCard = ({ item, removeInterviewer }) => {
                     </div>
                 </div>
                 <div
-                    className="font-medium text-base text-[#54577A] cursor-pointer"
+                    className="font-medium text-base text-[#54577A] hover:text-blue-500 cursor-pointer"
                     onClick={() => {
                         navigate(`/client/interviewer/${item.id}`);
                     }}
@@ -64,7 +64,7 @@ const InterviewerCard = ({ item, removeInterviewer }) => {
 					View all
 				</div> */}
                 <div
-                    className="text-xs cursor-pointer px-2.5 py-[5px] rounded-[5px] bg-[#FF8F8F] text-white"
+                    className="text-xs cursor-pointer px-2.5 py-[5px] rounded-[5px] bg-red-400 hover:bg-red-500 text-white"
                     onClick={() => {
                         removeInterviewer(item.id);
                     }}
@@ -207,9 +207,9 @@ const ClientInterviewers = () => {
                 <Pageloading />
             ) : (
                 <div className="">
-                    <div className="mt-4 -ml-2">
+                    {/* <div className="mt-4 -ml-2">
                         <GoBack />
-                    </div>
+                    </div> */}
                     <div className="pt-8 pl-8 text-2xl font-semibold">
                         All Interviewers
                     </div>

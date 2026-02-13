@@ -134,7 +134,7 @@ const ClientSignup = () => {
         if (formData.contact_number.length < 10) {
             message.error("Contact number should be at least 10 digits");
             return;
-        } else if (formData.contact_number > 10) {
+        } else if (formData.contact_number.length > 10) {
             message.error("Contact number should be at most 10 digits");
             return;
         }

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import ViewJobPost from "../../common/ViewJobPost";
 import Main from "./Layout";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../../common/useAuth";
 import Pageloading from "../../common/loading/Pageloading";
 import GoBack from "../../common/Goback";
-
+import { Breadcrumb } from "antd";
 const InterviewerCompleteJobPost = () => {
     const { id } = useParams();
+    const location = useLocation();
     const { token, apiurl } = useAuth();
     const [job, setJob] = useState();
     const [interviewers, setInterviewers] = useState();
@@ -43,22 +44,29 @@ const InterviewerCompleteJobPost = () => {
 
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-1">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             {loading ? (
                 <Pageloading />
             ) : job ? (
                 <>
-                    <div
-                        className="org-name"
-                        style={{
-                            color: "#171A1F",
-                            fontSize: "24px",
-                            fontWeight: "700",
-                            marginBottom: "15px",
-                        }}
-                    >
+                    <div className="m-4">
+                        <Breadcrumb
+                            items={[
+                                {
+                                    title: "Job Post",
+                                    href:
+                                        location.state?.from ||
+                                        "/interviewer/jobinterviews",
+                                },
+                                {
+                                    title: "Job Post Details",
+                                },
+                            ]}
+                        />
+                    </div>
+                    <div className="text-[#171A1F] text-[24px] font-bold mt-4 ml-[15px]">
                         Job post Details
                     </div>
                     <ViewJobPost

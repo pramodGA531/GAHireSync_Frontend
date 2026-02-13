@@ -9,6 +9,8 @@ import { useAuth } from "../../../common/useAuth";
 import Pageloading from "../../../common/loading/Pageloading";
 import AppTable from "../../../common/AppTable";
 import GoBack from "../../../common/Goback";
+import { Link } from "react-router-dom";
+import { Breadcrumb } from "antd";
 
 const RecruiterSummary = ({ tableData, cardsData, loading, id }) => {
     const navigate = useNavigate();
@@ -22,7 +24,7 @@ const RecruiterSummary = ({ tableData, cardsData, loading, id }) => {
             cell: ({ row }) => (
                 <div
                     onClick={() =>
-                        navigate(`/agency/postings/${row.original.id}`)
+                        navigate(`/agency/postings/${row.original.job_id}`)
                     }
                     className="font-bold text-[#3B82F6] hover:underline cursor-pointer flex flex-col"
                 >
@@ -98,7 +100,7 @@ const RecruiterSummary = ({ tableData, cardsData, loading, id }) => {
             {loading ? (
                 <Pageloading />
             ) : (
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-6">
                     <RctrSummerCards cardsData={cardsData} />
 
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -189,11 +191,34 @@ const RecruiterSummaryLayout = () => {
 
     return (
         <Main defaultSelectedKey="3">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
+            </div> */}
+            <div className="mx-6 mt-4">
+                <Breadcrumb
+                    items={[
+                        {
+                            title: (
+                                <Link
+                                    to="/agency/recruiters"
+                                    className="text-gray-400 text-sm"
+                                >
+                                    Recruiters
+                                </Link>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span className="text-gray-800 text-sm font-medium">
+                                    Recruiter Summary
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
             </div>
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                     <Tabs
                         centered
                         defaultActiveKey="1"

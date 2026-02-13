@@ -108,14 +108,21 @@ const Calendar = ({ events }) => {
 
     const currentTimePosition = useMemo(
         () => getCurrentTimePosition(),
-        [currentTime]
+        [currentTime],
     );
 
     return (
-        <div className="w-full max-h-[1020px] overflow-y-auto bg-white rounded-lg border border-[#e8e8e8] shadow-[0_2px_8px_rgba(0,0,0,0.06)] [&::-webkit-scrollbar]:block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2">
-            <div className="flex justify-between items-center p-[16px_24px] border-b border-[#f0f0f0]">
-                <Title level={4} style={{ margin: 0 }}>
-                    Today's Interviews
+        <div className="w-full max-h-[1020px] overflow-y-auto bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] [&::-webkit-scrollbar]:block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2">
+            <div className="flex justify-between items-center p-6 border-b border-gray-50">
+                <Title
+                    level={4}
+                    style={{
+                        margin: 0,
+                        fontWeight: 800,
+                        letterSpacing: "-0.025em",
+                    }}
+                >
+                    Interview Schedule
                 </Title>
                 <div className="flex items-center">
                     {/* <Button type="text" icon={<LeftOutlined />} onClick={goToPreviousDay} className="nav-button" /> */}
@@ -153,7 +160,7 @@ const Calendar = ({ events }) => {
                             <div
                                 key={event.id}
                                 className={`absolute left-[10px] right-[10px] rounded-lg px-3 flex items-center shadow-sm max-md:flex-col max-md:items-start max-md:p-3 ${getEventBackground(
-                                    event.type
+                                    event.type,
                                 )}`}
                                 style={getEventStyle(event)}
                             >
@@ -172,12 +179,12 @@ const Calendar = ({ events }) => {
                                 <div className="flex gap-2 max-md:w-full max-md:flex-col">
                                     <Button
                                         type="primary"
-                                        className="bg-[#1890ff] border-[#1890ff]"
+                                        className="bg-[#1890ff] border-none rounded-lg h-9 font-bold text-[11px] uppercase tracking-wider shadow-sm hover:shadow-md transition-all"
                                         disabled={event.endTime < currentTime}
                                     >
                                         Add Remarks
                                     </Button>
-                                    <Button className="bg-white border-[#d9d9d9]">
+                                    <Button className="bg-white border-gray-200 rounded-lg h-9 font-bold text-[11px] uppercase tracking-wider shadow-sm hover:shadow-md transition-all text-gray-500">
                                         Reschedule
                                     </Button>
                                 </div>

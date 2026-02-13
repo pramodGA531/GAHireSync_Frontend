@@ -14,7 +14,6 @@ const Tickets = () => {
     const { userData } = useAuth();
 
     useEffect(() => {
-        console.log(userData, " is the user data")
         if (userData != null) {
             const user = userData
             if (user?.role) {

@@ -168,14 +168,6 @@ const ViewResume = ({ id, onClose }) => {
                                 </div>
                             </div>
 
-                            {data.other_details && (
-                                <div className="flex flex-wrap gap-2.5 mt-[5px] pb-2.5 mb-2.5 border-b border-[#54666929]">
-                                    <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
-                                        Other Details: {data.other_details}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Primary Skills */}
                             <div className="mb-2.5 border-b border-[#54666929]">
                                 <div className="font-bold mb-2">
@@ -233,6 +225,20 @@ const ViewResume = ({ id, onClose }) => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Recruiter Feedback */}
+                            {data.other_details && (
+                                <div className="mb-2.5 border-b border-[#54666929]">
+                                    <div className="font-bold mb-2">
+                                        Recruiter Feedback
+                                    </div>
+                                    <div className="flex flex-wrap gap-2.5 mt-[5px] pb-2.5 mb-2.5">
+                                        <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                            {data.other_details}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Action Buttons */}
                             <div className="mt-auto pt-4">

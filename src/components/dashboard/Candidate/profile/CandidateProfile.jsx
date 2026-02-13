@@ -35,15 +35,16 @@ const CandidateProfile = () => {
     ];
     return (
         <Main defaultSelectedKey="4">
-            <div className="mt-4 -mb-6 -ml-2"><GoBack />
-                </div>
+            {/* <div className="mt-4 -mb-6 -ml-2"><GoBack /> */}
+                {/* </div> */}
             <ProfileCard></ProfileCard>
-
+<div className="m-4">
             <Tabs
-                className="mt-[15px] pl-[15px]"
+                className="pl-[15px] m-2"
                 defaultSelectedKey="1"
                 items={items}
             ></Tabs>
+            </div>
         </Main>
     );
 };

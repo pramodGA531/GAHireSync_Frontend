@@ -111,6 +111,7 @@ import ClientInterviewers from "./components/dashboard/client/Interviewers/Inter
 import TermsApprovals from "./components/dashboard/client/Approvals/TermsApprovals";
 import TandCClient from "./components/dashboard/client/Approvals/TandCClient";
 import Manager from "./components/dashboard/Manager/Manager";
+import ReplacementApproval from "./components/dashboard/Manager/JobPost/ReplacementApproval";
 import NotApprovedJobs from "./components/dashboard/Manager/JobPost/NotApprovedJobs";
 import ClosedHoldJobs from "./components/dashboard/Manager/JobPost/ClosedHoldJobs";
 import NotAssignedJobs from "./components/dashboard/Manager/JobPost/NotAssignedJobs";
@@ -122,6 +123,7 @@ import CompleteJobPostRecruiter from "./components/dashboard/Recruiter/CompleteJ
 import ReplacementsRecruiter from "./components/dashboard/Recruiter/RequestedReplacements/Replacements";
 import Footer from "./components/LandingPage/Footer";
 import JobEditRequests from "./components/dashboard/client/Approvals/JobEditRequests";
+// import CompleteJobPosts from "./components/dashboard/manager/jobpost/CompleteJobPosts";
 const App = () => {
     const now = new Date();
     const launchDate = new Date(2025, 2, 30, 10, 0, 0);
@@ -153,7 +155,7 @@ const App = () => {
                 <Route path="/agency/signup" element={<AgencySignUp />} />
                 <Route path="/welcome" element={<LandingHome />} />
                 <Route path="/coming-soon" element={<ComingSoon />} />
-                <Route path="/about-us" element={<AboutUs />} />f
+                <Route path="/about-us" element={<AboutUs />} />
                 <Route path="/server-down" element={<ServerDownPage />} />
                 <Route path="/job-board" element={<JobBoard />} />
                 <Route
@@ -308,6 +310,7 @@ const App = () => {
                         element={<AllInvoicesorg />}
                     />
                     <Route path="/agency/jobs" element={<JobPosts />} />
+                    {/* <Route path="/agency/job-posts" element={<CompleteJobPosts />} /> */}
                     <Route
                         path="/agency/jobs/not-approved"
                         element={<NotApprovedJobs />}
@@ -319,6 +322,10 @@ const App = () => {
                     <Route
                         path="/agency/jobs/closed-hold"
                         element={<ClosedHoldJobs />}
+                    />
+                    <Route
+                        path="/agency/replacement-approvals"
+                        element={<ReplacementApproval />}
                     />
                     <Route
                         path="/agency/jobs/analytics"
@@ -347,7 +354,12 @@ const App = () => {
                     />
                     <Route
                         path="/agency/negotiations/edited-jobs"
-                        element={<EditedJobs />}
+                        element={
+                            <JobPosts
+                                defaultTab="edit_requests"
+                                hideTabs={true}
+                            />
+                        }
                     />
                     <Route
                         path="/agency/recruiters"

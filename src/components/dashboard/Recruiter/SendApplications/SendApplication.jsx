@@ -306,57 +306,56 @@ const SendApplication = () => {
 
     return (
         <Main defaultSelectedKey={2} defaultSelectedChildKey="2-1">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-12">
-                <div className="max-w-[1600px] mx-auto">
-                    {/* Header Bridge */}
-                    <div className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
-                        <div className="space-y-4">
-                            <Breadcrumb
-                                separator={
-                                    <span className="text-gray-300">/</span>
-                                }
-                                items={[
-                                    {
-                                        title: (
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                                Assigned Jobs
-                                            </span>
-                                        ),
-                                        href: "/recruiter/postings/opened",
-                                    },
-                                    {
-                                        title: (
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#1681FF]">
-                                                Send Profile
-                                            </span>
-                                        ),
-                                    },
-                                ]}
-                            />
-                        </div>
+                <div className="max-w-[1600px] mx-auto space-y-8">
+                    {/* Header Section */}
+                    <div className="flex flex-row items-center justify-between gap-6">
+                        <Breadcrumb
+                            items={[
+                                {
+                                    title: (
+                                        <span
+                                            onClick={() => navigate(-1)}
+                                            className="text-gray-400 text-sm cursor-pointer hover:underline"
+                                        >
+                                            Assigned Jobs
+                                        </span>
+                                    ),
+                                },
+                                {
+                                    title: (
+                                        <span className="text-gray-800 text-sm font-medium">
+                                            Send Profile
+                                        </span>
+                                    ),
+                                },
+                            ]}
+                        />
 
-                        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex items-center gap-6 min-w-full md:min-w-[300px]">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <SolutionOutlined className="text-xl" />
-                            </div>
-                            <div>
-                                <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none mb-1">
-                                    Target Spec
-                                </p>
-                                <p className="text-[#071C50] font-black text-sm max-w-[180px] truncate">
-                                    {job?.job_title || "N/A"}
-                                </p>
-                                <Button
-                                    type="text"
-                                    icon={<EyeOutlined />}
-                                    onClick={() => setJobModalVisible(true)}
-                                    className="p-0 h-auto text-[#1681FF] text-[10px] font-black uppercase tracking-widest hover:text-blue-700"
-                                >
-                                    View Full JD
-                                </Button>
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex items-center gap-6 w-full md:w-auto md:min-w-[400px]">
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <SolutionOutlined className="text-xl" />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none mb-1">
+                                        Target Spec
+                                    </p>
+                                    <p className="text-[#071C50] font-black text-sm max-w-[250px] truncate">
+                                        {job?.job_title || "N/A"}
+                                    </p>
+                                    <Button
+                                        type="text"
+                                        icon={<EyeOutlined />}
+                                        onClick={() => setJobModalVisible(true)}
+                                        className="p-0 h-auto text-[#1681FF] text-[10px] font-black uppercase tracking-widest hover:text-blue-700"
+                                    >
+                                        View Full JD
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>

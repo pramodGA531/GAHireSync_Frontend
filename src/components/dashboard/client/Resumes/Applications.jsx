@@ -1,48 +1,42 @@
-import {
-    SearchOutlined,
-    SortAscendingOutlined,
-    SortDescendingOutlined,
-} from "@ant-design/icons";
-import { Button, Input, Pagination } from "antd";
 import React, { useEffect, useState } from "react";
+import { Button, message, Select } from "antd"; // Added Select
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../common/useAuth";
 import Main from "../Layout";
 // import "./Applications.css";
-import Pageloading from "../../../common/loading/Pageloading";
-import GoBack from "../../../common/Goback"
+// import Pageloading from "../../../common/loading/Pageloading";
+// import GoBack from "../../../common/Goback"
+import AppTable from "../../../common/AppTable";
+
 const apiurl = import.meta.env.VITE_BACKEND_URL;
+const { Option } = Select;
 
 const Applications = () => {
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [total, setTotal] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize] = useState(10);
-    const [sortOrder, setSortOrder] = useState("asc");
-    const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
     const { token } = useAuth();
+    const [locationFilter, setLocationFilter] = useState("All");
 
-    const getData = async (page = 1) => {
+    const getData = async () => {
         setLoading(true);
         try {
+            // Fetching all data for client-side pagination/filtering in AppTable
             const response = await fetch(
-                `${apiurl}/client/get-resumes/?page=${page}&page_size=${pageSize}`,
+                `${apiurl}/client/get-resumes/?page_size=1000`,
                 {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const result = await response.json();
-            setData(result.results);
-            setFilteredData(result.results);
-            setTotal(result.count);
+            // Assuming result.results contains the array if paginated, or result if list
+            setData(result.results || result);
         } catch (error) {
             console.error("Failed to fetch data:", error);
+            message.error("Failed to fetch applications.");
         } finally {
             setLoading(false);
         }
@@ -50,7 +44,7 @@ const Applications = () => {
 
     const updateState = async () => {
         try {
-            setLoading(true);
+            // setLoading(true); // Don't block UI for this background update
             const response = await fetch(
                 `${apiurl}/update-notification-seen/`,
                 {
@@ -62,7 +56,7 @@ const Applications = () => {
                     body: JSON.stringify({
                         category: "send_application",
                     }),
-                }
+                },
             );
             const data = response.json();
             if (data.error) {
@@ -70,176 +64,95 @@ const Applications = () => {
             }
         } catch (e) {
             console.log(e);
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
         if (token) {
-            getData(currentPage);
+            getData();
             updateState();
         }
-    }, [token, currentPage]);
+    }, [token]);
 
     const handleResumes = (id) => {
         navigate(`/client/get-resumes/${id}`);
     };
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
+    const columns = [
+        {
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
+        },
+        {
+            header: "Organization",
+            accessorKey: "organization",
+            cell: ({ getValue }) => getValue() || "N/A",
+            searchField: true,
+        },
+        {
+            header: "Num Of Positions",
+            accessorKey: "num_of_postings",
+        },
+        {
+            header: "Location Status",
+            accessorKey: "location_status",
+            searchField: true,
+        },
+        {
+            header: "Last Date to Submit",
+            accessorKey: "last_date",
+            dateFilter: true, // Enable date filter
+        },
+        {
+            header: "Applications Received",
+            accessorKey: "applications_sent",
+        },
+        {
+            header: "View Resume",
+            id: "view_resume",
+            cell: ({ row }) => (
+                <button
+                    className="px-2.5 py-[2px] bg-[#1681FF0D] text-[#1681FF] border-none h-10 rounded-[10px] cursor-pointer transition-colors duration-300 text-sm hover:bg-[#40a9ff] hover:text-white"
+                    onClick={() => handleResumes(row.original.job_id)}
+                >
+                    View Resumes
+                </button>
+            ),
+        },
+    ];
 
-    const handleSort = () => {
-        const sorted = [...filteredData].sort((a, b) => {
-            const dateA = new Date(a.last_date);
-            const dateB = new Date(b.last_date);
-            return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-        });
-        setFilteredData(sorted);
-        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    };
-
-    const handleSearch = (e) => {
-        const value = e.target.value.toLowerCase();
-        setSearchTerm(value);
-        const filtered = data.filter(
-            (job) =>
-                job.job_title.toLowerCase().includes(value) ||
-                (job.organization &&
-                    job.organization.toLowerCase().includes(value))
+    // Filter data based on location_status
+    const filteredData = (data || []).filter((item) => {
+        if (locationFilter === "All") return true;
+        return (
+            item.location_status?.toLowerCase() === locationFilter.toLowerCase()
         );
-        setFilteredData(filtered);
-    };
+    });
 
     return (
         <Main defaultSelectedKey="3">
-            {loading ? (
-                <Pageloading />
-            ) : (
-                <div className="p-5">
-                    <div className="-ml-6 -mt-1"><GoBack /></div>
-                    
-                    <div className="flex justify-between items-center mb-5">
-                        <div className="w-[40%] bg-white p-0 m-0">
-                            <Input
-                                placeholder="Search Jobs"
-                                prefix={<SearchOutlined />}
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                className="w-full"
-                            />
-                        </div>
-                        <div className="p-0 m-0">
-                            <Button
-                                icon={
-                                    sortOrder === "asc" ? (
-                                        <SortAscendingOutlined />
-                                    ) : (
-                                        <SortDescendingOutlined />
-                                    )
-                                }
-                                onClick={handleSort}
-                                className="bg-white border hover:border-blue-500 hover:text-blue-500"
-                            >
-                                Sort by Last Date
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto mt-5">
-                        {loading ? (
-                            <div className="text-center p-5 text-[#565E6C] text-base font-medium">
-                                Loading data...
-                            </div>
-                        ) : filteredData?.length > 0 ? (
-                            <>
-                                <table className="w-full min-w-[800px] mt-5 border-collapse">
-                                    <thead className="bg-[#FAFAFB] border-y border-[#F3F4F6]">
-                                        <tr>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Job Title
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Organization
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Num Of Positions
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Location Status
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Last Date to Submit
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                Applications Received
-                                            </th>
-                                            <th className="p-4 text-left font-semibold text-sm text-[#565E6C]">
-                                                View Resume
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredData.map((job) => (
-                                            <tr
-                                                key={job.job_id}
-                                                className="hover:bg-[#f9f9f9] transition-colors duration-300"
-                                            >
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.job_title}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.organization || "N/A"}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.num_of_postings}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.location_status}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.last_date}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    {job.applications_sent}
-                                                </td>
-                                                <td className="p-[10px_16px] border-b border-[#eee] text-[#171A1F] text-sm font-normal whitespace-nowrap">
-                                                    <button
-                                                        className="px-2.5 py-[2px] bg-[#1681FF0D] text-[#1681FF] border-none h-10 rounded-[10px] cursor-pointer transition-colors duration-300 text-sm hover:bg-[#40a9ff] hover:text-white"
-                                                        onClick={() =>
-                                                            handleResumes(
-                                                                job.job_id
-                                                            )
-                                                        }
-                                                    >
-                                                        View Resumes
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                <Pagination
-                                    current={currentPage}
-                                    pageSize={pageSize}
-                                    total={total}
-                                    onChange={handlePageChange}
-                                    style={{
-                                        marginTop: 20,
-                                        textAlign: "center",
-                                    }}
-                                />
-                            </>
-                        ) : (
-                            <div className="p-5 text-center text-[#565E6C] text-base font-medium">
-                                There are no applications
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            <div className="p-5">
+                {/* <div className="-ml-6 -mt-1"><GoBack /></div> */}
+                <AppTable
+                    columns={columns}
+                    data={filteredData}
+                    isLoading={loading}
+                    customFilters={
+                        <Select
+                            defaultValue="All"
+                            style={{ width: 170 }}
+                            onChange={(value) => setLocationFilter(value)}
+                            className="custom-filter-select"
+                        >
+                            <Option value="All">All Locations</Option>
+                            <Option value="Remote">Remote</Option>
+                            <Option value="Hybird">Hybrid</Option>
+                            <Option value="On-Site">On-Site</Option>
+                        </Select>
+                    }
+                />
+            </div>
         </Main>
     );
 };

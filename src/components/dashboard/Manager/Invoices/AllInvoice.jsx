@@ -215,9 +215,9 @@ const AllInvoices = () => {
                 <Pageloading />
             ) : (
                 <>
-                    <div className="-ml-1 mt-4">
+                    {/* <div className="-ml-1 mt-4">
                         <GoBack />
-                    </div>
+                    </div> */}
                     {accountants?.length > 0 ? (
                         <Table
                             dataSource={accountants}

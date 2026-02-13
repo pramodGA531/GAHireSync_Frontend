@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../common/useAuth";
 import {
     message,
@@ -10,6 +10,7 @@ import {
     Tag,
     Tooltip,
     Divider,
+    Select,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -45,6 +46,7 @@ const ApplicationsToSchedule = () => {
     const [data, setData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [btnLoading, setBtnLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
     const navigate = useNavigate();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -56,7 +58,7 @@ const ApplicationsToSchedule = () => {
                 `${apiurl}/recruiter/schedule_interview/pending_application/`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) message.error(result.error);
@@ -97,7 +99,7 @@ const ApplicationsToSchedule = () => {
                 `${apiurl}/recruiter/schedule_interview/pending_application/?application_id=${application_id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
             if (result.error) message.error(result.error);
@@ -131,7 +133,7 @@ const ApplicationsToSchedule = () => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify(payload),
-                }
+                },
             );
 
             if (response.ok) {
@@ -149,6 +151,33 @@ const ApplicationsToSchedule = () => {
         }
     };
 
+    const filteredData = useMemo(() => {
+        let result = data;
+
+        // Apply Status filter
+        if (statusFilter !== "All") {
+            result = result.filter(
+                (item) => item.location_status === statusFilter,
+            );
+        }
+
+        return result;
+    }, [data, statusFilter]);
+
+    const customFilters = (
+        <Select
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+                { label: "All Status", value: "All" },
+                { label: "Opened", value: "opened" },
+                { label: "Closed", value: "closed" },
+            ]}
+            style={{ width: 150 }}
+            placeholder="Select Status"
+        />
+    );
+
     const columns = [
         {
             accessorKey: "job_title",
@@ -161,7 +190,7 @@ const ApplicationsToSchedule = () => {
                     className="flex flex-col gap-1 cursor-pointer group"
                     onClick={() =>
                         navigate(
-                            `/recruiter/complete_job_post/${row.original.job_id}`
+                            `/recruiter/complete_job_post/${row.original.job_id}`,
                         )
                     }
                 >
@@ -267,13 +296,13 @@ const ApplicationsToSchedule = () => {
                     {/* Header Section */}
                     <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <div className="-ml-8">
+                            {/* <div className="-ml-8">
                                 <GoBack />
-                                </div>
-                            <h1 className="text-3xl font-black text-[#071C50] tracking-tight mb-2 uppercase">
+                                </div> */}
+                            <h1 className="text-3xl font-black text-[#071C50] ">
                                 New Applications
                             </h1>
-                            <p className="text-sm text-gray-400 font-bold uppercase tracking-[0.2em]">
+                            <p className="text-sm text-gray-400 font-bold">
                                 Schedule interviews for new applications
                             </p>
                         </div>
@@ -300,14 +329,15 @@ const ApplicationsToSchedule = () => {
                             <Pageloading />
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6">
-                            <AppTable
-                                data={data}
-                                columns={columns}
-                                multiSelect={false}
-                                pageSize={15}
-                            />
-                        </div>
+                        // <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6">
+                        <AppTable
+                            data={filteredData}
+                            columns={columns}
+                            multiSelect={false}
+                            pageSize={15}
+                            customFilters={customFilters}
+                        />
+                        // </d iv>
                     )}
 
                     <Modal
@@ -541,7 +571,7 @@ const ApplicationsToSchedule = () => {
                                                         startDate={yesterday}
                                                         onChange={(date) =>
                                                             setSelectedDate(
-                                                                date
+                                                                date,
                                                             )
                                                         }
                                                     />
@@ -583,16 +613,16 @@ const ApplicationsToSchedule = () => {
                                                             {
                                                                 validator: (
                                                                     _,
-                                                                    v
+                                                                    v,
                                                                 ) =>
                                                                     fromTime &&
                                                                     v &&
                                                                     v.isAfter(
-                                                                        fromTime
+                                                                        fromTime,
                                                                     )
                                                                         ? Promise.resolve()
                                                                         : Promise.reject(
-                                                                              "Exit must follow entry"
+                                                                              "Exit must follow entry",
                                                                           ),
                                                             },
                                                         ]}

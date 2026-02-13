@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useAuth } from "../../../common/useAuth";
-import { Form, Input, Select, Button, Checkbox, message } from "antd";
+import {
+    Form,
+    Input,
+    Select,
+    Button,
+    Checkbox,
+    message,
+    Breadcrumb,
+} from "antd";
 
 import Main from "../Layout";
 import ReactQuill from "react-quill";
@@ -323,13 +331,38 @@ const EditJob = () => {
 
     return (
         <Main defaultSelectedKey="2" className="no-overflow">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             {loading ? (
                 <Pageloading />
             ) : (
-                <div classname="m-8">
+                <div className="m-4">
+                    <div className="mb-4">
+                        <Breadcrumb
+                            items={[
+                                {
+                                    title: (
+                                        <Link to="/client/mypostings">
+                                            My Job Posts
+                                        </Link>
+                                    ),
+                                },
+                                {
+                                    title: (
+                                        <Link
+                                            to={`/client/complete_job_post/${id}`}
+                                        >
+                                            Job Details
+                                        </Link>
+                                    ),
+                                },
+                                {
+                                    title: "Edit Job",
+                                },
+                            ]}
+                        />
+                    </div>
                     <div className="text-[#171A1F] text-[20px] font-semibold">
                         Edit job post :{" "}
                         <span className="text-blue-500">
@@ -1115,14 +1148,14 @@ const EditJob = () => {
                                             });
                                         }}
                                     />
-                                    <span
+                                    {/* <span
                                         style={{
                                             width: "10%",
                                             textAlign: "center",
                                         }}
                                     >
                                         -
-                                    </span>
+                                    </span> */}
                                     <Input
                                         style={{ width: "20%" }}
                                         type="number"

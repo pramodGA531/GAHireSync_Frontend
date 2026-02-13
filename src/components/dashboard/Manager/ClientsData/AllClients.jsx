@@ -57,7 +57,7 @@ const AllClients = () => {
             cell: ({ row }) =>
                 row.getValue("negotiation_requested_on")
                     ? new Date(
-                          row.getValue("negotiation_requested_on")
+                          row.getValue("negotiation_requested_on"),
                       ).toLocaleString()
                     : "-",
         },
@@ -69,7 +69,7 @@ const AllClients = () => {
             cell: ({ row }) =>
                 row.getValue("negotiation_accepted_on")
                     ? new Date(
-                          row.getValue("negotiation_accepted_on")
+                          row.getValue("negotiation_accepted_on"),
                       ).toLocaleString()
                     : "-",
         },
@@ -143,7 +143,7 @@ const AllClients = () => {
                             "Content-Type": "application/json",
                             Authorization: `Bearer ${token}`,
                         },
-                    }
+                    },
                 );
 
                 if (!response.ok) {
@@ -175,7 +175,7 @@ const AllClients = () => {
                         request_id: rejectId,
                         reason: rejectionReason,
                     }),
-                }
+                },
             );
 
             const data = await res.json();
@@ -192,7 +192,7 @@ const AllClients = () => {
                             "Content-Type": "application/json",
                             Authorization: `Bearer ${token}`,
                         },
-                    }
+                    },
                 );
                 const newData = await response.json();
                 setConnectionRequests(newData.connection_requests);
@@ -212,9 +212,9 @@ const AllClients = () => {
 
     return (
         <Main defaultSelectedKey="5">
-            <div className="-ml-2 mt-4">
+            {/* <div className="-ml-2 mt-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[15px] mt-6 px-4">
                 {connectionRequests.map((item, index) => (
                     <div
@@ -307,15 +307,18 @@ const AllClients = () => {
                         </p>
                         <p>
                             <strong>Service Fee:</strong>{" "}
-                            {selectedNegotiation.service_fee}
+                            {selectedNegotiation.service_fee_type ===
+                            "percentage"
+                                ? `${selectedNegotiation.service_fee}%`
+                                : `₹${selectedNegotiation.service_fee}`}
                         </p>
                         <p>
                             <strong>Replacement Clause:</strong>{" "}
-                            {selectedNegotiation.replacement_clause}
+                            {selectedNegotiation.replacement_clause} Days
                         </p>
                         <p>
-                            <strong>Interest %:</strong>{" "}
-                            {selectedNegotiation.interest_percentage}
+                            <strong>Interest:</strong>{" "}
+                            {selectedNegotiation.interest_percentage}%
                         </p>
                         <p>
                             <strong>Invoice After:</strong>{" "}

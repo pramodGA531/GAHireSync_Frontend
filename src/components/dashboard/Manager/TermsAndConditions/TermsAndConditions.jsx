@@ -29,7 +29,7 @@ const OrganizationTerms = () => {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             if (!response.ok)
                 throw new Error("Failed to fetch organization terms");
@@ -56,7 +56,13 @@ const OrganizationTerms = () => {
             title: "Service Fee",
             dataIndex: "service_fee",
             key: "service_fee",
-            render: (text) => <span className="font-bold">{text}%</span>,
+            render: (text, record) => (
+                <span className="font-bold">
+                    {record.service_fee_type === "percentage"
+                        ? `${text}%`
+                        : `₹${text}`}
+                </span>
+            ),
         },
         {
             title: "Invoice After",
@@ -147,7 +153,7 @@ const OrganizationTerms = () => {
                                                     <CalendarOutlined />{" "}
                                                     Connected on{" "}
                                                     {new Date(
-                                                        client.created_at
+                                                        client.created_at,
                                                     ).toLocaleDateString()}
                                                 </span>
                                             </div>

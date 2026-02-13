@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Main from "../Layout";
-import { Table, Input, Button, Dropdown, Menu } from "antd";
+import { Table, Input, Button, Dropdown, Menu, Breadcrumb } from "antd";
 // import AllClients from "./AllClients";
 import { useAuth } from "../../../common/useAuth";
 import {
@@ -14,76 +14,82 @@ import {
     SyncOutlined,
 } from "@ant-design/icons";
 // import "./ClientData.css";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
 
 const ClientData = () => {
     const [searchText, setSearchText] = useState("");
     const { apiurl, token } = useAuth();
     const [clientData, setClientData] = useState(null);
     const [jobs, setJobs] = useState([]);
-
+    const [terms, setTerms] = useState([]);
+    const [stats, setStats] = useState(null);
+    const [communications, setCommunications] = useState([]);
     const { id } = useParams();
-
-    const statsData = [
-        {
-            icon: <UserOutlined />,
-            title: "Total Job Supports",
-            value: "800+",
-            date: "14-05-2025",
-        },
-        {
-            icon: <CheckOutlined />,
-            title: "No. Of Completed",
-            value: "800+",
-            date: "14-05-2025",
-        },
-        {
-            icon: <SyncOutlined />,
-            title: "No. Of Replacements",
-            value: "800+",
-            date: "14-05-2025",
-        },
-        {
-            icon: <HeartOutlined />,
-            title: "Client Satisfaction",
-            value: "80%",
-            date: "14-05-2025",
-        },
-    ];
 
     const formatData = (date) => {
         const newDate = new Date(date);
         return newDate.toLocaleDateString();
     };
 
+    const formatDateWithTime = (date) => {
+        if (!date) return "";
+        const newDate = new Date(date);
+        return newDate.toLocaleString();
+    };
+
+    const statsData = [
+        {
+            icon: <UserOutlined />,
+            title: "Total Job Supports",
+            value: stats?.total_openings || 0,
+            date: formatData(new Date()),
+        },
+        {
+            icon: <CheckOutlined />,
+            title: "No. Of Completed",
+            value: stats?.total_joined || 0,
+            date: formatData(new Date()),
+        },
+        {
+            icon: <SyncOutlined />,
+            title: "No. Of Replacements",
+            value: stats?.total_replaced || 0,
+            date: formatData(new Date()),
+        },
+        {
+            icon: <HeartOutlined />,
+            title: "Client Satisfaction",
+            value: `${stats?.satisfaction || 0}%`,
+            date: formatData(new Date()),
+        },
+    ];
+
     // Table columns
     const columns = [
-        { title: "Role", dataIndex: "job_title", key: "job_title" },
-        { title: "No. of openings", dataIndex: "openings", key: "openings" },
-        { title: "No. of completed", dataIndex: "joined", key: "joined" },
-        { title: "No. of Pending", dataIndex: "pending", key: "pending" },
+        { header: "Role", accessorKey: "job_title", searchField: true },
+        { header: "No. of openings", accessorKey: "openings" },
+        { header: "Joined On", accessorKey: "joined_at" },
+        { header: "No. of Pending", accessorKey: "pending" },
         {
-            title: "No. of Processing",
-            dataIndex: "processing",
-            key: "processing",
+            header: "No. of Processing",
+            accessorKey: "processing",
         },
         {
-            title: "Candidates Selected",
-            dataIndex: "selected",
-            key: "selected",
+            header: "Candidates Selected",
+            accessorKey: "selected",
         },
         {
-            title: "Candidates Rejected",
-            dataIndex: "rejected",
-            key: "rejected",
+            header: "Candidates Rejected",
+            accessorKey: "rejected",
         },
         {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status) => {
-                const isProcessing = status.toLowerCase() === "processing";
+            header: "Status",
+            accessorKey: "status",
+            cell: ({ getValue }) => {
+                const status = getValue();
+                const isProcessing = status?.toLowerCase() === "processing";
                 return (
                     <span
                         className={`px-2 py-1 rounded text-xs ${
@@ -98,6 +104,83 @@ const ClientData = () => {
             },
         },
     ];
+    const communicationColumns = [
+        { header: "Type", accessorKey: "type" },
+        { header: "Event", accessorKey: "subject" },
+        { header: "Message", accessorKey: "message" },
+        {
+            header: "Date & Time",
+            accessorKey: "timestamp",
+            cell: (info) => formatDateWithTime(info.getValue()),
+        },
+        { header: "Sender", accessorKey: "sender" },
+    ];
+
+    // Terms Table columns
+    const termColumns = [
+        { header: "CTC Range", accessorKey: "ctc_range", key: "ctc_range" },
+        {
+            header: "Service Fee",
+            accessorKey: "service_fee",
+            key: "service_fee",
+            cell: ({ row }) => {
+                const record = row.original;
+                const fee = record.service_fee;
+                return record.service_fee_type === "percentage"
+                    ? `${fee}%`
+                    : `₹${fee}`;
+            },
+        },
+        {
+            header: "Replacement Clause",
+            accessorKey: "replacement_clause",
+            key: "replacement_clause",
+            cell: ({ getValue }) => `${getValue()} Days`,
+        },
+        {
+            header: "Invoice After",
+            accessorKey: "invoice_after",
+            key: "invoice_after",
+            cell: ({ getValue }) => `${getValue()} Days`,
+        },
+        {
+            header: "Payment Within",
+            accessorKey: "payment_within",
+            key: "payment_within",
+            cell: ({ getValue }) => `${getValue()} Days`,
+        },
+        {
+            header: "Interest",
+            accessorKey: "interest_percentage",
+            key: "interest_percentage",
+            cell: ({ getValue }) => `${getValue()}%`,
+        },
+    ];
+
+    useEffect(() => {
+        const fetchTerms = async () => {
+            try {
+                const response = await fetch(
+                    `${apiurl}/agency/terms_with_client/?id=${id}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+
+                const data = await response.json();
+                setTerms(data.terms || []);
+            } catch (error) {
+                console.error("Error fetching terms:", error);
+                setTerms([]);
+            }
+        };
+
+        fetchTerms();
+    }, [id, token]);
 
     // Filter menu
     const menu = (
@@ -126,6 +209,7 @@ const ClientData = () => {
                 .then((data) => {
                     setClientData(data?.client_data);
                     setJobs(data?.jobs_data);
+                    setStats(data?.stats);
                 })
                 .catch((error) => {
                     console.error("Error fetching client data:", error);
@@ -133,14 +217,56 @@ const ClientData = () => {
         }
     }, [id]);
 
+    useEffect(() => {
+        if (id) {
+            fetch(`${apiurl}/manager/client-communications/?client_id=${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    setCommunications(data?.events || []);
+                })
+                .catch((error) => {
+                    console.error("Error fetching communications:", error);
+                });
+        }
+    }, [id, apiurl, token]);
+
     return (
         <Main defaultSelectedKey="5">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
+            </div> */}
+            <div className="mx-6 mt-4">
+                <Breadcrumb
+                    items={[
+                        {
+                            title: (
+                                <Link
+                                    to="/agency/allclients"
+                                    className="text-gray-400 text-sm"
+                                >
+                                    All Clients
+                                </Link>
+                            ),
+                        },
+                        {
+                            title: (
+                                <span className="text-gray-800 text-sm font-medium">
+                                    Client Details
+                                </span>
+                            ),
+                        },
+                    ]}
+                />
             </div>
             <div className="p-5">
                 <div className="flex flex-col lg:flex-row gap-5">
-                    <div className="flex-1 flex flex-col gap-5">
+                    <div className="flex-1 min-w-0 flex flex-col gap-5">
                         {/* Client Information Card */}
                         <div className="bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.1)] p-5 border border-[#E8E8E8]">
                             <div className="flex justify-between items-center mb-5">
@@ -166,7 +292,7 @@ const ClientData = () => {
                                         Designation
                                     </h3>
                                     <p className="text-sm text-[#333] m-0">
-                                        HR
+                                        {clientData?.designation}
                                     </p>
                                 </div>
                                 <div className="basis-full sm:basis-1/2 md:basis-1/3 mb-[15px]">
@@ -190,7 +316,7 @@ const ClientData = () => {
                                         Company pan
                                     </h3>
                                     <p className="text-sm text-[#333] m-0">
-                                        "NO PAN "
+                                        {clientData?.pan}
                                     </p>
                                 </div>
                                 <div className="basis-full sm:basis-1/2 md:basis-1/3 mb-[15px]">
@@ -218,28 +344,42 @@ const ClientData = () => {
                                     Client Information
                                 </h2>
                             </div>
-                            <div className="flex flex-col sm:flex-row justify-between mb-[15px] gap-2.5">
-                                <Input
-                                    placeholder="Search"
-                                    prefix={<SearchOutlined />}
-                                    value={searchText}
-                                    onChange={(e) =>
-                                        setSearchText(e.target.value)
-                                    }
-                                    className="w-full sm:w-[300px]"
-                                />
-                                <Dropdown overlay={menu}>
-                                    <Button className="flex items-center">
-                                        Filters <DownOutlined />
-                                    </Button>
-                                </Dropdown>
-                            </div>
-                            <Table
-                                dataSource={jobs}
+                            <AppTable
+                                data={jobs}
                                 columns={columns}
                                 pagination={false}
                                 className="w-full"
                             />
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.1)] p-5 border border-[#E8E8E8]">
+                            <div className="text-2xl font-bold">
+                                Terms Agreed
+                            </div>
+                            <div className="m-2">
+                                <AppTable
+                                    columns={termColumns}
+                                    data={terms}
+                                    pagination={false}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.1)] p-5 border border-[#E8E8E8]">
+                            <div className="text-2xl font-bold mb-4 uppercase text-[#003366]">
+                                History & Communications
+                            </div>
+                            <div className="m-2">
+                                <AppTable
+                                    columns={communicationColumns}
+                                    data={communications}
+                                    pagination={true}
+                                    pageSize={10}
+                                    className="w-full"
+                                    maxHeight="400px"
+                                />
+                            </div>
                         </div>
                     </div>
 

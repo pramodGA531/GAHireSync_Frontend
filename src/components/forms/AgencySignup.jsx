@@ -369,8 +369,7 @@ const AgencySignUp = () => {
                                                     <InfoCircleOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" />
                                                 </Tooltip>
                                             </div>
-                                        ) : 
-                                        // field.name === "org_code" ? (
+                                        ) : // field.name === "org_code" ? (
                                         //     <div className="relative w-full">
                                         //         <input
                                         //             name={field.name}
@@ -392,7 +391,7 @@ const AgencySignUp = () => {
                                         //         </Tooltip>
                                         //     </div>
                                         // ) :
-                                         field.name === "password" ? (
+                                        field.name === "password" ? (
                                             <div className="w-full rounded-[10px] border border-[#A2A1A866] p-3.5 flex items-center justify-between mt-2.5">
                                                 <input
                                                     name={field.name}

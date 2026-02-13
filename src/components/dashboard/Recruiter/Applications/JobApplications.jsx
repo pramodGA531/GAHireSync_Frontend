@@ -203,9 +203,9 @@ const JobApplications = () => {
                             `/recruiter/complete-application/${row.original.application_id}/${id}`,
                         )
                     }
-                    className="h-10 px-4 rounded-xl bg-[#001744] hover:bg-[#002b7a] font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-50 border-none flex items-center gap-2"
+                    className="h-10 px-2 rounded-xl bg-[#001744] hover:bg-[#002b7a] font-black text-[10px] shadow-lg shadow-blue-50 border-none flex items-center gap-2"
                 >
-                    Complete Profile <EyeOutlined />
+                    Complete Profile
                 </Button>
             ),
         },
@@ -213,9 +213,9 @@ const JobApplications = () => {
 
     return (
         <Main defaultSelectedKey={2} defaultSelectedChildKey="2-1">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
                 <div className="max-w-[1600px] mx-auto">
                     {/* Header Section */}
@@ -225,7 +225,7 @@ const JobApplications = () => {
                                 {
                                     title: (
                                         <span
-                                            className="text-gray-400 font-bold uppercase tracking-tighter text-[10px] cursor-pointer"
+                                            className="text-gray-400 font-bold text-[10px] cursor-pointer"
                                             onClick={() =>
                                                 navigate(
                                                     "/recruiter/postings/opened",
@@ -238,7 +238,7 @@ const JobApplications = () => {
                                 },
                                 {
                                     title: (
-                                        <span className="text-gray-800 font-black uppercase tracking-tighter text-[10px]">
+                                        <span className="text-gray-800 font-black text-[10px]">
                                             Candidate Archive
                                         </span>
                                     ),
@@ -248,12 +248,7 @@ const JobApplications = () => {
                         />
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <Button
-                                    onClick={() => navigate(-1)}
-                                    icon={<ArrowLeftOutlined />}
-                                    shape="circle"
-                                    className="border-none bg-white shadow-sm hover:text-[#1681FF]"
-                                />
+                               
                                 <div>
                                     <h1 className="text-2xl font-bold text-[#071C50]">
                                         Candidate Repository
@@ -301,13 +296,13 @@ const JobApplications = () => {
                             <Pageloading />
                         </div>
                     ) : jobApplications.length > 0 ? (
-                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-4">
+                        // <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-4">
                             <AppTable
                                 columns={columns}
                                 data={jobApplications}
                                 pageSize={15}
                             />
-                        </div>
+                        // </div>
                     ) : (
                         <div className="bg-white rounded-3xl border border-dashed border-gray-200 py-32 flex flex-col items-center justify-center text-center">
                             <Empty

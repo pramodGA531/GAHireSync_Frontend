@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../common/useAuth";
-import { message, Button, Modal, Input, Tag } from "antd";
+import { message, Button, Modal, Input, Tag, Select } from "antd";
 import {
     CheckCircleOutlined,
     CloseCircleOutlined,
@@ -22,6 +22,7 @@ const ReconfirmationCandidates = () => {
     const [rejectFeedback, setRejectFeedback] = useState("");
     const [selectedCandidateId, setSelectedCandidateId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
 
     const fetchData = async () => {
         try {
@@ -30,7 +31,7 @@ const ReconfirmationCandidates = () => {
                 `${apiurl}/recruiter/candidate-selected-jobs/`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
             // console.log(result[0].selected_candidate_id);
@@ -55,13 +56,15 @@ const ReconfirmationCandidates = () => {
                 {
                     method: "POST",
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const result = await response.json();
+            const data = result.ok;
+            // console.log(result.ok)
             if (result.error) message.error(result.error);
             else {
                 message.success(
-                    result.message || "Offer reconfirmed successfully."
+                    result.message || "Offer reconfirmed successfully.",
                 );
                 fetchData();
             }
@@ -90,9 +93,10 @@ const ReconfirmationCandidates = () => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ feedback: rejectFeedback }),
-                }
+                },
             );
             const result = await response.json();
+
             if (result.error) message.error(result.error);
             else {
                 message.success(result.message || "Rejection protocol logged.");
@@ -104,6 +108,33 @@ const ReconfirmationCandidates = () => {
             message.error("System error: Rejection update failed.");
         }
     };
+
+    const filteredData = useMemo(() => {
+        let result = data;
+
+        // Apply Status filter
+        if (statusFilter !== "All") {
+            result = result.filter(
+                (item) => item.candidate_acceptance === statusFilter,
+            );
+        }
+
+        return result;
+    }, [data, statusFilter]);
+
+    const customFilters = (
+        <Select
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+                { label: "All Status", value: "All" },
+                { label: "Accepted", value: "Accepted" },
+                { label: "Pending", value: "Pending" },
+            ]}
+            style={{ width: 150 }}
+            placeholder="Select Status"
+        />
+    );
 
     const columns = [
         {
@@ -196,30 +227,60 @@ const ReconfirmationCandidates = () => {
         },
         {
             header: "Actions",
-            accessorKey: "id",
+            accessorKey: "selected_candidate_id",
             width: 250,
             rightSticky: true,
-            cell: ({ row }) => (
-                <div className="flex gap-3">
-                    <Button
-                        type="primary"
-                        icon={<CheckCircleOutlined />}
-                        onClick={() => handleAccept(row.original.id)}
-                        className="h-10 px-6 rounded-xl bg-green-600 hover:bg-green-700 font-black text-[10px] uppercase tracking-widest border-none shadow-lg shadow-green-50"
-                    >
-                        Confirm
-                    </Button>
+            cell: ({ row }) => {
+                const {
+                    selected_candidate_id,
+                    recruiter_acceptance,
+                    reconfirmed_by_recruiter,
+                } = row.original;
 
-                    <Button
-                        danger
-                        icon={<CloseCircleOutlined />}
-                        onClick={() => openRejectModal(row.original.id)}
-                        className="h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-50"
-                    >
-                        Reject
-                    </Button>
-                </div>
-            ),
+                if (reconfirmed_by_recruiter) {
+                    return (
+                        <Tag
+                            color="success"
+                            className="px-4 py-1.5 bg-white rounded-lg font-black text-[10px] uppercase tracking-widest border-none shadow-sm flex items-center gap-2 w-fit"
+                        >
+                            <CheckCircleOutlined /> Confirmed
+                        </Tag>
+                    );
+                }
+
+                if (recruiter_acceptance === false) {
+                    return (
+                        <Tag
+                            color="error"
+                            className="px-4 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest border-none shadow-sm flex items-center gap-2 w-fit"
+                        >
+                            <CloseCircleOutlined /> Rejected
+                        </Tag>
+                    );
+                }
+
+                return (
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => handleAccept(selected_candidate_id)}
+                            className="h-8 px-4 rounded-xl bg-green-200 border-2 border-green-500 hover:bg-green-300 font-black text-[10px] text-green-600 uppercase tracking-widest shadow-lg shadow-green-50 cursor-pointer flex items-center gap-2"
+                        >
+                            <CheckCircleOutlined className="text-sm" />
+                            Confirm
+                        </button>
+
+                        <button
+                            onClick={() =>
+                                openRejectModal(selected_candidate_id)
+                            }
+                            className="h-8 px-4 rounded-xl border-2 border-red-600 bg-red-200 text-red-600 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-50 hover:bg-red-300 cursor-pointer flex items-center gap-2"
+                        >
+                            <CloseCircleOutlined className="text-sm" />
+                            Reject
+                        </button>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -230,13 +291,13 @@ const ReconfirmationCandidates = () => {
                     {/* Header Section */}
                     <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <div className="-ml-8">
+                            {/* <div className="-ml-8">
                                 <GoBack />
-                            </div>
-                            <h1 className="text-3xl font-black text-[#071C50] tracking-tight mb-2 uppercase">
+                            </div> */}
+                            <h1 className="text-3xl font-black text-[#071C50] ">
                                 Reconfirmations
                             </h1>
-                            <p className="text-sm text-gray-400 font-bold uppercase tracking-[0.2em]">
+                            <p className="text-sm text-gray-400 font-bold ">
                                 Manage candidate employment offer acceptances
                             </p>
                         </div>
@@ -263,13 +324,14 @@ const ReconfirmationCandidates = () => {
                             <Pageloading />
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <AppTable
-                                columns={columns}
-                                data={data}
-                                pageSize={15}
-                            />
-                        </div>
+                        // <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <AppTable
+                            columns={columns}
+                            data={filteredData}
+                            pageSize={15}
+                            customFilters={customFilters}
+                        />
+                        // </div>
                     )}
 
                     <Modal
@@ -311,7 +373,7 @@ const ReconfirmationCandidates = () => {
                                     onClick={() => setIsRejectModalOpen(false)}
                                     className="h-12 px-8 rounded-xl bg-gray-100 text-gray-500 border-none font-black text-[10px] uppercase tracking-widest"
                                 >
-                                    Abort
+                                    Back
                                 </Button>
                                 <Button
                                     danger

@@ -37,7 +37,7 @@ const OrganizationTerms = ({
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
             setOrganizationTerms(data.data);
@@ -53,7 +53,10 @@ const OrganizationTerms = ({
             setLoading(false);
         }
     };
-    const lastTerm = organizationTerms[organizationTerms.length - 1];
+    const lastTerm =
+        organizationTerms?.length > 0
+            ? organizationTerms[organizationTerms.length - 1]
+            : null;
 
     const columns = [
         {
@@ -104,24 +107,22 @@ const OrganizationTerms = ({
     }, [token, connectionId]);
 
     const handleNegotiateTerms = () => {
-    if (organizationTerms && organizationTerms.length > 0) {
-        const lastTerm =
-            organizationTerms[organizationTerms.length - 1];
+        if (organizationTerms && organizationTerms.length > 0) {
+            const lastTerm = organizationTerms[organizationTerms.length - 1];
 
-        form.setFieldsValue({
-            ctc_range: lastTerm.ctc_range,
-            service_fee_type: lastTerm.service_fee_type,
-            service_fee: lastTerm.service_fee,
-            replacement_clause: lastTerm.replacement_clause,
-            invoice_after: lastTerm.invoice_after,
-            payment_within: lastTerm.payment_within,
-            interest_percentage: lastTerm.interest_percentage,
-        });
-    }
+            form.setFieldsValue({
+                ctc_range: lastTerm.ctc_range,
+                service_fee_type: lastTerm.service_fee_type,
+                service_fee: lastTerm.service_fee,
+                replacement_clause: lastTerm.replacement_clause,
+                invoice_after: lastTerm.invoice_after,
+                payment_within: lastTerm.payment_within,
+                interest_percentage: lastTerm.interest_percentage,
+            });
+        }
 
-    setIsNegotiating(true);
-};
-
+        setIsNegotiating(true);
+    };
 
     const handleStartNew = async (values) => {
         try {
@@ -132,7 +133,7 @@ const OrganizationTerms = ({
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
             if (data.error) {
@@ -193,7 +194,7 @@ const OrganizationTerms = ({
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
             if (data.error) {
@@ -217,7 +218,7 @@ const OrganizationTerms = ({
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
             if (data.error) {
@@ -232,10 +233,10 @@ const OrganizationTerms = ({
                 setFormValues(extracted);
 
                 setPrimarySkills(
-                    draft.skill_metrics?.filter((s) => s.is_primary)
+                    draft.skill_metrics?.filter((s) => s.is_primary),
                 );
                 setSecondarySkills(
-                    draft.skill_metrics?.filter((s) => !s.is_primary)
+                    draft.skill_metrics?.filter((s) => !s.is_primary),
                 );
                 setLocationData(draft.locations || []);
                 setTermsData(organizationTerms);
@@ -265,7 +266,7 @@ const OrganizationTerms = ({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify(values),
-                }
+                },
             );
 
             const data = await response.json();
@@ -283,7 +284,7 @@ const OrganizationTerms = ({
     return (
         <div>
             <div>
-                <div className="mt-5">
+                <div className="m-4">
                     <h3 className="text-[#71102F] font-semibold text-base flex gap-2.5 items-center">
                         <img src={Terms} alt="" />
                         Terms and conditions
@@ -350,31 +351,31 @@ const OrganizationTerms = ({
                         >
                             Back{" "}
                         </button>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center ml-4 gap-2.5">
                             <button
                                 disabled={organizationTerms?.some(
-                                    (r) => r.is_negotiated === true
+                                    (r) => r.is_negotiated === true,
                                 )}
                                 style={{
                                     backgroundColor: organizationTerms?.some(
-                                        (r) => r.is_negotiated === true
+                                        (r) => r.is_negotiated === true,
                                     )
                                         ? "#ccc"
                                         : "#fff",
                                     color: organizationTerms?.some(
-                                        (r) => r.is_negotiated === true
+                                        (r) => r.is_negotiated === true,
                                     )
                                         ? "#666"
                                         : "#1681FF",
                                     cursor: organizationTerms?.some(
-                                        (r) => r.is_negotiated === true
+                                        (r) => r.is_negotiated === true,
                                     )
                                         ? "not-allowed"
                                         : "pointer",
                                 }}
                                 className={`border-2 border-[#1681FF] px-[15px] py-[10px] rounded-md h-[40px] flex items-center justify-center font-bold transition-colors ${
                                     !organizationTerms?.some(
-                                        (r) => r.is_negotiated === true
+                                        (r) => r.is_negotiated === true,
                                     )
                                         ? "hover:bg-blue-50"
                                         : ""
@@ -383,8 +384,8 @@ const OrganizationTerms = ({
                             >
                                 Negotiate
                             </button>
-                            <Button
-                                className="h-[40px] rounded-[6px]"
+                            <button
+                                className="h-[40px] rounded-[6px] bg-blue-500 text-white  px-[15px] py-[10px]"
                                 type="primary"
                                 onClick={() => {
                                     setCurrentStep(3);
@@ -393,7 +394,7 @@ const OrganizationTerms = ({
                                 }}
                             >
                                 Agree Terms
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 )}
@@ -424,8 +425,8 @@ const OrganizationTerms = ({
                                         }
                                         return Promise.reject(
                                             new Error(
-                                                "CTC must be in the format like 1-10 LPA"
-                                            )
+                                                "CTC must be in the format like 1-10 LPA",
+                                            ),
                                         );
                                     },
                                 },
@@ -468,8 +469,8 @@ const OrganizationTerms = ({
                                     serviceFeeType === "percentage"
                                         ? "%"
                                         : serviceFeeType === "fixed"
-                                        ? "₹"
-                                        : ""
+                                          ? "₹"
+                                          : ""
                                 }
                             />
                         </Form.Item>

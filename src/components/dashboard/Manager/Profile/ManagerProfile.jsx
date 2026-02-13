@@ -39,9 +39,9 @@ const ManagerProfile = () => {
 
     return (
         <Main>
-            <div className="mt-4 -mb-6 -ml-2">
+            {/* <div className="mt-4 -mb-6 -ml-2">
                 <GoBack />
-            </div>
+            </div> */}
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
                 <div className="mb-8">
                     <ProfileCard />

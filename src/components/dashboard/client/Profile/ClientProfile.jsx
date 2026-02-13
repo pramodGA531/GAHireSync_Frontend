@@ -13,9 +13,9 @@ const ClientProfile = () => {
 
     return (
         <Main>
-            <div className="mt-4 -mb-6 -ml-2">
+            {/* <div className="mt-4 -mb-6 -ml-2">
                 <GoBack />
-            </div>
+            </div> */}
             <ProfileCard />
             <div className="m-2">
                 <Tabs defaultActiveKey="1">

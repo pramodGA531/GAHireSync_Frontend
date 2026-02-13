@@ -41,6 +41,7 @@ export const LoginForm = ({ onToggle }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    // "ngrok-skip-browser-warning": "69420", // Any value works to skip the interstitial
                 },
                 body: JSON.stringify(user),
             });
@@ -102,6 +103,7 @@ export const LoginForm = ({ onToggle }) => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "69420",
                 },
                 body: JSON.stringify({ email: user.email }),
             });

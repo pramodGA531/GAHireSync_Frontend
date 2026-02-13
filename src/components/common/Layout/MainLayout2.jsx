@@ -67,7 +67,7 @@ const MainLayout = ({
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const data = await response.json();
             if (data.count > 0) SetNoteCount(data.count);
@@ -121,7 +121,7 @@ const MainLayout = ({
                     )}
                     onOpenChange={(keys) => {
                         const latestOpenKey = keys.find(
-                            (key) => String(key) !== String(expandedKey)
+                            (key) => String(key) !== String(expandedKey),
                         );
                         setExpandedKey(latestOpenKey || null);
                     }}
@@ -132,38 +132,56 @@ const MainLayout = ({
                         const isParentActive = item.children?.some(
                             (child) =>
                                 String(child.key) ===
-                                String(defaultSelectedChildKey)
+                                String(defaultSelectedChildKey),
                         );
                         const isActive =
                             String(item.key) === String(defaultSelectedKey) &&
-                            !defaultSelectedChildKey;
+                            (!defaultSelectedChildKey ||
+                                defaultSelectedChildKey === "0");
 
                         if (item.children) {
                             return (
                                 <Menu.SubMenu
                                     key={String(item.key)}
                                     icon={
-                                        <img
-                                            src={item.logo}
-                                            alt="icon"
-                                            className="w-5 h-5 opacity-80"
-                                        />
-                                    }
-                                    title={
-                                        <div className="flex items-center justify-between w-full pr-2">
-                                            <span
-                                                className={`text-[13px] font-bold text-slate-400`}
-                                            >
-                                                {item.label}
-                                            </span>
-                                            {item.badge && (
-                                                <div className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black min-w-[20px] text-center">
-                                                    {item.badge === true
-                                                        ? "!"
-                                                        : item.badge}
-                                                </div>
+                                        <div className="relative">
+                                            <img
+                                                src={
+                                                    isParentActive
+                                                        ? item.active_logo
+                                                        : item.logo
+                                                }
+                                                alt="icon"
+                                                className="w-5 h-5 opacity-80"
+                                            />
+                                            {item.badge === true && (
+                                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-[#001744]" />
                                             )}
                                         </div>
+                                    }
+                                    title={
+                                        <Tooltip
+                                            title={item.tooltip || item.label}
+                                            placement="right"
+                                        >
+                                            <div className="flex items-center justify-between w-full pr-2">
+                                                <span
+                                                    className={`text-[13px] font-bold ${
+                                                        isParentActive
+                                                            ? "text-blue-500"
+                                                            : "text-slate-400"
+                                                    }`}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                                {item.badge &&
+                                                    item.badge !== true && (
+                                                        <div className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black min-w-[20px] text-center">
+                                                            {item.badge}
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        </Tooltip>
                                     }
                                     className="mb-1"
                                 >
@@ -176,7 +194,7 @@ const MainLayout = ({
                                             }}
                                             className="!text-[12px] !h-10 !leading-10 !rounded-xl !mb-1"
                                         >
-                                            {child.label}   
+                                            {child.label}
                                         </Menu.Item>
                                     ))}
                                 </Menu.SubMenu>
@@ -187,41 +205,52 @@ const MainLayout = ({
                             <Menu.Item
                                 key={String(item.key)}
                                 icon={
-                                    <img
-                                        src={
-                                            isActive
-                                                ? item.active_logo
-                                                : item.logo
-                                        }
-                                        alt="icon"
-                                        className="w-5 h-5 opacity-80"
-                                    />
+                                    <div className="relative">
+                                        <img
+                                            src={
+                                                isActive
+                                                    ? item.active_logo
+                                                    : item.logo
+                                            }
+                                            alt="icon"
+                                            className="w-5 h-5 opacity-80"
+                                        />
+                                        {item.badge === true && (
+                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-[#001744]" />
+                                        )}
+                                    </div>
                                 }
                                 onClick={() => handleNavigation(item)}
                                 className={`!rounded-xl mb-1 !h-12 !leading-[48px] ${
                                     isActive
-                                        ? "!bg-white !text-[#001744] shadow-lg"
+                                        ? "!bg-[#1681FF1a] !text-blue-500"
                                         : ""
                                 }`}
                             >
-                                <div className="flex items-center justify-between w-full pr-2">
-                                    <span
-                                        className={`text-[13px] font-bold ${
-                                            isActive
-                                                ? "text-[#001744]"
-                                                : "text-slate-400"
-                                        }`}
-                                    >
-                                        {item.label}
-                                    </span>
-                                    {item.badge && !isActive && (
-                                        <div className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black min-w-[20px] text-center">
-                                            {item.badge === true
-                                                ? "!"
-                                                : item.badge}
-                                        </div>
-                                    )}
-                                </div>
+                                {/* -[#1681FF */}
+                                <Tooltip
+                                    title={item.tooltip || item.label}
+                                    placement="right"
+                                >
+                                    <div className="flex items-center justify-between w-full pr-2">
+                                        <span
+                                            className={`text-[13px] font-bold ${
+                                                isActive
+                                                    ? "text-blue-500"
+                                                    : "text-slate-400"
+                                            }`}
+                                        >
+                                            {item.label}
+                                        </span>
+                                        {item.badge &&
+                                            !isActive &&
+                                            item.badge !== true && (
+                                                <div className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-md font-black min-w-[20px] text-center">
+                                                    {item.badge}
+                                                </div>
+                                            )}
+                                    </div>
+                                </Tooltip>
                             </Menu.Item>
                         );
                     })}
@@ -231,41 +260,45 @@ const MainLayout = ({
             {/* Bottom User Area */}
             <div className="p-4 mt-auto">
                 <div className="bg-[#ffffff0d] rounded-2xl p-4 border border-[#ffffff1a] transition-all hover:bg-[#ffffff14]">
-                    <div
-                        className="flex items-center gap-3 cursor-pointer mb-4"
-                        onClick={() => navigate("/tickets")}
-                    >
-                        <div className="w-8 h-8 rounded-lg bg-[#ffffff1a] flex items-center justify-center">
-                            <img
-                                src={support}
-                                alt="Support"
-                                className="w-4 h-4"
-                            />
-                        </div>
-                        <span className="text-white text-sm font-bold">
-                            Help & Support
-                        </span>
-                    </div>
-                    <div
-                        className="flex items-center gap-3 cursor-pointer p-1 rounded-xl group"
-                        onClick={() => navigate("/profile")}
-                    >
-                        <Avatar
-                            size={40}
-                            className="!bg-[#1681FF] !font-bold shadow-md transform transition-transform group-hover:scale-105"
+                    <Tooltip title="Get Support for any queries" placement="right">
+                        <div
+                            className="flex items-center gap-3 cursor-pointer mb-4"
+                            onClick={() => navigate("/tickets")}
                         >
-                            {user?.username?.[0]?.toUpperCase()}
-                        </Avatar>
-                        <div className="flex flex-col flex-1 overflow-hidden">
-                            <span className="text-white text-sm font-bold truncate">
-                                {user?.username || "Account"}
-                            </span>
-                            <span className="text-slate-400 text-[10px] uppercase font-black tracking-tighter">
-                                View Profile{" "}
-                                <ArrowRightOutlined className="text-[8px]" />
+                            <div className="w-8 h-8 rounded-lg bg-[#ffffff1a] flex items-center justify-center">
+                                <img
+                                    src={support}
+                                    alt="Support"
+                                    className="w-4 h-4"
+                                />
+                            </div>
+                            <span className="text-white text-sm font-bold">
+                                Help & Support
                             </span>
                         </div>
-                    </div>
+                    </Tooltip>
+                    <Tooltip title="View your Profile and update your details" placement="right">
+                        <div
+                            className="flex items-center gap-3 cursor-pointer p-1 rounded-xl group"
+                            onClick={() => navigate("/profile")}
+                        >
+                            <Avatar
+                                size={40}
+                                className="!bg-blue-500 !font-bold shadow-md transform transition-transform group-hover:scale-105"
+                            >
+                                {user?.username?.[0]?.toUpperCase()}
+                            </Avatar>
+                            <div className="flex flex-col flex-1 overflow-hidden">
+                                <span className="text-white text-sm font-bold truncate">
+                                    {user?.username || "Account"}
+                                </span>
+                                <span className="text-slate-400 text-[10px] uppercase font-black tracking-tighter">
+                                    View Profile{" "}
+                                    <ArrowRightOutlined className="text-[8px]" />
+                                </span>
+                            </div>
+                        </div>
+                    </Tooltip>
                 </div>
             </div>
         </div>
@@ -334,50 +367,57 @@ const MainLayout = ({
 
                         <div className="flex items-center gap-6">
                             {user?.role === "client" && (
-                                <Button
-                                    type="primary"
-                                    className="hidden md:flex h-10 px-6 rounded-xl bg-[#1681FF] hover:bg-[#0061D5] font-bold shadow-lg shadow-blue-100 transition-all active:scale-95 border-none"
-                                    onClick={() => navigate("/client/postjob")}
-                                >
-                                    Create New Job
-                                </Button>
+                                <Tooltip title="Create a new job posting">
+                                    <Button
+                                        type="primary"
+                                        className="hidden md:flex h-10 px-6 rounded-xl bg-blue-500 hover:bg-[#0061D5] font-bold shadow-lg shadow-blue-100 transition-all active:scale-95 border-none"
+                                        onClick={() =>
+                                            navigate("/client/postjob")
+                                        }
+                                    >
+                                        Create New Job
+                                    </Button>
+                                </Tooltip>
                             )}
 
-                            {user?.role === "agency" && (
+                            {user?.role === "manager" && (
                                 <Tooltip title="Resume Bank">
-                                    <div
+                                    <Button
+                                        type="primary"
                                         onClick={() =>
                                             navigate("/agency/resume-bank")
                                         }
-                                        className="w-10 h-10 rounded-xl bg-blue-50 text-[#1681FF] flex items-center justify-center cursor-pointer transition-all hover:bg-blue-100 hover:scale-105 active:scale-95 border border-blue-100 shadow-sm"
+                                        className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center cursor-pointer transition-all hover:bg-blue-100 hover:scale-105 active:scale-95 border border-blue-100 shadow-sm"
                                     >
                                         <BankOutlined className="text-xl" />
-                                    </div>
+                                    </Button>
                                 </Tooltip>
                             )}
 
                             <div className="flex items-center gap-3">
-                                <Tooltip title="Help">
+                                {/* <Tooltip title="Help">
                                     <div className="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center cursor-pointer transition-all hover:bg-gray-50">
                                         <QuestionCircleOutlined className="text-xl" />
                                     </div>
-                                </Tooltip>
+                                </Tooltip> */}
 
-                                <Badge
-                                    count={noteCount}
-                                    size="small"
-                                    offset={[-5, 5]}
-                                    className="notification-badge"
-                                >
-                                    <div
-                                        onClick={() =>
-                                            navigate("/notifications")
-                                        }
-                                        className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center cursor-pointer transition-all hover:bg-slate-100 hover:text-slate-600 border border-slate-100"
+                                <Tooltip title="Notifications">
+                                    <Badge
+                                        count={noteCount}
+                                        size="small"
+                                        offset={[-5, 5]}
+                                        className="notification-badge"
                                     >
-                                        <BellOutlined className="text-xl" />
-                                    </div>
-                                </Badge>
+                                        <div
+                                            onClick={() =>
+                                                navigate("/notifications")
+                                            }
+                                            className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center cursor-pointer transition-all hover:bg-slate-100 hover:text-slate-600 border border-slate-100"
+                                        >
+                                            <BellOutlined className="text-xl" />
+                                        </div>
+                                    </Badge>
+                                </Tooltip>
                             </div>
                         </div>
                     </Header>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import CustomDatePicker from "../../../common/CustomDatePicker";
 import "react-quill/dist/quill.snow.css";
 
@@ -60,7 +60,6 @@ const FillJobDetails = ({
     const [resetPrimary, setResetPrimary] = useState(false);
     const [resetSecondary, setResetSecondary] = useState(false);
     const [resetLocation, setResetLocation] = useState(false);
-    const [serviceFee, setServiceFee] = useState("");
 
     const jobLevels = ["Entry", "Mid", "Senior", "Lead", "Executive"];
 
@@ -120,17 +119,27 @@ const FillJobDetails = ({
     const probationTypeOptions = ["Paid", "Unpaid"];
 
     const calculateServiceFee = (minVal, maxVal, termsData) => {
-        console.log(termsData);
-        const parsedRules = termsData?.map((r) => {
-            const [min, max] = r.ctc_range
-                .replace("LPA", "")
-                .split("-")
-                .map(Number);
+        if (!termsData || !Array.isArray(termsData)) return null;
+
+        const parsedRules = termsData.map((r) => {
+            // Remove LPA and any whitespace, then split by either hyphen or comma
+            const parts = r.ctc_range
+                .replace(/LPA/gi, "")
+                .replace(/\s+/g, "")
+                .split(/[-|,]/);
+
+            const min = parseFloat(parts[0]);
+            const max = parseFloat(parts[1]);
+
             return { ...r, min, max };
         });
 
         const matchingRules = parsedRules.filter(
-            (rule) => maxVal >= rule.min && maxVal <= rule.max,
+            (rule) =>
+                !isNaN(rule.min) &&
+                !isNaN(rule.max) &&
+                maxVal >= rule.min &&
+                maxVal <= rule.max,
         );
 
         if (matchingRules.length === 0) return null;
@@ -144,11 +153,6 @@ const FillJobDetails = ({
 
         return matchingRules[0]?.service_fee ?? null;
     };
-
-    const handleCTCChange = debounce((minVal, maxVal) => {
-        const fee = calculateServiceFee(minVal, maxVal, termsData);
-        setServiceFee(fee);
-    }, 2000);
 
     const fetchParticularJob = async (id) => {
         try {
@@ -337,6 +341,15 @@ const FillJobDetails = ({
         }
     }, [allValues, saveDraft]);
 
+    const computedServiceFee = useMemo(() => {
+        const ctcValue = allValues?.ctc;
+        if (!Array.isArray(ctcValue) || ctcValue.length < 2) return undefined;
+        const [min, max] = ctcValue;
+        if (min === null || max === null || isNaN(min) || isNaN(max))
+            return undefined;
+        return calculateServiceFee(min, max, termsData);
+    }, [allValues?.ctc, termsData]);
+
     useEffect(() => {
         fetchPrevJobs();
     }, []);
@@ -503,11 +516,11 @@ const FillJobDetails = ({
                 if (daysMatch) {
                     const num = parseInt(daysMatch[1]);
                     // Map to closest option: 15, 30, 45, 2M (60), 6M (180)
-                    if (num <= 20) setValue("notice_time", "15");
-                    else if (num <= 40) setValue("notice_time", "30");
-                    else if (num <= 50) setValue("notice_time", "45");
-                    else if (num <= 90) setValue("notice_time", "2M");
-                    else setValue("notice_time", "6M");
+                    if (num <= 20) setValue("notice_time", "15 Days");
+                    else if (num <= 40) setValue("notice_time", "30 Days");
+                    else if (num <= 50) setValue("notice_time", "45 Days");
+                    else if (num <= 90) setValue("notice_time", "2 Months");
+                    else setValue("notice_time", "6 Months");
                 }
             }
         }
@@ -595,7 +608,7 @@ const FillJobDetails = ({
     };
 
     return (
-        <div>
+        <div className="m-4">
             <label
                 className={labelClass}
                 style={{
@@ -727,12 +740,14 @@ const FillJobDetails = ({
                             />
                         </div>
 
-                        {watch("notice_period") === "need_to_serve_notice" && (
+                        {(watch("notice_period") === "need_to_serve_notice" ||
+                            watch("notice_period") === "serving_notice") && (
                             <div className="mb-4">
                                 <label className={labelClass}>
                                     Notice Time Period{" "}
                                     <span style={{ color: "red" }}>*</span>
                                 </label>
+
                                 <Controller
                                     name="notice_time"
                                     control={control}
@@ -743,22 +758,23 @@ const FillJobDetails = ({
                                                 {...field}
                                                 className="mt-1.5 rounded-md text-[#171A1F] text-sm font-normal w-full"
                                             >
-                                                <Option value="15">
+                                                <Option value="15 Days">
                                                     15 Days
                                                 </Option>
-                                                <Option value="30">
+                                                <Option value="30 Days">
                                                     30 Days
                                                 </Option>
-                                                <Option value="45">
+                                                <Option value="45 Days">
                                                     45 Days
                                                 </Option>
-                                                <Option value="2M">
+                                                <Option value="2 Months">
                                                     2 Months
                                                 </Option>
-                                                <Option value="6M">
+                                                <Option value="6 Months">
                                                     6 Months
                                                 </Option>
                                             </Select>
+
                                             {fieldState.error && (
                                                 <p style={{ color: "red" }}>
                                                     {fieldState.error.message}
@@ -1052,12 +1068,10 @@ const FillJobDetails = ({
 
                                         const handleMinChange = (minVal) => {
                                             field.onChange([minVal, max]);
-                                            handleCTCChange(minVal, max);
                                         };
 
                                         const handleMaxChange = (maxVal) => {
                                             field.onChange([min, maxVal]);
-                                            handleCTCChange(min, maxVal);
                                         };
 
                                         return (
@@ -1110,14 +1124,27 @@ const FillJobDetails = ({
                                     }}
                                 />
                             </div>
-                            {serviceFee !== null && (
-                                <div
-                                    style={{ marginTop: "5px", color: "green" }}
-                                >
-                                    Applicable Service Fee:{" "}
-                                    <strong>{serviceFee}%</strong>
-                                </div>
-                            )}
+                            {computedServiceFee !== undefined &&
+                                (computedServiceFee !== null ? (
+                                    <div
+                                        style={{
+                                            marginTop: "5px",
+                                            color: "green",
+                                        }}
+                                    >
+                                        CTC with in range
+                                        
+                                    </div>
+                                ) : (
+                                    <div
+                                        style={{
+                                            marginTop: "5px",
+                                            color: "red",
+                                        }}
+                                    >
+                                        CTC out of range
+                                    </div>
+                                ))}
                         </div>
 
                         <div className="mb-4">

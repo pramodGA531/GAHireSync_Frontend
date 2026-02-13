@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, message, Tabs } from "antd";
+import { Button, message, Tabs, Select } from "antd"; // Added Select
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../common/useAuth";
 import Main from "../Layout";
-import GoBack from "../../../common/Goback";
+// import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
 
 const apiurl = import.meta.env.VITE_BACKEND_URL;
 
 const { TabPane } = Tabs;
+const { Option } = Select; // Destructure Option
 
 const AnyEditRequests = () => {
     const navigate = useNavigate();
@@ -15,6 +17,7 @@ const AnyEditRequests = () => {
     const [interviewers, setInterviewers] = useState([]);
     const [loading, setLoading] = useState(false);
     const { token } = useAuth();
+    const [statusFilter, setStatusFilter] = useState("All"); // Add filter state
 
     const fetchData = () => {
         try {
@@ -82,34 +85,41 @@ const AnyEditRequests = () => {
 
     const jobColumns = [
         {
-            title: "JOB CODE",
-            dataIndex: "job_code",
-            key: "job_code",
+            header: "JOB CODE",
+            accessorKey: "job_code",
+            searchField: true,
         },
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
         },
         {
-            title: "Organization Code",
-            key: "organizaton_code",
-            render: (text, record) => (
-                <>
-                    {record.organization_name} (
-                    <span>{record.organization_code}</span>)
-                </>
-            ),
+            header: "Organization Code",
+            accessorKey: "organization_code",
+            cell: ({ row }) => {
+                const record = row.original;
+                return (
+                    <>
+                        {record.organization_name} (
+                        <span>{record.organization_code}</span>)
+                    </>
+                );
+            },
+            searchField: true, // Searching by organization code/name would be good but cell render is complex.
+            // AppTable searchField filters based on accessorKey value.
+            // If organization_code is the accessor, it filters by that.
         },
         {
-            title: "Requested by",
-            dataIndex: "edited_by",
-            key: "edited_by",
+            header: "Requested by",
+            accessorKey: "edited_by",
+            searchField: true,
         },
         {
-            title: "Status",
-            key: "status",
-            render: (text, record) => {
+            header: "Status",
+            accessorKey: "status",
+            cell: ({ row }) => {
+                const record = row.original;
                 if (record.status === "pending") {
                     return (
                         <Button
@@ -127,45 +137,44 @@ const AnyEditRequests = () => {
         },
     ];
 
-    const interviewerColumns = [
-        {
-            title: "ID",
-            dataIndex: "job_id",
-            key: "job_id",
-        },
-        {
-            title: "Edited By",
-            dataIndex: "edited_by",
-            key: "edited_by",
-        },
-        {
-            title: "View Complete Details",
-            key: "viewInterviewersDetails",
-            render: (text, record) => (
-                <Button onClick={() => handleInterviewersData(record.job_id)}>
-                    See Complete details
-                </Button>
-            ),
-        },
-    ];
+    // Filter data based on status
+    const getJobListArray = () => {
+        if (Array.isArray(jobList)) return jobList;
+        if (jobList && Array.isArray(jobList.jobs)) return jobList.jobs;
+        if (jobList && Array.isArray(jobList.data)) return jobList.data;
+        return [];
+    };
+
+    const filteredData = getJobListArray().filter((item) => {
+        if (statusFilter === "All") return true;
+        return item.status?.toLowerCase() === statusFilter.toLowerCase();
+    });
 
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-3">
-            <div>
-                <div className="mt-4 -ml-2 -mb-4">
+            <div className="m-1">
+                {/* <div className="mt-4 -ml-2 -mb-4">
                     <GoBack />
-                </div>
-                {jobList && jobList.length > 0 ? (
-                    <Table
+                </div> */}
+                <div className="p-5">
+                    <AppTable
                         columns={jobColumns}
-                        dataSource={jobList}
-                        rowKey="id"
+                        data={filteredData}
+                        customFilters={
+                            <Select
+                                defaultValue="All"
+                                style={{ width: 150 }}
+                                onChange={(value) => setStatusFilter(value)}
+                                className="custom-filter-select"
+                            >
+                                <Option value="All">All Status</Option>
+                                <Option value="pending">Pending</Option>
+                                <Option value="approved">Approved</Option>
+                                <Option value="rejected">Rejected</Option>
+                            </Select>
+                        }
                     />
-                ) : (
-                    <div className="text-center p-5">
-                        There are no changes in postings
-                    </div>
-                )}
+                </div>
             </div>
         </Main>
     );

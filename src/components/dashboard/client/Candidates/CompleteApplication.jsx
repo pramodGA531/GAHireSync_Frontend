@@ -50,22 +50,24 @@ const ClientCompleteApplication = () => {
 
     return (
         <Main defaultSelectedKey="3" className="complete-app-container">
-            <div className="mt-4 -ml-2 mb-4">
+            {/* <div className="mt-4 -ml-2 mb-4">
                 <GoBack />
-            </div>
+            </div> */}
+            <div className="m-4">
             <Breadcrumb
+           
                 separator=">"
                 items={[
                     {
                         title: "Applications",
-                        href: `/client/candidates/`,
+                        href: `/client/candidates/processing`,
                     },
                     {
                         title: "Complete Application",
                     },
                 ]}
             ></Breadcrumb>
-
+</div>
             <ViewApplication application_data={application_data} />
         </Main>
     );

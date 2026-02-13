@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
@@ -14,12 +14,13 @@ import {
     LockOutlined,
     InfoCircleOutlined,
 } from "@ant-design/icons";
-import { Tag, Button, Tooltip } from "antd";
+import { Tag, Button, Tooltip, Select } from "antd";
 import GoBack from "../../../common/Goback";
 const ClosedApplicationsRecruiter = () => {
     const [jobList, setJobList] = useState([]);
     const { apiurl, token } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [locationFilter, setLocationFilter] = useState("All");
     const navigate = useNavigate();
 
     const updateState = async () => {
@@ -73,6 +74,40 @@ const ClosedApplicationsRecruiter = () => {
             setLoading(false);
         }
     };
+
+    const filteredJobs = useMemo(() => {
+        let result = jobList;
+
+        // Apply Tab filtering (Closed/Archived)
+        result = result.filter((job) => job.location_status !== "opened");
+
+        // Apply Location filter
+        if (locationFilter !== "All") {
+            result = result.filter((job) => job.location === locationFilter);
+        }
+
+        return result;
+    }, [jobList, locationFilter]);
+
+    const locationOptions = useMemo(() => {
+        const locations = [
+            ...new Set(jobList.map((job) => job.location).filter(Boolean)),
+        ];
+        return [
+            { label: "All Locations", value: "All" },
+            ...locations.map((loc) => ({ label: loc, value: loc })),
+        ];
+    }, [jobList]);
+
+    const customFilters = (
+        <Select
+            value={locationFilter}
+            onChange={setLocationFilter}
+            options={locationOptions}
+            style={{ width: 180 }}
+            placeholder="Select Location"
+        />
+    );
 
     const columns = [
         {
@@ -222,9 +257,9 @@ const ClosedApplicationsRecruiter = () => {
                     {/* Header Section */}
                     <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <div className="-ml-6">
+                            {/* <div className="-ml-6">
                                 <GoBack />
-                            </div>
+                            </div> */}
                             <div className="flex items-center gap-3 mb-1">
                                 <h1 className="text-2xl font-bold text-[#071C50]">
                                     Job History
@@ -277,13 +312,12 @@ const ClosedApplicationsRecruiter = () => {
                                 </div>
                             </div>
                             <AppTable
-                                data={jobList.filter(
-                                    (job) => job.location_status !== "opened",
-                                )}
+                                data={filteredJobs}
                                 columns={columns}
                                 multiSelect={false}
                                 onDeleteSelected={() => {}}
                                 pageSize={10}
+                                customFilters={customFilters}
                             />
                         </div>
                     ) : (

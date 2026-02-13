@@ -6,9 +6,9 @@ const RecruiterProfile = () => {
     return (
         <Main>
             <div className="p-6 md:p-10 animate-in fade-in duration-500">
-                <div className="mt-4 -mb-6 -ml-2">
+                {/* <div className="mt-4 -mb-6 -ml-2">
                     <GoBack />
-                </div>
+                </div> */}
                 <div className="max-w-4xl mx-auto">
                     <IntProfileCard />
                 </div>

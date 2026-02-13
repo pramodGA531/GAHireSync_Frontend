@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../common/useAuth";
 import AppTable from "../../../common/AppTable";
-import { Button, Modal, Input, message, Tag } from "antd";
+import { Button, Modal, Input, message, Tag, Select } from "antd";
 import { useNavigate } from "react-router-dom";
 import { CheckOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
 import Main from "../Layout";
@@ -13,6 +13,7 @@ const ClosedHoldJobs = () => {
     const [loading, setLoading] = useState(false);
     const [rejectingJob, setRejectingJob] = useState(null);
     const [feedback, setFeedback] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
     const navigate = useNavigate();
 
     const fetchData = async () => {
@@ -24,7 +25,7 @@ const ClosedHoldJobs = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             const res = await response.json();
             if (res.data) {
@@ -63,7 +64,7 @@ const ClosedHoldJobs = () => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ feedback }),
-                }
+                },
             );
             message.success("Job rejected with feedback");
             setRejectingJob(null);
@@ -142,17 +143,35 @@ const ClosedHoldJobs = () => {
         if (token) fetchData();
     }, [token]);
 
+    const filteredData = React.useMemo(() => {
+        if (statusFilter === "All") return data;
+        return data.filter(
+            (item) => item.status?.toLowerCase() === statusFilter.toLowerCase(),
+        );
+    }, [data, statusFilter]);
+
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-4">
-            <div className="-ml-2 mt-4">
+            {/* <div className="-ml-2 mt-4">
                 <GoBack />
-            </div>
+            </div> */}
             <AppTable
                 title="Not Approved Jobs"
                 columns={columns}
-                data={data}
+                data={filteredData}
                 loading={loading}
-        
+                customFilters={
+                    <Select
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        style={{ width: 150 }}
+                        options={[
+                            { label: "All Status", value: "All" },
+                            { label: "Closed", value: "closed" },
+                            { label: "Hold", value: "hold" },
+                        ]}
+                    />
+                }
             />
 
             {/* Modal for Reject Feedback */}

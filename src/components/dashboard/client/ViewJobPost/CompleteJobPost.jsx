@@ -1,24 +1,54 @@
 import React, { useEffect, useState } from "react";
 import ViewJobPost from "../../../common/ViewJobPost";
 import Main from "../Layout";
-import { useNavigate, useParams } from "react-router-dom";
+import { Modal, Select, message, Breadcrumb } from "antd";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../../common/useAuth";
 import Pageloading from "../../../common/loading/Pageloading";
-import { Modal, Select ,message} from "antd";
 import GoBack from "../../../common/Goback";
 
 const CompleteJobPost = () => {
     const { id } = useParams();
     const { token, apiurl } = useAuth();
+    const location = useLocation();
+    const fromTandC = location.state?.from === "tandc";
 
     const [job, setJob] = useState(null);
     const [interviewers, setInterviewers] = useState([]);
     const [selectedInterviewers, setSelectedInterviewers] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     const [changeInterviewerModal, setChangeInterviewerModal] = useState(false);
-    const Navigate =useNavigate();
-    // fallback for empty / null / undefined
+    const Navigate = useNavigate();
+    const [editHistory, setEditHistory] = useState([]);
+    const [fieldsRejected, setFieldsRejected] = useState([]);
+    const [designationFilter, setDesignationFilter] = useState("All");
+
+    const fetchJobEditDetails = async () => {
+        try {
+            const response = await fetch(
+                `${apiurl}/client/job-edit-details/?id=${id}`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+            const data = await response.json();
+            if (data.edit_history) {
+                setEditHistory(data.edit_history);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    useEffect(() => {
+        if (token && id) {
+            fetchJobEditDetails();
+        }
+    }, [token, id]);
 
     /* =========================
         FETCH JOB DETAILS
@@ -47,22 +77,23 @@ const CompleteJobPost = () => {
     }, [token]);
 
     const handleEditJob = async () => {
-        const Response = await fetch(`${apiurl}/job/posting/is_editted_by_client/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
+        const Response = await fetch(
+            `${apiurl}/job/posting/is_editted_by_client/${id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             },
-        });
-        const data =await Response.json();
-        console.log(data.is_editted)
-        if(!data.is_editted){
-          Navigate(`/client/edit_job/${id}`) ; 
+        );
+        const data = await Response.json();
+        console.log(data.is_editted);
+        if (!data.is_editted) {
+            Navigate(`/client/edit_job/${id}`);
+        } else {
+            message.info(
+                "This job posting has already been edited. Additional changes are not permitted.",
+            );
         }
-        else {
-    message.info(
-        "This job posting has already been edited. Additional changes are not permitted."
-    );
-}
-
     };
     /* =========================
         FETCH INTERVIEWERS
@@ -150,8 +181,28 @@ const CompleteJobPost = () => {
                 <Pageloading />
             ) : job ? (
                 <>
-                    <div className="mt-4 -ml-2 -mb-4 pl-4">
+                    {/* <div className="mt-4 -ml-2 -mb-4 pl-4">
                         <GoBack />
+                    </div> */}
+                    <div className="m-4 -mb-2">
+                        <Breadcrumb
+                            items={[
+                                {
+                                    title: fromTandC ? (
+                                        <Link to="/client/finalized-tandc">
+                                            Finalized T&C
+                                        </Link>
+                                    ) : (
+                                        <Link to="/client/mypostings">
+                                            My Job Posts
+                                        </Link>
+                                    ),
+                                },
+                                {
+                                    title: "Job Details",
+                                },
+                            ]}
+                        />
                     </div>
 
                     <div className="text-[#171A1F] m-4 flex items-center justify-between">
@@ -159,15 +210,15 @@ const CompleteJobPost = () => {
                         <div className="flex items-center justify-end">
                             <button
                                 onClick={handleChangeInterviewer}
-                                className="text-md border-2 p-2 m-2 mt-0 border-gray-400 hover:border-blue-400 hover:text-blue-500 rounded-md"
+                                className="text-md border-2 p-2 m-2 mt-0 border-gray-400 hover:border-blue-400 hover:text-blue-500 rounded-md cursor-pointer"
                             >
                                 Change Interviewer
                             </button>
                             <button
                                 onClick={handleEditJob}
-                                className="text-md border-2 p-2 m-2 mt-0 border-gray-400 hover:border-blue-400 hover:text-blue-500 rounded-md"
+                                className="text-md border-2 p-2 m-2 mt-0 border-gray-400 hover:border-blue-400 hover:text-blue-500 rounded-md cursor-pointer"
                             >
-                               Edit Job
+                                Edit Job
                             </button>
                         </div>
                     </div>
@@ -176,6 +227,7 @@ const CompleteJobPost = () => {
                         id={id}
                         job={job}
                         interviewers={interviewers}
+                        editHistory={editHistory}
                     />
                 </>
             ) : null}
@@ -191,24 +243,56 @@ const CompleteJobPost = () => {
                     onOk={handleModifyInterviewer}
                 >
                     <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                        {selectedInterviewers.map((round) => (
-                            <div key={round.round_num} className="mb-4">
-                                <p className="mb-2 font-semibold">
-                                    Round {round.round_num}
-                                </p>
-                                <Select
-                                    className="w-full"
-                                    value={round.interviewer_id}
-                                    onChange={(val) =>
-                                        handleRoundChange(round.round_num, val)
-                                    }
-                                    options={interviewers.map((i) => ({
-                                        value: i.id,
-                                        label: i.username,
-                                    }))}
-                                />
-                            </div>
-                        ))}
+                        <div className="mb-6 p-4 rounded-lg ">
+                            <p className="mb-2 font-semibold ">
+                                Designation
+                            </p>
+                            <Select
+                                className="w-full"
+                                value={designationFilter}
+                                onChange={(val) => setDesignationFilter(val)}
+                                options={[
+                                    { value: "All", label: "All Designations" },
+                                    { value: "Technical", label: "Technical" },
+                                    { value: "HR", label: "HR" },
+                                ]}
+                            />
+                        </div>
+
+                        {selectedInterviewers.map((round) => {
+                            const filteredOptions = interviewers
+                                .filter((i) =>
+                                    designationFilter === "All"
+                                        ? true
+                                        : i.designation === designationFilter,
+                                )
+                                .map((i) => ({
+                                    value: i.id,
+                                    label: `${i.username} (${i.designation || "N/A"})`,
+                                }));
+
+                            return (
+                                <div key={round.round_num} className="mb-4">
+                                    <p className="mb-2 font-semibold">
+                                        Round {round.round_num}
+                                    </p>
+                                    <Select
+                                        showSearch
+                                        className="w-full"
+                                        value={round.interviewer_id}
+                                        onChange={(val) =>
+                                            handleRoundChange(
+                                                round.round_num,
+                                                val,
+                                            )
+                                        }
+                                        optionFilterProp="label"
+                                        options={filteredOptions}
+                                        placeholder={`Select ${designationFilter === "All" ? "" : designationFilter} Interviewer`}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                 </Modal>
             )}

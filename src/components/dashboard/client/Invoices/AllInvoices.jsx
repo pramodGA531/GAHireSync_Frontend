@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, message, Modal, Input, Select } from "antd";
+import { Button, message, Modal, Input, Select } from "antd";
 import html2pdf from "html2pdf.js"; // Import the html2pdf library
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
-import { Option } from "antd/es/mentions";
+// import { Option } from "antd/es/mentions"; // Removed incorrect import
 import downloadinvoicebut from "../../../../images/invoice/downloadinvoicebut.svg";
 // import "./AllInvoices.css";
-import Pageloading from "../../../common/loading/Pageloading";
+// import Pageloading from "../../../common/loading/Pageloading";
 import GoBack from "../../../common/Goback";
+import AppTable from "../../../common/AppTable";
+
+const { Option } = Select; // Added correct Option destructuring
+
 const AllInvoices = () => {
     const { token, apiurl } = useAuth();
     const [invoices, setInvoices] = useState([]);
@@ -16,11 +20,10 @@ const AllInvoices = () => {
     const [newStatus, setNewStatus] = useState("");
     const [transactionId, setTransactionId] = useState(null);
     const [payment_method, setPayment_method] = useState(null);
-    const [searchText, setSearchText] = useState("");
     const [loading, setLoading] = useState(false);
-    const [filterStatus, setFilterStatus] = useState("All");
-    const [selectedInvoice, setSelectedInvoice] = useState(null);
-    const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All"); // Added state
+    // const [selectedInvoice, setSelectedInvoice] = useState(null);
+    // const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
     // const invoiceRef = useRef(null);
 
@@ -60,32 +63,84 @@ const AllInvoices = () => {
 
     // Function to download the invoice as PDF
     const downloadInvoice = (htmlContent, invoiceId) => {
-        // Create a new HTML element to pass into the html2pdf function
-        const invoiceElement = document.createElement("div");
+        // Create a wrapper to hold the content
+        const container = document.createElement("div");
+        container.style.position = "absolute";
+        container.style.left = "-9999px";
+        container.style.top = "0";
+        container.style.width = "800px"; // Fixed width for A4 consistency
+        container.style.zIndex = "-1";
+        container.className = "p-8 bg-white"; // Ensure some base styling
+        document.body.appendChild(container);
 
-        // Add Tailwind CSS styles if they are not included externally
-        const tailwindStyles = `
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
-    `;
-        invoiceElement.innerHTML = tailwindStyles + htmlContent; // Inject Tailwind CSS into the HTML content
+        // 1. Clone all styles from the current document head
+        // This ensures fully accurate styling matching the app
+        const styles = document.head.querySelectorAll(
+            'style, link[rel="stylesheet"]',
+        );
+        styles.forEach((styleNode) => {
+            container.appendChild(styleNode.cloneNode(true));
+        });
+
+        // 2. Add extra specific print overrides
+        const extraStyle = document.createElement("style");
+        extraStyle.innerHTML = `
+            body {
+                font-family: 'Inter', sans-serif;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            /* Start of Fallback Tailwind for basic layout if local styles miss */
+            .flex { display: flex; }
+            .justify-between { justify-content: space-between; }
+            .items-center { align-items: center; }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: 700; }
+            .text-gray-500 { color: #6b7280; }
+            .text-sm { font-size: 0.875rem; }
+            .p-4 { padding: 1rem; }
+            .mb-4 { margin-bottom: 1rem; }
+            .border-b { border-bottom-width: 1px; }
+            /* End fallback */
+        `;
+        container.appendChild(extraStyle);
+
+        // 3. Insert the content
+        const contentDiv = document.createElement("div");
+        contentDiv.innerHTML = htmlContent;
+        container.appendChild(contentDiv);
 
         // Use html2pdf.js to convert the HTML to PDF
         const options = {
-            margin: 0, // Margin for the PDF
+            margin: 0.5, // Margin for the PDF
             filename: `invoice_${invoiceId}.pdf`, // The file name
             image: { type: "jpeg", quality: 0.98 }, // Image settings
-            html2canvas: { scale: 3 }, // Rendering canvas scale (higher for better quality)
+            html2canvas: { scale: 2, useCORS: true, logging: false }, // Rendering canvas scale (higher for better quality)
             jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, // Paper size and orientation
         };
 
-        html2pdf().from(invoiceElement).set(options).save(); // Trigger PDF download
+        // Small delay to ensure styles apply
+        setTimeout(() => {
+            html2pdf()
+                .from(container)
+                .set(options)
+                .save()
+                .then(() => {
+                    document.body.removeChild(container); // Clean up
+                })
+                .catch((err) => {
+                    console.error("PDF generation failed:", err);
+                    document.body.removeChild(container); // Clean up even on error
+                    message.error("Failed to generate PDF. Please try again.");
+                });
+        }, 500);
     };
 
-    const viewInvoice = (htmlContent) => {
-        const newWindow = window.open();
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-    };
+    // const viewInvoice = (htmlContent) => {
+    //     const newWindow = window.open();
+    //     newWindow.document.write(htmlContent);
+    //     newWindow.document.close();
+    // };
 
     useEffect(() => {
         fetchInvoices();
@@ -105,19 +160,19 @@ const AllInvoices = () => {
     //   }
     // }, [searchText]);
 
-    const filteredData = invoices.filter((item) => {
-        const matchesSearch = Object.values(item).some(
-            (value) =>
-                value &&
-                value
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchText.toLowerCase())
-        );
-        const matchesStatus =
-            filterStatus === "All" || item.payment_status === filterStatus;
-        return matchesSearch && matchesStatus;
-    });
+    // const filteredData = invoices.filter((item) => {
+    //     const matchesSearch = Object.values(item).some(
+    //         (value) =>
+    //             value &&
+    //             value
+    //                 .toString()
+    //                 .toLowerCase()
+    //                 .includes(searchText.toLowerCase()),
+    //     );
+    //     const matchesStatus =
+    //         filterStatus === "All" || item.payment_status === filterStatus;
+    //     return matchesSearch && matchesStatus;
+    // });
 
     const openUpdateModal = (invoiceId) => {
         setSelectedInvoiceId(invoiceId);
@@ -125,9 +180,11 @@ const AllInvoices = () => {
     };
 
     const handleUpdateInvoice = async () => {
-        // Check if both fields are provided
-        if (!transactionId || !newStatus) {
-            message.error("Both transaction ID and status are required.");
+        // Check if all fields are provided
+        if (!transactionId || !newStatus || !payment_method) {
+            message.error(
+                "Transaction ID, Payment Method, and Status are all required.",
+            );
             return;
         }
         const data = {
@@ -167,69 +224,68 @@ const AllInvoices = () => {
         }
     };
 
-    const handleSearch = (e) => {
-        setSearchText(e.target.value);
-    };
+    // const handleSearch = (e) => {
+    //     setSearchText(e.target.value);
+    // };
 
-    const handleFilterChange = (e) => {
-        setFilterStatus(e.target.value);
-    };
+    // const handleFilterChange = (e) => {
+    //     setFilterStatus(e.target.value);
+    // };
 
-    const handleViewDetails = (record) => {
-        setSelectedInvoice(record);
-        setIsDetailModalVisible(true);
-    };
+    // const handleViewDetails = (record) => {
+    //     setSelectedInvoice(record);
+    //     setIsDetailModalVisible(true);
+    // };
 
-    const handleCloseDetailModal = () => {
-        setIsDetailModalVisible(false);
-        setSelectedInvoice(null);
-    };
+    // const handleCloseDetailModal = () => {
+    //     setIsDetailModalVisible(false);
+    //     setSelectedInvoice(null);
+    // };
 
-    const handleDownloadInvoice = (invoice) => {
-        downloadInvoice(invoice.html, invoice.id);
-    };
+    // const handleDownloadInvoice = (invoice) => {
+    //     downloadInvoice(invoice.html, invoice.id);
+    // };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        const options = { year: "numeric", month: "long", day: "numeric" };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
+    // const formatDate = (dateString) => {
+    //     if (!dateString) return "N/A";
+    //     const options = { year: "numeric", month: "long", day: "numeric" };
+    //     return new Date(dateString).toLocaleDateString(undefined, options);
+    // };
 
     const columns = [
         {
-            title: "Invoice Code",
-            dataIndex: "invoice_code",
-            key: "invoice_code",
+            header: "Invoice Code",
+            accessorKey: "invoice_code",
+            searchField: true,
         },
         {
-            title: "Status",
-            dataIndex: "payment_status",
-            key: "payment_status",
+            header: "Status",
+            accessorKey: "payment_status",
+            searchField: true,
         },
         {
-            title: "Organization Email",
-            dataIndex: "org_email",
-            key: "org_email",
+            header: "Organization Email",
+            accessorKey: "org_email",
+            searchField: true,
         },
         {
-            title: "Payment Verification",
-            dataIndex: "payment_verification",
-            key: "payment_verification",
-            render: (payment_verification) => (
+            header: "Payment Verification",
+            accessorKey: "payment_verification",
+            cell: ({ getValue }) => (
                 <div>
                     {/* Display verification status */}
-                    <span>
-                        {payment_verification ? "Verified" : "Not Verified"}
-                    </span>
+                    <span>{getValue() ? "Verified" : "Not Verified"}</span>
                 </div>
             ),
         },
         {
-            title: "Invoice",
-            key: "actions",
-            render: (_, record) => (
-                <div>
-                    {/* <Button
+            header: "Invoice",
+            accessorKey: "actions",
+            cell: ({ row }) => {
+                const record = row.original;
+                return (
+                    <div>
+                        {/* <Button
             type="primary"
             size="small"
             style={{ marginRight: 8 }}
@@ -237,21 +293,25 @@ const AllInvoices = () => {
           >
             View
           </Button> */}
-                    {/* Download Invoice Button */}
+                        {/* Download Invoice Button */}
 
-                    <img
-                        style={{ width: "150px", cursor: "pointer" }}
-                        src={downloadinvoicebut}
-                        onClick={() => downloadInvoice(record.html, record.id)}
-                    />
-                </div>
-            ),
+                        <img
+                            style={{ width: "150px", cursor: "pointer" }}
+                            src={downloadinvoicebut}
+                            onClick={() =>
+                                downloadInvoice(record.html, record.id)
+                            }
+                        />
+                    </div>
+                );
+            },
         },
 
         {
-            title: "Update Status",
-            key: "UpdateStatus",
-            render: (_, record) => {
+            header: "Update Status",
+            accessorKey: "UpdateStatus",
+            cell: ({ row }) => {
+                const record = row.original;
                 return (
                     <Button
                         type="primary"
@@ -283,75 +343,95 @@ const AllInvoices = () => {
         },
     ];
 
+    const filteredData = (invoices || []).filter((item) => {
+        if (statusFilter === "All") return true;
+        return (
+            item.payment_status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+    });
+
     return (
         <Main defaultSelectedKey="8">
-            {loading ? (
+            {/* {loading ? (
                 <Pageloading />
-            ) : (
-                <>
-                <div className="mt-2 -ml-4">
+            ) : ( */}
+            <>
+                {/* <div className="mt-2 -ml-4">
                     <GoBack />
-                </div>
-                    <div className="invoices-table">
-                        {/* <h2>All Invoices</h2> */}
-                        <Input
+                </div> */}
+                <div className="m-2">
+                    <h2 className="text-2xl ml-2 mt-4 font-semibold ">
+                        All Invoices
+                    </h2>
+                    {/* <Input
                             placeholder="Search"
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                             className="search-input m-2 p-2"
                             prefix={<span className="search-icon">⌕</span>}
-                        />
-                        {invoices.length > 0 ? (
-                            <Table
-                                dataSource={filteredData}
-                                columns={columns}
-                                rowKey="id"
-                                pagination={false}
-                                className="candidate-table"
-                            />
-                        ) : (
-                            <p className="text-xl m-2">No invoices found.</p>
-                        )}
-                    </div>
-                    <Modal
-                        title="Update Invoice Status"
-                        visible={updateModalVisible}
-                        onCancel={() => setUpdateModalVisible(false)}
-                        footer={[
-                            <Button
-                                key="cancel"
-                                onClick={() => setUpdateModalVisible(false)}
+                        /> */}
+                    {/* {invoices.length > 0 ? ( */}
+                    <AppTable
+                        columns={columns}
+                        data={filteredData}
+                        rowKey="id"
+                        isLoading={loading}
+                        customFilters={
+                            <Select
+                                defaultValue="All"
+                                style={{ width: 150 }}
+                                onChange={(value) => setStatusFilter(value)}
+                                className="custom-filter-select"
                             >
-                                Cancel
-                            </Button>,
-                            <Button key="update" onClick={handleUpdateInvoice}>
-                                update
-                            </Button>,
-                        ]}
-                    >
-                        <Input
-                            placeholder="Enter Payment Method"
-                            value={payment_method}
-                            onChange={(e) => setPayment_method(e.target.value)}
-                            required
-                        />
-                        <Input
-                            placeholder="Enter Transaction Id"
-                            value={transactionId}
-                            onChange={(e) => setTransactionId(e.target.value)}
-                            required
-                        />
-                        <Select
-                            placeholder="Update Status"
-                            style={{ marginTop: "20px", width: "100%" }}
-                            onChange={(value) => setNewStatus(value)}
-                            required
+                                <Option value="All">All Status</Option>
+                                <Option value="paid">Paid</Option>
+                                <Option value="pending">Pending</Option>
+                            </Select>
+                        }
+                    />
+                    {/* ) : (
+                            <p className="text-xl m-2">No invoices found.</p>
+                        )} */}
+                </div>
+                <Modal
+                    title="Update Invoice Status"
+                    visible={updateModalVisible}
+                    onCancel={() => setUpdateModalVisible(false)}
+                    footer={[
+                        <Button
+                            key="cancel"
+                            onClick={() => setUpdateModalVisible(false)}
                         >
-                            <Option value="Paid">Paid</Option>
-                        </Select>
-                    </Modal>
-                </>
-            )}
+                            Cancel
+                        </Button>,
+                        <Button key="update" onClick={handleUpdateInvoice}>
+                            update
+                        </Button>,
+                    ]}
+                >
+                    <Input
+                        placeholder="Enter Payment Method"
+                        value={payment_method}
+                        onChange={(e) => setPayment_method(e.target.value)}
+                        required
+                    />
+                    <Input
+                        placeholder="Enter Transaction Id"
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        required
+                    />
+                    <Select
+                        placeholder="Update Status"
+                        style={{ marginTop: "20px", width: "100%" }}
+                        onChange={(value) => setNewStatus(value)}
+                        required
+                    >
+                        <Option value="Paid">Paid</Option>
+                    </Select>
+                </Modal>
+            </>
+            {/* )} */}
         </Main>
     );
 };

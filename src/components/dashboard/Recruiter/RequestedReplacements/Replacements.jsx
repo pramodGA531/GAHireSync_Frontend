@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
-import { message, Tag } from "antd";
+import { message, Tag, Select } from "antd";
 import Pageloading from "../../../common/loading/Pageloading";
 import AppTable from "../../../common/AppTable";
 import {
@@ -18,6 +18,7 @@ const ReplacementsRecruiter = () => {
     const { apiurl, token } = useAuth();
     const [replacements, setReplacements] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
 
     const fetchData = async () => {
         try {
@@ -37,6 +38,35 @@ const ReplacementsRecruiter = () => {
     useEffect(() => {
         if (token) fetchData();
     }, [token]);
+
+    const filteredReplacements = useMemo(() => {
+        let result = replacements;
+
+        // Apply Status filter
+        if (statusFilter !== "All") {
+            result = result.filter(
+                (item) =>
+                    (item.replacement_status || "Pending").toLowerCase() ===
+                    statusFilter.toLowerCase(),
+            );
+        }
+
+        return result;
+    }, [replacements, statusFilter]);
+
+    const customFilters = (
+        <Select
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val)}
+            options={[
+                { label: "All Status", value: "All" },
+                { label: "Completed", value: "completed" },
+                { label: "Pending", value: "pending" },
+            ]}
+            style={{ width: 150 }}
+            placeholder="Select Status"
+        />
+    );
 
     const columns = [
         {
@@ -81,7 +111,7 @@ const ReplacementsRecruiter = () => {
                         </span>{" "}
                         {row.getValue("joining_date")
                             ? new Date(
-                                  row.getValue("joining_date")
+                                  row.getValue("joining_date"),
                               ).toLocaleDateString()
                             : "N/A"}
                     </div>
@@ -91,7 +121,7 @@ const ReplacementsRecruiter = () => {
                         </span>{" "}
                         {row.original.left_on
                             ? new Date(
-                                  row.original.left_on
+                                  row.original.left_on,
                               ).toLocaleDateString()
                             : "N/A"}
                     </div>
@@ -136,13 +166,13 @@ const ReplacementsRecruiter = () => {
                     {/* Header Section */}
                     <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <div className="-ml-8">
+                            {/* <div className="-ml-8">
                                 <GoBack />
-                            </div>
-                            <h1 className="text-3xl font-black text-[#071C50] tracking-tight mb-2 uppercase">
+                            </div> */}
+                            <h1 className="text-3xl font-black text-[#071C50]">
                                 Replacements
                             </h1>
-                            <p className="text-sm text-gray-400 font-bold uppercase tracking-[0.2em]">
+                            <p className="text-sm text-gray-400 font-bold ">
                                 Manage replacements for terminated candidates
                             </p>
                         </div>
@@ -169,13 +199,14 @@ const ReplacementsRecruiter = () => {
                             <Pageloading />
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <AppTable
-                                columns={columns}
-                                data={replacements}
-                                pageSize={15}
-                            />
-                        </div>
+                        // <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <AppTable
+                            columns={columns}
+                            data={filteredReplacements}
+                            pageSize={15}
+                            customFilters={customFilters}
+                        />
+                        // </div>
                     )}
                 </div>
             </div>

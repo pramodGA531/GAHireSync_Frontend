@@ -10,22 +10,17 @@ import {
     Button,
     Tag,
     Avatar,
-    Tooltip,
     Badge,
     Empty,
 } from "antd";
 import {
     SearchOutlined,
-    UploadOutlined,
     PlusCircleOutlined,
     SendOutlined,
     PaperClipOutlined,
     ClockCircleOutlined,
-    CheckCircleOutlined,
     UserOutlined,
-    MessageOutlined,
     InboxOutlined,
-    FilterOutlined,
     ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { format } from "date-fns";
@@ -83,25 +78,25 @@ const AllTickets = ({ setTicketId, activeTicketId }) => {
     );
 
     return (
-        <div className="flex flex-col h-full bg-white border-r border-gray-100 w-full md:w-[380px] shrink-0">
+        <div className="flex flex-col h-full bg-white border-r border-gray-100 w-full md:w-[320px] shrink-0">
             {/* Toggle Section */}
-            <div className="p-4 border-b border-gray-50 bg-gray-50/30">
-                <div className="flex bg-white p-1 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="p-4 border-b border-gray-50">
+                <div className="flex bg-gray-50 p-1 rounded-lg border border-gray-100">
                     <button
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ease-in-out duration-300 ${
                             isSent
-                                ? "bg-[#1681FF] text-white shadow-lg shadow-blue-100"
-                                : "text-gray-400 hover:text-gray-600"
+                                ? "bg-white text-blue-600 shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
                         }`}
                         onClick={() => setIsSent(true)}
                     >
                         Outgoing
                     </button>
                     <button
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-all ease-in-out duration-300 ${
                             !isSent
-                                ? "bg-[#1681FF] text-white shadow-lg shadow-blue-100"
-                                : "text-gray-400 hover:text-gray-600"
+                                ? "bg-white text-blue-600 shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
                         }`}
                         onClick={() => setIsSent(false)}
                     >
@@ -113,21 +108,21 @@ const AllTickets = ({ setTicketId, activeTicketId }) => {
             {/* Search Section */}
             <div className="p-4 border-b border-gray-50">
                 <Input
-                    prefix={<SearchOutlined className="text-gray-300 mr-2" />}
+                    prefix={<SearchOutlined className="text-gray-400 mr-2" />}
                     placeholder="Search by name..."
-                    className="h-11 rounded-xl border-gray-100 bg-gray-50/50 hover:bg-gray-50 focus:bg-white transition-all text-sm"
+                    className="h-10 rounded-lg border-gray-200 bg-white hover:border-gray-300 focus:border-blue-400 transition-all text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
 
             {/* List Section */}
-            <div className="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto sidebar-scroll p-3 space-y-2">
                 {loading ? (
-                    <div className="p-10 flex flex-col items-center gap-3 opacity-30">
-                        <ClockCircleOutlined className="text-3xl animate-spin" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                            Loading Inbox...
+                    <div className="p-10 flex flex-col items-center gap-3 opacity-50">
+                        <ClockCircleOutlined className="text-2xl animate-spin text-blue-400" />
+                        <span className="text-xs text-gray-400 font-medium">
+                            Loading tickets...
                         </span>
                     </div>
                 ) : filteredTickets.length > 0 ? (
@@ -135,41 +130,37 @@ const AllTickets = ({ setTicketId, activeTicketId }) => {
                         <div
                             key={ticket.id}
                             onClick={() => setTicketId(ticket.id)}
-                            className={`group p-4 rounded-2xl cursor-pointer transition-all border ${
+                            className={`p-3 rounded-lg cursor-pointer transition-all border ${
                                 activeTicketId === ticket.id
-                                    ? "bg-blue-50 border-blue-100"
-                                    : "bg-white border-transparent hover:bg-gray-50/80 hover:border-gray-100"
+                                    ? "bg-blue-50/50 border-blue-200 shadow-sm"
+                                    : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50/50"
                             }`}
                         >
-                            <div className="flex justify-between items-start mb-2">
+                            <div className="flex justify-between items-start mb-1">
                                 <span
-                                    className={`text-sm font-bold tracking-tight ${
+                                    className={`text-sm font-semibold truncate pr-2 ${
                                         activeTicketId === ticket.id
-                                            ? "text-[#1681FF]"
-                                            : "text-[#071C50]"
+                                            ? "text-blue-600"
+                                            : "text-gray-800"
                                     }`}
                                 >
                                     {isSent
                                         ? ticket.assigned_to
                                         : ticket.raised_by}
                                 </span>
-                                <span className="text-[9px] font-black text-gray-300 uppercase italic">
+                                <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                     {format(
                                         new Date(ticket.created_at),
                                         "MMM d",
                                     )}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <Tag className="bg-white border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-tighter m-0 rounded-md">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                                     {ticket.category}
-                                </Tag>
+                                </span>
                                 {ticket.status === "pending" && (
-                                    <Badge
-                                        status="processing"
-                                        color="#1681FF"
-                                        className="animate-pulse"
-                                    />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                                 )}
                             </div>
                         </div>
@@ -178,7 +169,7 @@ const AllTickets = ({ setTicketId, activeTicketId }) => {
                     <div className="h-full flex flex-col items-center justify-center opacity-40">
                         <Empty
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="No tickets found"
+                            description="No tickets"
                         />
                     </div>
                 )}
@@ -278,120 +269,105 @@ const ParticularTicket = ({ ticket_id, onBack }) => {
 
     if (!ticket_id) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/30 p-10 select-none">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center border border-gray-100 shadow-xl mb-6">
-                    <InboxOutlined className="text-[#1681FF] text-3xl" />
+            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/20 p-10">
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border border-gray-100 shadow-sm mb-4">
+                    <InboxOutlined className="text-gray-300 text-2xl" />
                 </div>
-                <h3 className="text-xl font-black text-[#071C50] tracking-tight mb-2">
-                    Issue Tracking Terminal
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                    Select a Ticket
                 </h3>
-                <p className="text-gray-400 font-medium text-sm max-w-xs text-center">
-                    Select a ticket from the sidebar to view the conversation
-                    history and provide resolutions.
+                <p className="text-gray-400 text-sm max-w-xs text-center">
+                    Choose a conversation from the list to view details and provide resolution.
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-white relative animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex-1 flex flex-col h-full bg-white relative">
             {/* Header Area */}
             {data && (
                 <>
-                    <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center z-10 bg-white/80 backdrop-blur-md">
-                        <div className="flex items-center gap-4">
+                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                        <div className="flex items-center gap-3">
                             <Button
                                 icon={<ArrowLeftOutlined />}
                                 shape="circle"
-                                className="md:hidden border-none"
+                                className="md:hidden border-none text-gray-400"
                                 onClick={onBack}
                             />
                             <div className="flex flex-col">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-xl font-black text-[#071C50] leading-none mb-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-0 leading-tight">
                                         {data.assigned_to}
                                     </h3>
-                                    <span className="text-[10px] font-bold text-gray-300 uppercase tracking-tighter">
-                                        REF: #{data.id}
+                                    <span className="text-[11px] text-gray-400 font-medium">
+                                        #{data.id}
                                     </span>
                                 </div>
-                                <span className="bg-blue-50 text-[#1681FF] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-blue-100 w-fit">
-                                    {data.category}
-                                </span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Tag className="text-[10px] m-0 border-gray-100 bg-gray-50 text-gray-500 rounded px-1.5">
+                                        {data.category}
+                                    </Tag>
+                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                                        data.status === "completed"
+                                            ? "bg-green-50 text-green-600"
+                                            : "bg-blue-50 text-blue-600"
+                                    }`}>
+                                        {data.status}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-6">
-                            {data.status !== "completed" && (
-                                <div className="hidden lg:flex items-center gap-3 bg-green-50 px-4 py-2 rounded-2xl border border-green-100">
-                                    <span className="text-[10px] text-green-700 font-black uppercase tracking-tighter">
-                                        Issue Resolved?
-                                    </span>
-                                    <Button
-                                        size="small"
-                                        className="h-7 bg-green-500 hover:bg-green-600 text-white border-none font-black text-[9px] uppercase rounded-lg px-4"
-                                        onClick={() => updateStatus(data.id)}
-                                    >
-                                        Yes, Close Now
-                                    </Button>
-                                </div>
-                            )}
-                            <div className="text-right">
-                                <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1 leading-none">
-                                    System Status
-                                </p>
-                                <Tag
-                                    className={`rounded-xl border-none font-black text-[10px] uppercase tracking-widest px-3 ${
-                                        data.status === "completed"
-                                            ? "bg-green-100 text-green-600"
-                                            : "bg-amber-100 text-amber-600"
-                                    }`}
-                                >
-                                    {data.status}
-                                </Tag>
-                            </div>
-                        </div>
+                        {data.status !== "completed" && (
+                            <Button
+                                size="small"
+                                className="h-8 border-green-200 text-green-600 font-medium hover:bg-green-50 text-xs rounded-lg px-4"
+                                onClick={() => updateStatus(data.id)}
+                            >
+                                Mark Resolved
+                            </Button>
+                        )}
                     </div>
 
                     {/* Chat Area */}
-                    <div className="flex-1 overflow-y-auto sidebar-scroll p-4 md:p-8 bg-gray-50/30">
-                        <div className="max-w-4xl mx-auto space-y-8">
+                    <div className="flex-1 overflow-y-auto sidebar-scroll p-6 bg-gray-50/10">
+                        <div className="max-w-4xl mx-auto space-y-6">
                             {/* Original Issue */}
                             <div className="flex gap-4">
                                 <Avatar
-                                    size={40}
+                                    size={36}
                                     icon={<UserOutlined />}
-                                    className="bg-[#001744] shadow-lg shrink-0"
+                                    className="bg-gray-100 text-gray-400 shrink-0"
                                 />
-                                <div className="space-y-3 flex-1">
-                                    <div className="bg-white p-6 rounded-3xl rounded-tl-none border border-gray-100 shadow-sm relative group">
+                                <div className="flex-1">
+                                    <div className="bg-white p-5 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm">
                                         <div className="flex justify-between items-center mb-3">
-                                            <span className="text-[10px] font-black text-[#1681FF] uppercase tracking-[0.2em]">
-                                                Initial Report
+                                            <span className="text-[10px] font-medium text-blue-500 uppercase tracking-wider">
+                                                Created Ticket
                                             </span>
-                                            <span className="text-[10px] font-bold text-gray-300 italic">
+                                            <span className="text-[10px] text-gray-400">
                                                 {data.date}
                                             </span>
                                         </div>
-                                        <h4 className="text-lg font-black text-[#071C50] mb-4 tracking-tight">
+                                        <h4 className="text-base font-semibold text-gray-800 mb-2">
                                             {data.subject}
                                         </h4>
-                                        <p className="text-gray-600 font-medium leading-relaxed">
+                                        <p className="text-gray-600 text-sm leading-relaxed mb-0">
                                             {data.description}
                                         </p>
 
                                         {data.attachments && (
-                                            <div className="mt-6 pt-4 border-t border-gray-50">
+                                            <div className="mt-4 pt-3 border-t border-gray-50">
                                                 <a
                                                     href={`${apiurl}/${data.attachments}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center gap-2 text-[#1681FF] font-bold text-[10px] uppercase hover:underline"
+                                                    className="flex items-center gap-1.5 text-blue-500 font-medium text-[11px] hover:underline"
                                                 >
-                                                    <PaperClipOutlined />{" "}
-                                                    {data.attachment_name
-                                                        ?.split("/")
-                                                        .pop()}
+                                                    <PaperClipOutlined className="text-xs" />
+                                                    {data.attachment_name?.split("/").pop()}
                                                 </a>
                                             </div>
                                         )}
@@ -403,64 +379,53 @@ const ParticularTicket = ({ ticket_id, onBack }) => {
                             {data.replies_list?.map((reply, index) => (
                                 <div
                                     key={index}
-                                    className={`flex gap-4 ${
+                                    className={`flex gap-3 ${
                                         reply.is_staff
                                             ? "flex-row"
                                             : "flex-row-reverse"
                                     }`}
                                 >
                                     <Avatar
-                                        size={40}
+                                        size={32}
                                         icon={<UserOutlined />}
                                         className={`${
                                             reply.is_staff
-                                                ? "bg-blue-600"
-                                                : "bg-gray-800"
-                                        } shadow-lg shrink-0`}
+                                                ? "bg-blue-100 text-blue-500"
+                                                : "bg-gray-100 text-gray-400"
+                                        } shrink-0`}
                                     />
-                                    <div
-                                        className={`space-y-1 flex-1 max-w-[80%]`}
-                                    >
+                                    <div className="max-w-[80%]">
                                         <div
-                                            className={`p-5 rounded-3xl border shadow-sm ${
+                                            className={`p-4 rounded-xl border shadow-sm ${
                                                 reply.is_staff
-                                                    ? "bg-blue-50/50 border-blue-100 rounded-tl-none"
+                                                    ? "bg-blue-50/30 border-blue-100 rounded-tl-none"
                                                     : "bg-white border-gray-100 rounded-tr-none"
                                             }`}
                                         >
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span
-                                                    className={`text-[9px] font-black uppercase tracking-widest ${
-                                                        reply.is_staff
-                                                            ? "text-blue-500"
-                                                            : "text-gray-400"
-                                                    }`}
-                                                >
+                                            <div className="flex justify-between items-center gap-4 mb-2">
+                                                <span className={`text-[10px] font-semibold ${
+                                                    reply.is_staff ? "text-blue-600" : "text-gray-700"
+                                                }`}>
                                                     {reply.name}
                                                 </span>
-                                                <span className="text-[8px] font-bold text-gray-300 italic uppercase">
-                                                    {format(
-                                                        new Date(
-                                                            reply.created_at,
-                                                        ),
-                                                        "MMM d, h:mm a",
-                                                    )}
+                                                <span className="text-[9px] text-gray-400">
+                                                    {format(new Date(reply.created_at), "MMM d, h:mm a")}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-600 text-sm font-medium leading-relaxed">
+                                            <p className="text-gray-600 text-sm leading-relaxed mb-0">
                                                 {reply.message}
                                             </p>
 
                                             {reply.attachment && (
-                                                <div className="mt-4 pt-3 border-t border-gray-50/50">
+                                                <div className="mt-3 pt-2 border-t border-gray-50">
                                                     <a
                                                         href={`${apiurl}/${reply.attachment}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-[9px] font-black uppercase text-blue-500 flex items-center gap-1.5 hover:underline"
+                                                        className="text-[10px] font-medium text-blue-500 flex items-center gap-1.5 hover:underline"
                                                     >
-                                                        <PaperClipOutlined />{" "}
-                                                        Shared Asset
+                                                        <PaperClipOutlined className="text-xs" />
+                                                        Shared File
                                                     </a>
                                                 </div>
                                             )}
@@ -473,60 +438,43 @@ const ParticularTicket = ({ ticket_id, onBack }) => {
 
                     {/* Footer Input Area */}
                     {data.status !== "completed" && (
-                        <div className="p-4 md:p-6 bg-white border-t border-gray-100">
+                        <div className="p-4 bg-white border-t border-gray-100">
                             <div className="max-w-4xl mx-auto">
-                                <div className="bg-gray-50 rounded-3xl border border-gray-100 p-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 focus-within:bg-white transition-all">
+                                <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-2 focus-within:bg-white focus-within:border-blue-200 transition-all">
                                     <Input.TextArea
-                                        placeholder="Type your resolution message or update..."
+                                        placeholder="Type your reply here..."
                                         autoSize={{ minRows: 2, maxRows: 6 }}
                                         value={replyText}
-                                        onChange={(e) =>
-                                            setReplyText(e.target.value)
-                                        }
-                                        className="border-none bg-transparent hover:bg-transparent focus:bg-transparent focus:ring-0 shadow-none text-gray-700 font-medium p-4 text-sm"
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        className="border-none bg-transparent hover:bg-transparent focus:bg-transparent focus:ring-0 shadow-none text-gray-700 text-sm p-3"
                                     />
 
-                                    <div className="flex justify-between items-center p-2 border-t border-gray-100/50">
+                                    <div className="flex justify-between items-center px-2 py-1.5 border-t border-gray-50">
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="file"
                                                 id="ticket-file"
                                                 className="hidden"
-                                                onChange={(e) =>
-                                                    setFile(e.target.files[0])
-                                                }
+                                                onChange={(e) => setFile(e.target.files[0])}
                                             />
                                             <Button
                                                 icon={<PaperClipOutlined />}
-                                                onClick={() =>
-                                                    document
-                                                        .getElementById(
-                                                            "ticket-file",
-                                                        )
-                                                        .click()
-                                                }
-                                                className={`rounded-xl border-none h-10 px-4 flex items-center gap-2 text-xs font-bold transition-all ${
+                                                onClick={() => document.getElementById("ticket-file").click()}
+                                                className={`h-8 px-3 rounded-lg border-none text-[11px] font-medium transition-all ${
                                                     file
-                                                        ? "bg-amber-100 text-amber-600"
-                                                        : "bg-white text-gray-400 hover:text-gray-600"
+                                                        ? "bg-blue-50 text-blue-600"
+                                                        : "bg-transparent text-gray-400 hover:text-gray-600"
                                                 }`}
                                             >
-                                                {file
-                                                    ? file.name.slice(0, 15) +
-                                                      "..."
-                                                    : "Attach Image"}
+                                                {file ? file.name.slice(0, 15) + "..." : "Attach File"}
                                             </Button>
                                             {file && (
-                                                <Button
-                                                    shape="circle"
-                                                    size="small"
-                                                    className="border-none bg-red-50 text-red-500"
-                                                    onClick={() =>
-                                                        setFile(null)
-                                                    }
+                                                <button
+                                                    className="text-gray-400 hover:text-red-500 text-lg leading-none"
+                                                    onClick={() => setFile(null)}
                                                 >
                                                     ×
-                                                </Button>
+                                                </button>
                                             )}
                                         </div>
 
@@ -534,10 +482,9 @@ const ParticularTicket = ({ ticket_id, onBack }) => {
                                             type="primary"
                                             loading={sending}
                                             onClick={sendReply}
-                                            icon={<SendOutlined />}
-                                            className="h-10 px-8 rounded-xl bg-[#1681FF] hover:bg-[#0061D5] font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 border-none flex items-center gap-2"
+                                            className="h-8 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold text-xs border-none flex items-center gap-2"
                                         >
-                                            Deliver Reply
+                                            Send reply
                                         </Button>
                                     </div>
                                 </div>
@@ -567,7 +514,7 @@ const TicketMessages = () => {
                     : values.category,
             );
             formData.append("description", values.description);
-            formData.append("subject", values.subject); // Added subject support if missing in UI but needed in API
+            formData.append("subject", values.subject);
 
             if (values.attachments && values.attachments.length > 0) {
                 formData.append(
@@ -585,46 +532,31 @@ const TicketMessages = () => {
             const result = await response.json();
             if (result.error) message.error(result.error);
             else {
-                message.success("Issue formalised and logged.");
+                message.success("Ticket raised successfully.");
                 setIsModalOpen(false);
                 form.resetFields();
             }
         } catch (error) {
-            message.error("Terminating: System failure in issue logging.");
+            message.error("Error raising ticket.");
         }
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-72px)] bg-gray-50/30 overflow-hidden">
-            <div className="p-4 md:p-8 flex justify-between items-center bg-white border-b border-gray-100">
+        <div className="flex flex-col h-[calc(100vh-72px)] bg-white overflow-hidden">
+            <div className="px-6 py-5 flex justify-between items-center border-b border-gray-50">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-[#071C50] tracking-tight mb-1">
-                        Support Command
+                    <h1 className="text-2xl font-bold text-black mb-0 leading-tight">
+                        Support Tickets
                     </h1>
-                    <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em]">
-                        Secure communication with technical desk
+                    <p className="text-gray-400 text-xs mt-1">
+                        View and manage your technical support requests
                     </p>
                 </div>
                 <Button
                     type="primary"
-                    size="large"
-                    icon={
-                        <PlusCircleOutlined className="text-sm sm:text-base" />
-                    }
+                    icon={<PlusCircleOutlined />}
                     onClick={() => setIsModalOpen(true)}
-                    className="
-                        h-10 sm:h-14
-                        px-4 sm:px-8
-                        rounded-xl sm:rounded-2xl
-                        bg-[#1681FF] hover:bg-[#0061D5]
-                        font-black
-                        text-[9px] sm:text-[10px]
-                        uppercase tracking-widest
-                        shadow-lg sm:shadow-xl shadow-blue-100
-                        border-none
-                        flex items-center
-                        gap-2 sm:gap-3
-                    "
+                    className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold text-xs border-none"
                 >
                     New Ticket
                 </Button>
@@ -658,180 +590,95 @@ const TicketMessages = () => {
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                width={550}
+                width={500}
                 style={{ maxWidth: "95vw" }}
                 centered
-                className="modal-no-padding rounded-3xl overflow-hidden"
+                className="modal-custom rounded-2xl overflow-hidden"
             >
-                <div className="flex flex-col">
-                    <div className="p-8 bg-[#001744] text-white">
-                        <div className="flex items-center gap-3 mb-2">
-                            <PlusCircleOutlined className="text-2xl" />
-                            <h3 className="text-2xl font-black text-white mb-0 tracking-tight">
-                                Technical Request
-                            </h3>
-                        </div>
-                        <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">
-                            Document your system issue or feedback
+                <div className="p-6">
+                    <div className="mb-6">
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">
+                            New Support Ticket
+                        </h3>
+                        <p className="text-gray-400 text-xs">
+                            Please provide details about your issue
                         </p>
                     </div>
 
-                    <div className="p-8">
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={raiseTicket}
-                            className="space-y-4"
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={raiseTicket}
+                        className="space-y-4"
+                        requiredMark={false}
+                    >
+                        <Form.Item
+                            label={<span className="text-xs font-semibold text-gray-700">Category</span>}
+                            name="category"
+                            rules={[{ required: true, message: "Category required" }]}
                         >
+                            <Select placeholder="Select category" className="h-10">
+                                <Option value="Support">System Support</Option>
+                                <Option value="Feature Request">Feature Request</Option>
+                                <Option value="Bug Report">Bug Report</Option>
+                                <Option value="Access Request">Access Request</Option>
+                                <Option value="Performance Issue">Performance Issue</Option>
+                                <Option value="Other">Other</Option>
+                            </Select>
+                        </Form.Item>
+
+                        {isOtherSelected && (
                             <Form.Item
-                                label={
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        Help Category
-                                    </span>
-                                }
-                                name="category"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Classification required",
-                                    },
-                                ]}
+                                label={<span className="text-xs font-semibold text-gray-700">Specify Category</span>}
+                                name="customCategory"
+                                rules={[{ required: true, message: "Please specify" }]}
                             >
-                                <Select
-                                    className="h-12 border-gray-100"
-                                    placeholder="Select issue domain"
-                                    onChange={(value) =>
-                                        setIsOtherSelected(value === "Other")
-                                    }
-                                >
-                                    <Option value="Support">
-                                        System Support
-                                    </Option>
-                                    <Option value="Feature Request">
-                                        Platform Feedback
-                                    </Option>
-                                    <Option value="Bug Report">
-                                        Technical Anomaly
-                                    </Option>
-                                    <Option value="Access Request">
-                                        Authorization Desk
-                                    </Option>
-                                    <Option value="Performance Issue">
-                                        Latency Report
-                                    </Option>
-                                    <Option value="Other">Miscellaneous</Option>
-                                </Select>
+                                <Input placeholder="Enter category" className="h-10 rounded-lg" />
                             </Form.Item>
+                        )}
 
-                            {isOtherSelected && (
-                                <Form.Item
-                                    label={
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                            Custom Specification
-                                        </span>
-                                    }
-                                    name="customCategory"
-                                    rules={[
-                                        {
-                                            required: true,
-                                            message:
-                                                "Please specify request type",
-                                        },
-                                    ]}
-                                >
-                                    <Input
-                                        placeholder="Enter request identifier"
-                                        className="h-12 rounded-xl"
-                                    />
-                                </Form.Item>
-                            )}
+                        <Form.Item
+                            label={<span className="text-xs font-semibold text-gray-700">Subject</span>}
+                            name="subject"
+                            rules={[{ required: true, message: "Subject required" }]}
+                        >
+                            <Input placeholder="Issue summary" className="h-10 rounded-lg" />
+                        </Form.Item>
 
-                            <Form.Item
-                                label={
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        Brief Topic
-                                    </span>
-                                }
-                                name="subject"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Subject is mandatory",
-                                    },
-                                ]}
-                            >
-                                <Input
-                                    placeholder="Short summary of the issue"
-                                    className="h-12 rounded-xl"
-                                />
-                            </Form.Item>
+                        <Form.Item
+                            label={<span className="text-xs font-semibold text-gray-700">Description</span>}
+                            name="description"
+                            rules={[{ required: true, message: "Description required" }]}
+                        >
+                            <Input.TextArea
+                                rows={4}
+                                placeholder="Describe the problem in detail..."
+                                className="rounded-lg p-3"
+                            />
+                        </Form.Item>
 
-                            <Form.Item
-                                label={
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        Detailed Context
-                                    </span>
-                                }
-                                name="description"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Full description required",
-                                    },
-                                ]}
-                            >
-                                <Input.TextArea
-                                    rows={4}
-                                    placeholder="State exactly what happened or what you need..."
-                                    className="rounded-xl p-4"
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                label={
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        Evidence Asset (Optional)
-                                    </span>
-                                }
-                                name="attachments"
-                                valuePropName="fileList"
-                                getValueFromEvent={(e) =>
-                                    Array.isArray(e) ? e : e?.fileList
-                                }
-                            >
-                                <Upload
-                                    beforeUpload={() => false}
-                                    maxCount={1}
-                                    className="w-full"
-                                >
-                                    <Button
-                                        block
-                                        icon={<UploadOutlined />}
-                                        className="h-12 border-dashed border-gray-200 text-gray-400 hover:text-blue-500 hover:border-blue-200"
-                                    >
-                                        Attach Screenshots / Logs
-                                    </Button>
-                                </Upload>
-                            </Form.Item>
-
-                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-50 mt-8">
-                                <Button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="h-12 px-8 rounded-2xl font-bold text-gray-400 border-none hover:bg-gray-100 text-[10px] uppercase tracking-widest"
-                                >
-                                    Abort
+                        <Form.Item
+                            label={<span className="text-xs font-semibold text-gray-700">Attachments (Optional)</span>}
+                            name="attachments"
+                            valuePropName="fileList"
+                            getValueFromEvent={(e) => Array.isArray(e) ? e : e?.fileList}
+                        >
+                            <Upload beforeUpload={() => false} maxCount={1}>
+                                <Button icon={<PaperClipOutlined />} className="rounded-lg text-xs">
+                                    Choose file
                                 </Button>
-                                <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    icon={<CheckCircleOutlined />}
-                                    className="h-12 px-10 rounded-2xl bg-[#1681FF] hover:bg-[#0061D5] font-black text-[10px] uppercase tracking-widest border-none shadow-lg shadow-blue-100 flex items-center gap-2"
-                                >
-                                    Lodge Request
-                                </Button>
-                            </div>
-                        </Form>
-                    </div>
+                            </Upload>
+                        </Form.Item>
+
+                        <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-50">
+                            <Button onClick={() => setIsModalOpen(false)} className="rounded-lg h-10 px-6 font-medium text-xs border-gray-100">
+                                Cancel
+                            </Button>
+                            <Button type="primary" htmlType="submit" className="rounded-lg h-10 px-8 font-semibold text-xs bg-blue-600 hover:bg-blue-700 border-none">
+                                Create Ticket
+                            </Button>
+                        </div>
+                    </Form>
                 </div>
             </Modal>
         </div>

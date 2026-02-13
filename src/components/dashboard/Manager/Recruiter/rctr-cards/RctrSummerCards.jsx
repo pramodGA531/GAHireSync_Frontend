@@ -36,7 +36,7 @@ const RctrSummerCards = ({ cardsData }) => {
     ];
 
     return (
-        <div className="w-full p-4 flex flex-wrap gap-4 m-2 justify-center">
+        <div className="w-full py-4 flex flex-wrap gap-4 justify-center">
             {cardData.map((card, index) => (
                 <Card
                     key={index}

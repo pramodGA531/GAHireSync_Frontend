@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams,Link } from "react-router-dom";
 import { useAuth } from "../../../common/useAuth";
 import dayjs from "dayjs";
 import {
@@ -11,7 +11,7 @@ import {
     InputNumber,
     message,
 } from "antd";
-
+import {Breadcrumb} from "antd";
 import Main from "../Layout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -89,7 +89,7 @@ const Editjob = () => {
     const [probationTime, setProbationTime] = useState("");
     const [internTime, setInternTime] = useState("");
     const [consultantTime, setConsultantTime] = useState("");
-    const [changes, setChanges] = useState([]);
+    const [changes, setChanges] = useState({});
     const [btnLoading, setBtnLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [locations, setLocations] = useState([]);
@@ -249,20 +249,37 @@ const Editjob = () => {
     const handleSubmit = async (values) => {
         console.log("edit request");
 
-        if (changes["job_type"]) {
-            const jobType = changes["job_type"];
+        const currentChanges = { ...changes };
+
+        if (currentChanges["job_type"]) {
+            const jobType = currentChanges["job_type"];
             const timePeriodMap = {
                 Intern: internTime,
                 "Full Time": probationTime,
                 Consultant: consultantTime,
             };
             const time_period = timePeriodMap[jobType] || "";
-            changes["time_period"] = time_period;
+            currentChanges["time_period"] = time_period;
         }
+
+        // Ensure years_of_experience and ctc are pulled from the latest form values and sanitized
+        const formValues = form.getFieldsValue();
+        if (formValues.years_of_experience) {
+            currentChanges["years_of_experience"] =
+                formValues.years_of_experience
+                    .toString()
+                    .replace(/[\[\]\s]/g, "");
+        }
+        if (formValues.ctc) {
+            currentChanges["ctc"] = formValues.ctc
+                .toString()
+                .replace(/[\[\]\s]/g, "");
+        }
+
         const payload = {
-            changes: changes,
-            primarySkills: values.primary_skills,
-            secondarySkills: values.secondary_skills,
+            changes: currentChanges,
+            primarySkills: values.primary_skills || [],
+            secondarySkills: values.secondary_skills || [],
         };
         try {
             setBtnLoading(true);
@@ -320,13 +337,36 @@ const Editjob = () => {
 
     return (
         <Main defaultSelectedKey="2" className="no-overflow">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             {loading ? (
                 <Pageloading />
             ) : (
-                <>
+                <div className="m-4">
+                    <div className="mb-4">
+                        <Breadcrumb
+                            items={[
+                                {
+                                    title: (
+                                        <Link
+                                            to="/agency/jobs/not-approved"
+                                            className="text-gray-400 text-sm"
+                                        >
+                                            Not Approved Jobs
+                                        </Link>
+                                    ),
+                                },
+                                {
+                                    title: (
+                                        <span className="text-gray-800 text-sm">
+                                            Edit Job
+                                        </span>
+                                    ),
+                                },
+                            ]}
+                        />
+                    </div>
                     <div className="text-[#171A1F] text-[20px] font-semibold">
                         Edit job post :{" "}
                         <span className="text-blue-500">
@@ -661,51 +701,76 @@ const Editjob = () => {
                             >
                                 <Input.Group compact>
                                     <Input
-                                        style={{ width: "20%" }}
+                                        style={{ width: "10%" }}
                                         type="number"
                                         step="0.01"
                                         placeholder="Min CTC"
                                         suffix="LPA"
                                         value={
-                                            job.ctc ? job.ctc.split(",")[0] : ""
+                                            (form.getFieldValue("ctc") || "")
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "")
+                                                .split(",")[0] || ""
                                         }
                                         onChange={(e) => {
-                                            const maxValue = changes.ctc
-                                                ? changes.ctc.split(",")[1]
-                                                : "";
+                                            const cleaned = (
+                                                form.getFieldValue("ctc") || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "");
+                                            const [, max] = cleaned.split(",");
+                                            const updatedValue = `${e.target.value},${max || ""}`;
+                                            form.setFieldsValue({
+                                                ctc: updatedValue,
+                                            });
                                             handleInputChange({
                                                 target: {
                                                     name: "ctc",
-                                                    value: `${e.target.value},${maxValue}`,
+                                                    value: updatedValue,
                                                 },
                                             });
                                         }}
                                     />
-                                    <span
+
+                                    {/* <span
                                         style={{
-                                            width: "10%",
+                                            // width: "10%",
                                             textAlign: "center",
+                                            marginLeft:"10px",
+                                            marginRight:"10px",
                                         }}
+                                        // className="cona"
                                     >
                                         -
-                                    </span>
+                                    </span> */}
+
                                     <Input
-                                        style={{ width: "20%" }}
+                                        style={{ width: "10%" }}
                                         type="number"
                                         step="0.01"
                                         suffix="LPA"
                                         placeholder="Max CTC"
                                         value={
-                                            job.ctc ? job.ctc.split(",")[1] : ""
+                                            (form.getFieldValue("ctc") || "")
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "")
+                                                .split(",")[1] || ""
                                         }
                                         onChange={(e) => {
-                                            const minValue = changes.ctc
-                                                ? changes.ctc.split(",")[0]
-                                                : "";
+                                            const cleaned = (
+                                                form.getFieldValue("ctc") || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "");
+                                            const [min] = cleaned.split(",");
+                                            const updatedValue = `${min || ""},${e.target.value}`;
+                                            form.setFieldsValue({
+                                                ctc: updatedValue,
+                                            });
                                             handleInputChange({
                                                 target: {
                                                     name: "ctc",
-                                                    value: `${minValue},${e.target.value}`,
+                                                    value: updatedValue,
                                                 },
                                             });
                                         }}
@@ -804,7 +869,7 @@ const Editjob = () => {
 
                                         {/* Location Type */}
                                         <Select
-                                            style={{ width: "10%" }}
+                                            style={{ width: "20%" }}
                                             placeholder="Location Type"
                                             defaultValue={item.job_type}
                                             onChange={(value) => {
@@ -839,7 +904,7 @@ const Editjob = () => {
                                                     positions: Number(
                                                         e.target.value,
                                                     ),
-                                                };
+                                              };
                                                 handleLocationChange(updated);
                                             }}
                                         />
@@ -1065,95 +1130,90 @@ const Editjob = () => {
                                 ]}
                             >
                                 <Input.Group compact>
-                                    {/* Min Years */}
                                     <Input
-                                        style={{ width: "20%" }}
+                                        style={{ width: "10%" }}
                                         type="number"
                                         step="0.5"
                                         placeholder="Min years"
                                         suffix="Years"
                                         value={
-                                            changes?.years_of_experience
-                                                ? changes.years_of_experience.split(
-                                                      ",",
-                                                  )[0]
-                                                : job?.years_of_experience?.split(
-                                                      ",",
-                                                  )[0] || ""
+                                            (
+                                                form.getFieldValue(
+                                                    "years_of_experience",
+                                                ) || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "")
+                                                .split(",")[0] || ""
                                         }
                                         onChange={(e) => {
-                                            const minValue = e.target.value;
-                                            const maxValue =
-                                                job?.job_title !== "" &&
-                                                changes?.years_of_experience
-                                                    ? changes.years_of_experience.split(
-                                                          ",",
-                                                      )[1]
-                                                    : job?.years_of_experience?.split(
-                                                          ",",
-                                                      )[1] || "";
-
-                                            const updatedValue = `${minValue},${maxValue}`;
-
-                                            // Update changes
+                                            const cleaned = (
+                                                form.getFieldValue(
+                                                    "years_of_experience",
+                                                ) || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "");
+                                            const [, max] = cleaned.split(",");
+                                            const updatedValue = `${e.target.value},${max || ""}`;
+                                            form.setFieldsValue({
+                                                years_of_experience:
+                                                    updatedValue,
+                                            });
                                             handleInputChange({
                                                 target: {
                                                     name: "years_of_experience",
                                                     value: updatedValue,
                                                 },
                                             });
-
-                                            // Update job state
-                                            setJob((prev) => ({
-                                                ...prev,
-                                                years_of_experience:
-                                                    updatedValue,
-                                            }));
                                         }}
                                     />
 
-                                    {/* <span style={{ width: '10%', textAlign: 'center' }}>-</span> */}
+                                    {/* <span
+                                        style={{
+                                            width: "10%",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        -
+                                    </span> */}
 
-                                    {/* Max Years */}
                                     <Input
-                                        style={{ width: "20%" }}
+                                        style={{ width: "10%" }}
                                         type="number"
                                         step="0.5"
                                         suffix="Years"
                                         placeholder="Max years"
                                         value={
-                                            job?.years_of_experience?.split(
-                                                ",",
-                                            )[1] || ""
+                                            (
+                                                form.getFieldValue(
+                                                    "years_of_experience",
+                                                ) || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "")
+                                                .split(",")[1] || ""
                                         }
                                         onChange={(e) => {
-                                            const maxValue = e.target.value;
-                                            const minValue =
-                                                job?.job_title !== "" &&
-                                                changes?.years_of_experience
-                                                    ? changes.years_of_experience?.split(
-                                                          ",",
-                                                      )[0]
-                                                    : job?.years_of_experience?.split(
-                                                          ",",
-                                                      )[0] || "";
-
-                                            const updatedValue = `${minValue},${maxValue}`;
-
-                                            // Update changes
+                                            const cleaned = (
+                                                form.getFieldValue(
+                                                    "years_of_experience",
+                                                ) || ""
+                                            )
+                                                .toString()
+                                                .replace(/[\[\]\s]/g, "");
+                                            const [min] = cleaned.split(",");
+                                            const updatedValue = `${min || ""},${e.target.value}`;
+                                            form.setFieldsValue({
+                                                years_of_experience:
+                                                    updatedValue,
+                                            });
                                             handleInputChange({
                                                 target: {
                                                     name: "years_of_experience",
                                                     value: updatedValue,
                                                 },
                                             });
-
-                                            // Update job state
-                                            setJob((prev) => ({
-                                                ...prev,
-                                                years_of_experience:
-                                                    updatedValue,
-                                            }));
                                         }}
                                     />
                                 </Input.Group>
@@ -1247,7 +1307,7 @@ const Editjob = () => {
                             </Form.Item>
                         </Form>
                     )}
-                </>
+                </div>
             )}
         </Main>
     );

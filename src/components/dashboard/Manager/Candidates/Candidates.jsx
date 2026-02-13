@@ -19,6 +19,7 @@ const Candidates = () => {
     const [showReasonModal, setShowReasonModal] = useState(false);
     const [reason, setReason] = useState("");
     const [loading, setLoading] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
 
     useEffect(() => {
         fetchCandidatesApplications();
@@ -26,7 +27,7 @@ const Candidates = () => {
 
     useEffect(() => {
         filterCandidates();
-    }, [searchQuery, selectedJobs, candidatesApplications]);
+    }, [searchQuery, selectedJobs, candidatesApplications, statusFilter]);
 
     const fetchCandidatesApplications = async () => {
         try {
@@ -107,7 +108,14 @@ const Candidates = () => {
                 .toLowerCase()
                 .includes(searchQuery.toLowerCase());
 
-            return jobMatches && (nameMatches || jobTitleMatches);
+            const statusMatches =
+                statusFilter === "All" ||
+                app.application_status?.toLowerCase() ===
+                    statusFilter.toLowerCase();
+
+            return (
+                jobMatches && (nameMatches || jobTitleMatches) && statusMatches
+            );
         });
         setFilteredCandidates(filtered);
     };
@@ -205,9 +213,9 @@ const Candidates = () => {
             ) : (
                 <>
                     <div className="w-full p-2 md:pl-6 md:w-[94%]">
-                        <div className="-ml-8 mt-2">
+                        {/* <div className="-ml-8 mt-2">
                             <GoBack />
-                        </div>
+                        </div> */}
                         <h2 className="text-xl font-bold mb-4">Candidates</h2>
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 md:h-20 md:px-5 mb-5 rounded-lg shadow-sm gap-4 h-auto">
                             <div className="flex flex-col md:flex-row items-start md:items-center gap-2.5 w-full md:w-auto">
@@ -233,6 +241,39 @@ const Candidates = () => {
                                         </Select.Option>
                                     ))}
                                 </Select>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-2.5 w-full md:w-auto">
+                                <span className="font-semibold text-gray-700">
+                                    Status
+                                </span>
+                                <Select
+                                    style={{ width: "100%" }}
+                                    placeholder="Filter by Status"
+                                    onChange={(val) => setStatusFilter(val)}
+                                    value={statusFilter}
+                                    className="custom-select w-full md:w-[200px]"
+                                    options={[
+                                        { label: "All Status", value: "All" },
+                                        {
+                                            label: "Shortlisted",
+                                            value: "shortlisted",
+                                        },
+                                        {
+                                            label: "Selected",
+                                            value: "selected",
+                                        },
+                                        {
+                                            label: "Rejected",
+                                            value: "rejected",
+                                        },
+                                        { label: "On Hold", value: "onhold" },
+                                        {
+                                            label: "Processing",
+                                            value: "processing",
+                                        },
+                                    ]}
+                                />
                             </div>
 
                             <div className="flex items-center gap-2 w-full md:w-auto">

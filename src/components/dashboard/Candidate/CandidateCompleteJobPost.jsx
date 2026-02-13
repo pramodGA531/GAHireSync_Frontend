@@ -3,6 +3,7 @@ import ViewJobPost from "../../common/ViewJobPost";
 import Main from "./Layout";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../common/useAuth";
+import { Breadcrumb } from "antd";
 import Pageloading from "../../common/loading/Pageloading";
 import GoBack from "../../common/Goback";
 
@@ -43,26 +44,32 @@ const CandidateCompleteJobPost = () => {
 
     return (
         <Main defaultSelectedKey="2">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
+            </div> */}
             {loading ? (
                 <Pageloading />
             ) : job ? (
                 <>
-                    <div
-                        className="org-name"
-                        style={{
-                            color: "#171A1F",
-                            fontSize: "24px",
-                            fontWeight: "700",
-                            marginBottom: "15px",
-                        }}
-                    ></div>
+                    <div className="m-4 -mb-1">
+                        <Breadcrumb
+                            separator=">"
+                            items={[
+                                {
+                                    title: "Selected Jobs",
+                                    href: "/candidate/selected_jobs",
+                                },
+                                {
+                                    title: "Job Details",
+                                },
+                            ]}
+                        />
+                    </div>
                     <ViewJobPost
                         id={job_id}
                         job={job}
                         interviewers={interviewers}
+                        hideAssigned={true}
                     />
                 </>
             ) : null}

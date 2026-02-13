@@ -44,6 +44,7 @@ const Layout = ({
                 label: "Dashboard",
                 logo: dashboard,
                 active_logo: dashboard_active,
+                tooltip:"View your jobs, applications, replacements and reconfirmations",
                 path: "/recruiter",
             },
             {
@@ -51,40 +52,58 @@ const Layout = ({
                 label: "Jobs",
                 logo: jobposts,
                 active_logo: jobposts_active,
-                badge: badgesData?.assign_job > 0,
+                tooltip:"View your active and closed jobs",
+                badge:
+                    badgesData &&
+                    badgesData.active_jobs + badgesData.history_jobs > 0,
                 children: [
                     {
                         key: "2-1",
                         label: "Active",
                         path: "/recruiter/postings/opened",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.active_jobs > 0
+                                ? true
+                                : false,
                     },
                     {
                         key: "2-2",
                         label: "History",
                         path: "/recruiter/postings/closed",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.history_jobs > 0
+                                ? true
+                                : false,
                     },
                 ],
             },
             {
                 key: "3",
-                label: "Applications",
+                label: "Interviews",
                 logo: scheduled,
                 active_logo: secheduled_active,
-                badge: badgesData?.schedule_interview > 0,
+                tooltip:"view any new jobs and scheduled interviews",
+                badge:
+                    badgesData &&
+                    badgesData.to_schedule > 0,
                 children: [
                     {
                         key: "3-1",
                         label: "New Jobs",
                         path: "/recruiter/applications/to-schedule",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.to_schedule > 0
+                                ? true
+                                : false,
                     },
                     {
                         key: "3-2",
                         label: "Scheduled",
                         path: "/recruiter/applications/already-scheduled",
-                        badge: false,
+                        badge:
+                            badgesData && badgesData.already_scheduled > 0
+                                ? true
+                                : false,
                     },
                 ],
             },
@@ -95,6 +114,7 @@ const Layout = ({
                 active_logo: reconfirmed_active,
                 path: "/recruiter/reconfirmation-applications",
                 badge: badgesData?.reconfirm > 0,
+                tooltip:"Confirm the candidates whether they joined in the clients organization",
             },
             {
                 key: "5",
@@ -102,10 +122,11 @@ const Layout = ({
                 logo: replacement,
                 active_logo: replacement_active,
                 path: "/recruiter/replacements",
+                tooltip:"view raised replacements by the clients",
                 badge: badgesData?.replacement > 0,
             },
         ],
-        [badgesData]
+        [badgesData],
     );
 
     return (

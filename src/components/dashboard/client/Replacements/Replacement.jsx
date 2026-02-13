@@ -198,12 +198,13 @@ const Replacement = () => {
                 <Pageloading />
             ) : (
                 <>
-                <div className="mt-4 -ml-2">
+                {/* <div className="mt-4 -ml-2">
                     <GoBack />
-                </div>
-                    <h2 className="font-semibold text-xl m-4 -mt-0.5 text-black">
+                </div> */}
+                   
+                   <div className="m-4"> <h2 className="font-semibold text-xl text-black">
                         Replacements
-                    </h2>
+                    </h2></div>
                     <div className="flex flex-wrap gap-4">
                         {data &&
                             data?.map((item, index) => (

@@ -87,16 +87,17 @@ const RctrSummaryCard = ({ type, value, label }) => {
     const { bgClass, textClass, icon } = getCardStyles();
 
     return (
-        <div className={`stat-card ${bgClass} animate-fade-in`}>
-            <div className={`stat-card-content ${textClass}`}>
-                <div className="stat-card-header">
-                    {icon}
-                    <h2 className="stat-value">{value}</h2>
-                </div>
-                <p className="stat-label">{label}</p>
-            </div>
-        </div>
-    );
+  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 m-3 shadow-sm border border-gray-100">
+    <div className="text-gray-800">
+      <div className="flex items-center gap-3 mb-2">
+        {icon}
+        <h2 className="text-2xl font-semibold">{value}</h2>
+      </div>
+      <p className="text-sm text-gray-500">{label}</p>
+    </div>
+  </div>
+);
+
 };
 
 export default RctrSummaryCard;

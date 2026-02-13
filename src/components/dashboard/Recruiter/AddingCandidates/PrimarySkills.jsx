@@ -22,7 +22,7 @@ const PrimarySkillsForm = ({ primarySkills }) => {
                                 <div className="flex items-center gap-2">
                                     <RocketOutlined className="text-[#1681FF]" />
                                     <span className="text-[10px] font-black text-[#1681FF] uppercase tracking-widest">
-                                        Primary Core
+                                        Primary Skills
                                     </span>
                                 </div>
                                 <Badge status="processing" color="#1681FF" />

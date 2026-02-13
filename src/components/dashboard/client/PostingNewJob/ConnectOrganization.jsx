@@ -94,20 +94,20 @@ const ConnectOrganization = ({ setCurrentStep, setConnectionId }) => {
     };
 
     const handleAddJobPost = (connection_id, can_add_new, organization_id) => {
-        if (can_add_new) {
+        // if (can_add_new) {
             setCurrentStep(2);
             setConnectionId(connection_id);
-        } else {
-            Modal.warning({
-                title: "Job Post Limit Reached",
-                content:
-                    "To add job post, please contact your Talent Acquisition partner or upgrade your plan.",
-                centered: true,
-                okText: "Okay",
-            });
+        // } else {
+        //     Modal.warning({
+        //         title: "Job Post Limit Reached",
+        //         content:
+        //             "To add job post, please contact your Talent Acquisition partner or upgrade your plan.",
+        //         centered: true,
+        //         okText: "Okay",
+        //     });
 
-            sendMail(organization_id);
-        }
+        //     sendMail(organization_id);
+        // }
     };
 
     useEffect(() => {

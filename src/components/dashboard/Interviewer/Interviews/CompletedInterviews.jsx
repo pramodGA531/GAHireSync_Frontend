@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../common/useAuth";
-import { Button, message } from "antd";
-import { useNavigate } from "react-router-dom";
-import Table from "../../../common/Table";
+import { Button, message, Select } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import AppTable from "../../../common/AppTable";
 // import "./ScheduledInterviews.css";
 import Pageloading from "../../../common/loading/Pageloading";
 import Main from "../Layout";
@@ -17,8 +17,23 @@ const CompletedInterviews = () => {
     const [pageSize, setPageSize] = useState(10);
     const [expandedRowKeys, setExpandedRowKeys] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [modeFilter, setModeFilter] = useState("All");
 
     const navigate = useNavigate();
+    const location = useLocation();
+    const parseSkills = (skills) => {
+        if (typeof skills === "string") {
+            try {
+                // convert single quotes to double quotes
+                const fixed = skills.replace(/'/g, '"');
+                return JSON.parse(fixed);
+            } catch (e) {
+                console.error("Invalid skills format", e);
+                return null;
+            }
+        }
+        return skills;
+    };
 
     const fetchData = async (page = 1) => {
         try {
@@ -30,7 +45,7 @@ const CompletedInterviews = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
 
             const data = await response.json();
@@ -47,6 +62,40 @@ const CompletedInterviews = () => {
         }
     };
 
+    const filteredData = useMemo(() => {
+        let result = data || [];
+        if (modeFilter !== "All") {
+            result = result.filter(
+                (item) => item.mode_of_interview === modeFilter,
+            );
+        }
+        return result;
+    }, [data, modeFilter]);
+
+    const modeOptions = useMemo(() => {
+        const modes = [
+            ...new Set(
+                (data || [])
+                    .map((item) => item.mode_of_interview)
+                    .filter(Boolean),
+            ),
+        ];
+        return [
+            { label: "All Modes", value: "All" },
+            ...modes.map((mode) => ({ label: mode, value: mode })),
+        ];
+    }, [data]);
+
+    const customFilters = (
+        <Select
+            value={modeFilter}
+            onChange={setModeFilter}
+            options={modeOptions}
+            style={{ width: 180 }}
+            placeholder="Select Mode"
+        />
+    );
+
     useEffect(() => {
         if (token) {
             fetchData(currentPage);
@@ -55,13 +104,18 @@ const CompletedInterviews = () => {
 
     const columns = [
         {
-            title: "Job Title",
-            dataIndex: "job_title",
-            key: "job_title",
-            render: (title, record) => (
+            header: "Job Title",
+            accessorKey: "job_title",
+            searchField: true,
+            cell: ({ row }) => (
                 <div
                     onClick={() => {
-                        navigate(`/interviewer/jobpost/${record.job_id}`);
+                        navigate(
+                            `/interviewer/jobpost/${row.original.job_id}`,
+                            {
+                                state: { from: location.pathname },
+                            },
+                        );
                     }}
                     style={{
                         color: "#2C5F99",
@@ -69,33 +123,27 @@ const CompletedInterviews = () => {
                         cursor: "pointer",
                     }}
                 >
-                    {title}
+                    {row.original.job_title}
                 </div>
             ),
         },
         {
-            title: "Rounds Number",
-            dataIndex: "round_num",
-            key: "round_num",
+            header: "Rounds Number",
+            accessorKey: "round_num",
         },
         {
-            title: "Mode of Interview",
-            dataIndex: "mode_of_interview",
-            key: "mode_of_interview",
+            header: "Mode of Interview",
+            accessorKey: "mode_of_interview",
         },
         {
-            title: "Candidate Name",
-            dataIndex: "candidate_name",
-            key: "candidate_name",
+            header: "Candidate Name",
+            accessorKey: "candidate_name",
+            searchField: true,
         },
         {
-            title: "Scheduled Time",
-            dataIndex: "scheduled_date",
-            key: "scheduled_date",
-            render: (text) => new Date(text).toLocaleDateString(),
-            sorter: (a, b) =>
-                new Date(a.schedule_date) - new Date(b.schedule_date),
-            sortDirections: ["ascend", "descend"],
+            header: "Scheduled Time",
+            accessorKey: "scheduled_date",
+            cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
         },
     ];
 
@@ -106,26 +154,16 @@ const CompletedInterviews = () => {
             ) : (
                 data && (
                     <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div className="-ml-6">
+                        {/* <div className="-ml-6">
                             <GoBack />
-                        </div>
+                        </div> */}
                         <h1 className="text-xl font-bold">
                             Completed Interviews
                         </h1>
-                        <Table
+                        <AppTable
                             columns={columns}
-                            data={data}
-                            pagination={{
-                                current: currentPage,
-                                pageSize: pageSize,
-                                total: total, // Total interviews count for pagination
-                                onChange: (page, pageSize) => {
-                                    setCurrentPage(page);
-                                    setPageSize(pageSize);
-                                },
-                                showSizeChanger: true,
-                                pageSizeOptions: ["5", "10", "20", "50"],
-                            }}
+                            data={filteredData}
+                            customFilters={customFilters}
                             expandable={{
                                 expandedRowRender: (record) => (
                                     <div className="p-4 bg-gray-50 rounded-lg space-y-2 border border-gray-100">
@@ -133,14 +171,43 @@ const CompletedInterviews = () => {
                                             <strong className="text-gray-700">
                                                 Primary Skills Rating:
                                             </strong>{" "}
-                                            {record.primary_skills_rating}
+                                            {(() => {
+                                                const skillsObj = parseSkills(
+                                                    record.primary_skills_rating,
+                                                );
+                                                return skillsObj
+                                                    ? Object.entries(skillsObj)
+                                                          .map(
+                                                              ([key, value]) =>
+                                                                  `${key} : ${value}`,
+                                                          )
+                                                          .join(", ")
+                                                    : "N/A";
+                                            })()}
                                         </div>
+
                                         <div>
                                             <strong className="text-gray-700">
                                                 Secondary Skills Rating:
                                             </strong>{" "}
-                                            {record.secondary_skills_rating}
+                                            {(() => {
+                                                const secskillsObj =
+                                                    parseSkills(
+                                                        record.secondary_skills_rating,
+                                                    );
+                                                return secskillsObj
+                                                    ? Object.entries(
+                                                          secskillsObj,
+                                                      )
+                                                          .map(
+                                                              ([key, value]) =>
+                                                                  `${key} : ${value}`,
+                                                          )
+                                                          .join(", ")
+                                                    : "N/A";
+                                            })()}
                                         </div>
+
                                         <div>
                                             <strong className="text-gray-700">
                                                 Remarks:

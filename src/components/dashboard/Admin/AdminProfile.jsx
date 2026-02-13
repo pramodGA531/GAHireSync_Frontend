@@ -18,7 +18,7 @@ export default function AdminProfile() {
         <Layout defaultSelectedKey="1">
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
                 <div className="mb-8">
-                    <GoBack />
+                    {/* <GoBack /> */}
                     <ProfileCard hideEdit={true} />
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

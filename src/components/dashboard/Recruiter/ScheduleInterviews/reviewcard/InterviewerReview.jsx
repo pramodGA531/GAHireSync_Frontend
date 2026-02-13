@@ -21,7 +21,7 @@ const InterviewerReview = ({ id }) => {
                 `${apiurl}/recruiter/get-interview-marks/?interview_id=${id}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                }
+                },
             );
             const data = await response.json();
             if (data.error) message.error(data.error);
@@ -50,75 +50,81 @@ const InterviewerReview = ({ id }) => {
     };
 
     const primarySkills = parseSkills(
-        reviewData?.primary_skills_rating || "{}"
+        reviewData?.primary_skills_rating || "{}",
     );
     const secondarySkills = parseSkills(
-        reviewData?.secondary_skills_rating || "{}"
+        reviewData?.secondary_skills_rating || "{}",
     );
 
     return (
-        <div className="bg-white rounded-[40px] p-2 md:p-6 animate-in fade-in zoom-in duration-500">
-            <div className="bg-[#071C50] text-white p-10 rounded-[48px] shadow-2xl shadow-blue-900/10 mb-10 overflow-hidden relative">
-                <div className="absolute right-[-30px] top-[-30px] opacity-10 rotate-12 scale-150">
-                    <SafetyCertificateOutlined className="text-[180px]" />
+        <div className="bg-white rounded-[40px] p-2 md:p-6 animate-in fade-in duration-700">
+            {/* Minimalist Header */}
+            <div className="bg-[#b7eafb] border border-slate-100 p-10 rounded-[48px] shadow-sm mb-10 overflow-hidden relative">
+                <div className="absolute right-[-20px] top-[-20px] opacity-[0.03] rotate-12 scale-150 pointer-events-none">
+                    {/* <SafetyCertificateOutlined className="text-[180px] text-slate-900" /> */}
                 </div>
 
-                <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                                <AuditOutlined className="text-2xl text-blue-300" />
-                            </div>
-                            <div>
-                                <h2 className="text-3xl font-black tracking-tighter uppercase m-0">
-                                    Performance Scorecard
-                                </h2>
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mt-1">
-                                    Operational Evaluation Data Log
-                                </p>
-                            </div>
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100">
+                            <AuditOutlined className="text-2xl text-slate-400" />
                         </div>
+                        <div>
+                            <h2 className="text-2xl font-black tracking-tight text-slate-800 uppercase m-0">
+                                Interview Results
+                            </h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">
+                                Interview details and feedback
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5 px-1">
+                            Current Status
+                        </span>
                         <Tag
-                            className={`border-none rounded-xl px-4 py-1.5 font-black text-[10px] uppercase tracking-widest ${
+                            className={`border-none rounded-xl px-5 py-2 font-black text-[10px] uppercase tracking-widest shadow-sm ${
                                 reviewData?.status?.toLowerCase() === "selected"
-                                    ? "bg-green-500 text-white"
+                                    ? "bg-green-50 text-green-600"
                                     : reviewData?.status?.toLowerCase() ===
-                                      "rejected"
-                                    ? "bg-red-500 text-white"
-                                    : "bg-amber-500 text-white"
+                                        "rejected"
+                                      ? "bg-red-50 text-red-600"
+                                      : "bg-amber-50 text-amber-600"
                             }`}
                         >
-                            Result: {reviewData?.status}
+                            {reviewData?.status}
                         </Tag>
                     </div>
                 </div>
             </div>
 
-            <div className="px-6 space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    {/* Primary Skills */}
+            <div className="px-6 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {/* Core Skills */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <RocketOutlined className="text-[#1681FF] text-xl" />
-                            <h3 className="text-sm font-black text-[#071C50] uppercase tracking-widest m-0">
-                                Primary Proficiencies
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                <RocketOutlined className="text-blue-500 text-sm" />
+                            </div>
+                            <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] m-0">
+                                Core Skills
                             </h3>
                         </div>
-                        <div className="space-y-5 bg-blue-50/20 p-8 rounded-[32px] border border-blue-100/50">
+                        <div className="space-y-6 bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
                             {primarySkills.length > 0 ? (
                                 primarySkills.map((skill) => (
                                     <div key={skill.id} className="group">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[#071C50] font-bold text-xs tracking-tight">
+                                        <div className="flex justify-between items-center mb-2.5">
+                                            <span className="text-slate-700 font-bold text-xs tracking-tight">
                                                 {skill.name}
                                             </span>
-                                            <span className="text-[10px] font-black text-[#1681FF] bg-blue-100/50 px-2 py-0.5 rounded-lg">
-                                                {skill.rating} / 10
+                                            <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                                                {skill.rating}/10
                                             </span>
                                         </div>
-                                        <div className="h-2 w-full bg-blue-100/50 rounded-full overflow-hidden">
+                                        <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
                                             <div
-                                                className="h-full bg-[#1681FF] rounded-full transition-all duration-1000 ease-out"
+                                                className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out"
                                                 style={{
                                                     width: `${
                                                         (skill.rating / 10) *
@@ -130,34 +136,36 @@ const InterviewerReview = ({ id }) => {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-gray-400 font-bold text-xs italic text-center py-4">
-                                    No primary metrics logged.
+                                <p className="text-slate-300 font-bold text-[10px] uppercase tracking-widest text-center py-4">
+                                    No core skills recorded
                                 </p>
                             )}
                         </div>
                     </div>
 
-                    {/* Secondary Skills */}
+                    {/* Additional Skills */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <AppstoreOutlined className="text-amber-500 text-xl" />
-                            <h3 className="text-sm font-black text-[#071C50] uppercase tracking-widest m-0">
-                                Auxiliary Credentials
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                                <AppstoreOutlined className="text-amber-500 text-sm" />
+                            </div>
+                            <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] m-0">
+                                Additional Skills
                             </h3>
                         </div>
-                        <div className="space-y-5 bg-amber-50/10 p-8 rounded-[32px] border border-amber-100/30">
+                        <div className="space-y-6 bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
                             {secondarySkills.length > 0 ? (
                                 secondarySkills.map((skill) => (
                                     <div key={skill.id} className="group">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-slate-600 font-bold text-xs tracking-tight">
+                                        <div className="flex justify-between items-center mb-2.5">
+                                            <span className="text-slate-700 font-bold text-xs tracking-tight">
                                                 {skill.name}
                                             </span>
-                                            <span className="text-[10px] font-black text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded-lg">
-                                                {skill.rating} / 10
+                                            <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                                                {skill.rating}/10
                                             </span>
                                         </div>
-                                        <div className="h-2 w-full bg-amber-100/30 rounded-full overflow-hidden">
+                                        <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
                                             <div
                                                 className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
                                                 style={{
@@ -171,8 +179,8 @@ const InterviewerReview = ({ id }) => {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-gray-400 font-bold text-xs italic text-center py-4">
-                                    No secondary metrics found.
+                                <p className="text-slate-300 font-bold text-[10px] uppercase tracking-widest text-center py-4">
+                                    No additional skills recorded
                                 </p>
                             )}
                         </div>
@@ -180,31 +188,40 @@ const InterviewerReview = ({ id }) => {
                 </div>
 
                 {/* Remarks Section */}
-                <div className="bg-slate-50/50 p-10 rounded-[40px] border border-gray-100 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <FormOutlined className="text-[#071C50] text-xl" />
-                        <h3 className="text-sm font-black text-[#071C50] uppercase tracking-widest m-0">
-                            Interviewer Narrative
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3 px-1">
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
+                            <FormOutlined className="text-slate-400 text-sm" />
+                        </div>
+                        <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.15em] m-0">
+                            Interviewer's Remarks
                         </h3>
                     </div>
-                    <div className="relative p-8 bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[120px]">
-                        <div className="absolute top-4 right-6 opacity-5 grayscale">
-                            <CheckCircleOutlined className="text-6xl text-green-500" />
+                    <div className="relative p-10 bg-slate-50/30 rounded-[40px] border border-slate-100 overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] grayscale pointer-events-none">
+                            <CheckCircleOutlined className="text-8xl text-slate-900" />
                         </div>
-                        <p className="text-slate-600 font-medium leading-relaxed italic relative z-10">
-                            "{" "}
-                            {reviewData?.remarks ||
-                                "Operational logs indicate no descriptive narrative recorded for this session."}{" "}
-                            "
+                        <p className="text-slate-600 font-medium leading-[1.8] text-sm relative z-10 m-0">
+                            {reviewData?.remarks ? (
+                                <span className="text-slate-700 italic">
+                                    "{reviewData.remarks}"
+                                </span>
+                            ) : (
+                                <span className="text-slate-400 uppercase text-[10px] font-bold tracking-widest">
+                                    No descriptive feedback provided for this
+                                    session
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
 
-                <div className="pt-4 pb-12 text-center">
-                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-[#071C50] text-white">
-                        <CheckCircleOutlined className="text-blue-400" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">
-                            Verified Evaluation Complete
+                {/* Footer Tag */}
+                <div className="pt-6 pb-8 flex justify-center">
+                    <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400">
+                        <CheckCircleOutlined className="text-slate-300 text-sm" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.25em]">
+                            Review Finalized
                         </span>
                     </div>
                 </div>
