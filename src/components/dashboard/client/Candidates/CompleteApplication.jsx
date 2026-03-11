@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from "react";
 
 import { useAuth } from "../../../common/useAuth";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { message, Breadcrumb } from "antd";
 import Main from "../Layout";
 import Pageloading from "../../../common/loading/Pageloading";
 import ViewApplication from "../../../common/ViewApplication";
-import GoBack from "../../../common/Goback";
 
 const ClientCompleteApplication = () => {
     const [data, setData] = useState(null);
     const { apiurl, token } = useAuth();
     const { application_id } = useParams();
+    const location = useLocation();
     const [loading, setLoading] = useState(false);
+
+    // Determine breadcrumb trail from router state (if any)
+    const routerState = location.state || {};
+    const fromReplacements = routerState.from === "replacements";
+    const parentLabel = routerState.label || "Replacement Requests";
 
     const fetchData = async () => {
         try {
@@ -48,26 +53,22 @@ const ClientCompleteApplication = () => {
 
     const { application_data } = data;
 
+    const breadcrumbItems = fromReplacements
+        ? [
+              { title: "Replacements", href: "/client/replacements" },
+              { title: parentLabel, href: "/client/replacements" },
+              { title: "Candidate Profile" },
+          ]
+        : [
+              { title: "Applications", href: "/client/candidates/processing" },
+              { title: "Candidate Profile" },
+          ];
+
     return (
         <Main defaultSelectedKey="3" className="complete-app-container">
-            {/* <div className="mt-4 -ml-2 mb-4">
-                <GoBack />
-            </div> */}
             <div className="m-4">
-            <Breadcrumb
-           
-                separator=">"
-                items={[
-                    {
-                        title: "Applications",
-                        href: `/client/candidates/processing`,
-                    },
-                    {
-                        title: "Complete Application",
-                    },
-                ]}
-            ></Breadcrumb>
-</div>
+                <Breadcrumb separator=">" items={breadcrumbItems} />
+            </div>
             <ViewApplication application_data={application_data} />
         </Main>
     );

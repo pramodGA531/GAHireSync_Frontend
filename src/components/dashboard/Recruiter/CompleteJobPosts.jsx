@@ -57,7 +57,6 @@ const CompleteJobPostRecruiter = () => {
                         <div className="flex flex-col gap-4">
                             <Breadcrumb
                                 items={[
-                                    
                                     {
                                         title: (
                                             <span
@@ -93,6 +92,14 @@ const CompleteJobPostRecruiter = () => {
                                 </div>
                             </div>
                         </div>
+                        <Button
+                            onClick={() =>
+                                navigate(`/agency/job-calendar/${id}`)
+                            }
+                            className="bg-[#1681FF] hover:bg-[#1681FF]/90 text-white border-none font-bold rounded-xl h-10 px-6"
+                        >
+                            View Interview Calendar
+                        </Button>
                     </div>
 
                     {job?.is_edited_by_client && (

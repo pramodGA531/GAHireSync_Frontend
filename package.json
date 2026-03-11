@@ -13,6 +13,7 @@
     "@ant-design/icons": "^6.1.0",
     "@tanstack/react-table": "^8.21.3",
     "antd": "^6.1.4",
+    "axios": "^1.13.5",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
     "dayjs-plugin-utc": "^0.1.2",
@@ -38,10 +39,11 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.11.0",
     "react-select": "^5.10.2",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "styled-components": "^6.3.9"
   },
   "devDependencies": {
-   "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.0.9",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

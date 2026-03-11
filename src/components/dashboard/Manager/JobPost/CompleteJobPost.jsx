@@ -1,15 +1,131 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 // import "./CompleteJobPost.css";
-import { Button, Table, Modal, Select, message, Input, Breadcrumb } from "antd";
+import {
+    Button,
+    Table,
+    Modal,
+    Select,
+    message,
+    Input,
+    Breadcrumb,
+    Spin,
+    Typography,
+    Tag,
+} from "antd";
+const { Text, Title, Paragraph } = Typography;
+import { LoadingOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import DOMPurify from "dompurify";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
 import ViewJobPost from "../../../common/ViewJobPost";
 import { EyeOutlined } from "@ant-design/icons";
 import { InfoCircleOutlined } from "@ant-design/icons";
-import { CloudCog } from "lucide-react";
+import { CloudCog, Sparkles } from "lucide-react";
 import GoBack from "../../../common/Goback";
+
+const AIInsightsDashboard = ({ content, loading }) => {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm h-full">
+                <Spin
+                    indicator={
+                        <LoadingOutlined
+                            style={{ fontSize: 40, color: "#6366f1" }}
+                            spin
+                        />
+                    }
+                />
+                <div className="text-center">
+                    <Title level={4} className="!mb-1 text-indigo-900">
+                        AI Analysis in Progress
+                    </Title>
+                    <Text className="text-gray-400 font-medium">
+                        Deep diving into job logs and requirements...
+                    </Text>
+                </div>
+            </div>
+        );
+    }
+
+    if (!content) return null;
+
+    // Helper to strip markdown and format красиво
+    const sections = content
+        .split(/### |#### /)
+        .filter((s) => s.trim().length > 0);
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <Tag
+                    color="indigo"
+                    className="m-0 border-none rounded-full px-3 py-1 text-[10px] items-center gap-1.5 flex"
+                >
+                    <Sparkles size={12} className="text-indigo-600" />
+                    AI AGENT ANALYSIS
+                </Tag>
+            </div>
+
+            {sections.map((section, idx) => {
+                const lines = section.trim().split("\n");
+                const title = lines[0].replace(/[:*#]/g, "").trim();
+                const body = lines.slice(1).join("\n").trim();
+
+                if (!body && idx === 0) return null; // Skip if title only (main header)
+
+                return (
+                    <div
+                        key={idx}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-indigo-100 transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
+                            <Title
+                                level={5}
+                                className="!m-0 text-gray-800 uppercase tracking-wider text-[13px] font-bold"
+                            >
+                                {title}
+                            </Title>
+                        </div>
+                        <div className="text-gray-600 leading-relaxed text-[14px]">
+                            {body.split("\n").map((line, lidx) => {
+                                const cleanLine = line
+                                    .replace(/^[*+-]\s*/, "")
+                                    .replace(/[*_~`]/g, "")
+                                    .trim();
+                                if (!cleanLine) return null;
+                                return (
+                                    <div
+                                        key={lidx}
+                                        className="mb-3 flex gap-3 group"
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 mt-2 flex-shrink-0 group-hover:bg-indigo-400 transition-colors" />
+                                        <span>{cleanLine}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
+
+            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100 flex items-start gap-4">
+                <div className="bg-white p-2 rounded-lg shadow-sm">
+                    <Sparkles className="text-indigo-600" size={20} />
+                </div>
+                <div>
+                    <Text className="text-indigo-900 font-bold block">
+                        AI Powered Report
+                    </Text>
+                    <Text className="text-indigo-600/70 text-xs">
+                        Generated in real-time based on latest system logs.
+                    </Text>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const CompleteJobPost = () => {
     const navigate = useNavigate();
@@ -30,6 +146,39 @@ const CompleteJobPost = () => {
     const [locations, setLocations] = useState([]);
     const [rejectJob, setRejectJob] = useState(false);
 
+    // Plan Limit States
+    const [canOpenModal, setCanOpenModal] = useState(false);
+    const [showReasonBox, setShowReasonBox] = useState(false);
+    const [reason, setReason] = useState("");
+    const [planLimitJob, setPlanLimitJob] = useState(null);
+
+    // AI Summary States
+    const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
+    const [jobSummary, setJobSummary] = useState("");
+    const [summaryLoading, setSummaryLoading] = useState(false);
+
+    const fetchAIJobSummary = async () => {
+        setSummaryLoading(true);
+        setIsSummaryModalVisible(true);
+        try {
+            const response = await fetch(`${apiurl}/ai/job-summary/${id}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setJobSummary(data.summary);
+            } else {
+                message.error(data.error || "Failed to fetch summary");
+            }
+        } catch (error) {
+            message.error("An error occurred while fetching summary");
+        } finally {
+            setSummaryLoading(false);
+        }
+    };
+
     const fetchJobDetails = async () => {
         if (token) {
             try {
@@ -48,6 +197,22 @@ const CompleteJobPost = () => {
                 setInterviewers(data.job.interview_details);
                 setSelectedRecruiters(data.assigned_recruiters);
                 setLocations(data.job.locations);
+
+                // Check for plan limit
+                const notApprovedResponse = await fetch(
+                    `${apiurl}/manager/jobs/not-approved/`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    },
+                );
+                const notApprovedData = await notApprovedResponse.json();
+                const matchedJob = notApprovedData.data?.find(
+                    (j) => j.id === parseInt(id),
+                );
+                if (matchedJob && matchedJob.can_open === false) {
+                    setPlanLimitJob(matchedJob);
+                    setCanOpenModal(true);
+                }
             } catch (error) {
                 console.error("Error fetching job details:", error);
             } finally {
@@ -258,6 +423,33 @@ const CompleteJobPost = () => {
         }
     };
 
+    const handleSubmitReason = async () => {
+        if (!planLimitJob) return;
+        try {
+            const response = await fetch(
+                `${apiurl}/manager/jobs/not-approved/PLAN_LIMIT_REJECT/${planLimitJob.id}/`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ reason: reason }),
+                },
+            );
+            if (response.ok) {
+                message.success("Reason sent to the client successfully");
+                setCanOpenModal(false);
+                setShowReasonBox(false);
+                setReason("");
+                setPlanLimitJob(null);
+                fetchJobDetails();
+            }
+        } catch (err) {
+            message.error("An error occurred while sending the reason");
+        }
+    };
+
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-1">
             {/* <div className="mt-4 -ml-2 -mb-4">
@@ -294,6 +486,22 @@ const CompleteJobPost = () => {
                                 Job post Details
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
+                                <Button
+                                    icon={<Sparkles size={16} />}
+                                    onClick={fetchAIJobSummary}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white border-none font-bold"
+                                >
+                                    AI Job Summary
+                                </Button>
+                                <Button
+                                    icon={<calendar size={16} />}
+                                    onClick={() =>
+                                        navigate(`/agency/job-calendar/${id}`)
+                                    }
+                                    className="bg-white hover:bg-gray-50 text-[#071C50] border-gray-200 font-bold"
+                                >
+                                    View Calendar
+                                </Button>
                                 {editHistory.length > 0 &&
                                 editHistory[0].status === "pending" ? (
                                     <button
@@ -689,6 +897,105 @@ const CompleteJobPost = () => {
                 footer={null}
             >
                 <p>{job?.reason}</p>
+            </Modal>
+
+            <Modal
+                title="Plan Limit Reached"
+                open={canOpenModal}
+                onCancel={() => {
+                    setCanOpenModal(false);
+                    setShowReasonBox(false);
+                    setReason("");
+                    setPlanLimitJob(null);
+                    navigate("/agency/jobs");
+                }}
+                footer={null}
+                destroyOnClose
+                styles={{
+                    mask: {
+                        backdropFilter: "blur(15px)",
+                    },
+                }}
+            >
+                {!showReasonBox ? (
+                    <>
+                        <p>You have reached your current plan limit.</p>
+                        <div style={{ textAlign: "right", marginTop: 16 }}>
+                            <Button
+                                style={{ marginRight: 8 }}
+                                onClick={() => {
+                                    setReason(planLimitJob?.reason || "");
+                                    setShowReasonBox(true);
+                                }}
+                            >
+                                Send Reason
+                            </Button>
+                            <Button
+                                type="primary"
+                                onClick={() => navigate("/upgrade-plan")}
+                            >
+                                Upgrade Plan
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <p className="mb-2">Reason (sent to client):</p>
+                        <Input.TextArea
+                            rows={4}
+                            value={reason}
+                            className="mb-4"
+                            onChange={(e) => setReason(e.target.value)}
+                        />
+                        <div style={{ textAlign: "right" }}>
+                            <Button
+                                style={{ marginRight: 8 }}
+                                onClick={() => setShowReasonBox(false)}
+                            >
+                                Back
+                            </Button>
+                            <Button type="primary" onClick={handleSubmitReason}>
+                                Submit
+                            </Button>
+                        </div>
+                    </>
+                )}
+            </Modal>
+
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="text-indigo-600" size={20} />
+                        <span className="text-lg font-bold text-[#071C50]">
+                            AI Powered Job Summary
+                        </span>
+                    </div>
+                }
+                open={isSummaryModalVisible}
+                onCancel={() => setIsSummaryModalVisible(false)}
+                footer={[
+                    <Button
+                        key="close"
+                        onClick={() => setIsSummaryModalVisible(false)}
+                        className="font-semibold"
+                    >
+                        Close
+                    </Button>,
+                ]}
+                width={800}
+                centered
+                styles={{
+                    mask: {
+                        backdropFilter: "blur(4px)",
+                    },
+                }}
+            >
+                <div className="max-h-[70vh] overflow-y-auto no-scrollbar">
+                    <AIInsightsDashboard
+                        content={jobSummary}
+                        loading={summaryLoading}
+                    />
+                </div>
             </Modal>
         </Main>
     );

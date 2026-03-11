@@ -31,13 +31,13 @@ const Layout = ({ children, defaultSelectedKey }) => {
 			"active_logo": blogs_active,
 			"path": '/admin/blogs'
 		},
-		{
-			"key": 4,
-			"label": "Plans",
-			"logo": money_bag,
-			"active_logo": money_bag,
-			"path": '/admin/plans'
-		},
+		// {
+		// 	"key": 4,
+		// 	"label": "Plans",
+		// 	"logo": money_bag,
+		// 	"active_logo": money_bag,
+		// 	"path": '/admin/plans'
+		// },
 	
 	]
 

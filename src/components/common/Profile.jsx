@@ -5,8 +5,10 @@ import InterviewerProfile from "../dashboard/Interviewer/Profile/InterviewerProf
 import RecruiterProfile from "../dashboard/Recruiter/Profile/RecruiterProfile";
 import ManagerProfile from "../dashboard/Manager/Profile/ManagerProfile";
 import AdminProfile from "../dashboard/Admin/AdminProfile";
+import AccountantProfile from "../dashboard/Accountants/AccountantProfile";
 import { useAuth } from "./useAuth";
 import Goback from "./Goback";
+
 const Profile = () => {
     const { userData } = useAuth();
 
@@ -19,6 +21,7 @@ const Profile = () => {
         recruiter: RecruiterProfile,
         interviewer: InterviewerProfile,
         admin: AdminProfile,
+        accountant: AccountantProfile,
     };
 
     const ProfileComponent = roleComponentMap[user?.role] || null;

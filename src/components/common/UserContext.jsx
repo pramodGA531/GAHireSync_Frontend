@@ -50,6 +50,8 @@ export const UserProvider = ({ children }) => {
                 username: userData.username,
                 role: userData.role,
                 user_id: userData.id,
+                target_in_amount: userData.target_in_amount,
+                target_in_positions: userData.target_in_positions,
             };
             setUserData(formattedUserData);
             localStorage.setItem(
@@ -69,6 +71,8 @@ export const UserProvider = ({ children }) => {
                 username: userData.username,
                 role: userData.role,
                 user_id: userData.id,
+                target_in_amount: userData.target_in_amount,
+                target_in_positions: userData.target_in_positions,
             };
             setUserData(formattedUserData);
             sessionStorage.setItem(
@@ -89,6 +93,18 @@ export const UserProvider = ({ children }) => {
         sessionStorage.removeItem("hiresynctoken");
     };
 
+    const updateUserData = (newUserData) => {
+        const updatedData = { ...userData, ...newUserData };
+        setUserData(updatedData);
+
+        if (localStorage.getItem("hireSyncUser")) {
+            localStorage.setItem("hireSyncUser", JSON.stringify(updatedData));
+        }
+        if (sessionStorage.getItem("hireSyncUser")) {
+            sessionStorage.setItem("hireSyncUser", JSON.stringify(updatedData));
+        }
+    };
+
     if (isLoading) {
         return <Pageloading />;
     }
@@ -99,6 +115,7 @@ export const UserProvider = ({ children }) => {
                 handleLogin,
                 handleSessionLogin,
                 handleLogout,
+                updateUserData,
                 token,
                 apiurl,
                 userData,

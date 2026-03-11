@@ -4,6 +4,7 @@ import { Tabs } from "antd";
 import Experiences from "./Experiences";
 import Certificates from "./Certificates";
 import Education from "./Education";
+import Skills from "./Skills";
 import Main from "../Layout";
 import { EditOutlined } from "@ant-design/icons";
 import ProfileCard from "../../../common/CommonCards/ProfileCard/ProfileCard";
@@ -19,16 +20,21 @@ const CandidateProfile = () => {
         },
         {
             key: "2",
+            label: "Skills",
+            children: <Skills />,
+        },
+        {
+            key: "3",
             label: "Experiences",
             children: <Experiences />,
         },
         {
-            key: "3",
+            key: "4",
             label: "Education",
             children: <Education />,
         },
         {
-            key: "4",
+            key: "5",
             label: "Certificates",
             children: <Certificates />,
         },
@@ -36,14 +42,14 @@ const CandidateProfile = () => {
     return (
         <Main defaultSelectedKey="4">
             {/* <div className="mt-4 -mb-6 -ml-2"><GoBack /> */}
-                {/* </div> */}
+            {/* </div> */}
             <ProfileCard></ProfileCard>
-<div className="m-4">
-            <Tabs
-                className="pl-[15px] m-2"
-                defaultSelectedKey="1"
-                items={items}
-            ></Tabs>
+            <div className="m-4">
+                <Tabs
+                    className="pl-[15px] m-2"
+                    defaultActiveKey="1"
+                    items={items}
+                ></Tabs>
             </div>
         </Main>
     );

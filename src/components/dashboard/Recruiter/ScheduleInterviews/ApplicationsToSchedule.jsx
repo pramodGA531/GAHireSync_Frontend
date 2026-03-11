@@ -11,7 +11,9 @@ import {
     Tooltip,
     Divider,
     Select,
+    Typography,
 } from "antd";
+const { Title, Text } = Typography;
 import dayjs from "dayjs";
 import {
     CalendarOutlined,
@@ -21,13 +23,13 @@ import {
     PhoneOutlined,
     LinkOutlined,
     VideoCameraOutlined,
-    SettingOutlined,
     SafetyCertificateOutlined,
     GlobalOutlined,
     ArrowRightOutlined,
     CheckCircleOutlined,
     AuditOutlined,
     ReloadOutlined,
+    ScheduleOutlined,
 } from "@ant-design/icons";
 import CustomDatePicker from "../../../common/CustomDatePicker";
 import Pageloading from "../../../common/loading/Pageloading";
@@ -70,25 +72,9 @@ const ApplicationsToSchedule = () => {
         }
     };
 
-    const updateState = async () => {
-        try {
-            await fetch(`${apiurl}/update-notification-seen/`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ category: "schedule_interview" }),
-            });
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
     useEffect(() => {
         if (token) {
             fetchData();
-            updateState();
         }
     }, [token]);
 
@@ -199,6 +185,11 @@ const ApplicationsToSchedule = () => {
                     </span>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <GlobalOutlined /> {row.original.job_location}
+                        {row.original.is_replacement && (
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[7px] font-black uppercase tracking-widest bg-purple-50 text-purple-600 border border-purple-100">
+                                Replacement
+                            </span>
+                        )}
                     </span>
                 </div>
             ),
@@ -207,15 +198,24 @@ const ApplicationsToSchedule = () => {
             accessorKey: "candidate_name",
             header: "Candidate",
             searchField: true,
-            width: 200,
-            cell: ({ getValue }) => (
+            width: 170,
+            cell: ({ row }) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#071C50] text-white flex items-center justify-center font-black text-[10px]">
-                        {getValue()?.[0]}
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
+                            {/* <div className="w-8 h-8 rounded-lg bg-[#071C50] text-white flex items-center justify-center font-black text-[10px]">
+                                {row.original.candidate_name?.[0]}
+                            </div> */}
+                            <span className="text-[#071C50] font-bold text-xs tracking-tight">
+                                {row.original.candidate_name}
+                            </span>
+                        </div>
+                        {row.original.is_replacement && (
+                            <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-purple-50 text-purple-600 border border-purple-100 w-fit">
+                                Replacement
+                            </span>
+                        )}
                     </div>
-                    <span className="text-[#071C50] font-bold text-xs tracking-tight">
-                        {getValue()}
-                    </span>
                 </div>
             ),
         },
@@ -229,9 +229,9 @@ const ApplicationsToSchedule = () => {
                     <span className="text-gray-600 font-bold text-[11px]">
                         {getValue()}
                     </span>
-                    <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none mt-1 italic">
+                    {/* <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-none mt-1 italic">
                         Lead
-                    </span>
+                    </span> */}
                 </div>
             ),
         },
@@ -247,8 +247,31 @@ const ApplicationsToSchedule = () => {
             ),
         },
         {
+            accessorKey: "status",
+            header: "App Status",
+            width: 120,
+            cell: ({ getValue }) => (
+                <span
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest ${
+                        getValue() === "hold"
+                            ? "bg-orange-50 text-orange-600 border border-orange-100"
+                            : "bg-blue-50 text-blue-600 border border-blue-100"
+                    }`}
+                >
+                    <div
+                        className={`w-1.5 h-1.5 rounded-full ${
+                            getValue() === "hold"
+                                ? "bg-orange-600 animate-pulse"
+                                : "bg-blue-600"
+                        }`}
+                    ></div>
+                    {getValue() === "hold" ? "On Hold" : "Processing"}
+                </span>
+            ),
+        },
+        {
             accessorKey: "location_status",
-            header: "Status",
+            header: "Job Status",
             width: 120,
             cell: ({ getValue }) => (
                 <span
@@ -281,7 +304,7 @@ const ApplicationsToSchedule = () => {
                         fetchApplicationDetails(row.original.application_id)
                     }
                     disabled={row.getValue("location_status") === "closed"}
-                    className="h-10 px-6 rounded-xl bg-[#071C50] hover:bg-[#1681FF] font-black text-[10px] uppercase tracking-widest border-none shadow-lg shadow-blue-50"
+                    className="h-10 px-6 rounded-xl bg-[#071C50] hover:bg-[#1681FF] font-black text-[10px] border-none shadow-lg shadow-blue-50"
                 >
                     Schedule <ArrowRightOutlined />
                 </Button>
@@ -341,334 +364,245 @@ const ApplicationsToSchedule = () => {
                     )}
 
                     <Modal
-                        title={null}
                         open={isModalOpen}
                         onCancel={() => setIsModalOpen(false)}
                         footer={null}
-                        width={850}
+                        width={900}
                         centered
-                        className="premium-modal-v2"
-                        closeIcon={
-                            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
-                                <ReloadOutlined className="rotate-45" />
-                            </div>
-                        }
+                        className="premium-schedule-modal"
+                        closeIcon={null}
                     >
                         {selectedApplication && (
-                            <div className="p-2">
-                                <div className="mb-10 flex items-center gap-6">
-                                    <div className="w-16 h-16 rounded-[24px] bg-[#001744] flex items-center justify-center text-white shadow-2xl shadow-blue-200">
-                                        <CalendarOutlined className="text-2xl" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-black text-[#071C50] tracking-tighter m-0">
-                                            Schedule Interview
-                                        </h2>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">
-                                            Assignment:{" "}
-                                            {selectedApplication.job_title}
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="relative overflow-hidden">
+                                {/* Decorative background elements */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none"></div>
+                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/50 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none"></div>
 
-                                <Form
-                                    form={form}
-                                    layout="vertical"
-                                    onFinish={handleScheduleInterview}
-                                    className="space-y-10"
-                                >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                        {/* Interviewer Module */}
-                                        <div className="space-y-6 bg-slate-50/50 p-8 rounded-[32px] border border-gray-100/50">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100">
-                                                    <SafetyCertificateOutlined />
-                                                </div>
-                                                <h3 className="text-[10px] font-black text-[#071C50] uppercase tracking-widest m-0">
-                                                    Interviewer
-                                                </h3>
+                                <div className="relative p-1">
+                                    {/* Modal Header */}
+                                    <div className="flex justify-between items-start mb-8 px-2">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#1681FF]">
+                                                <ScheduleOutlined className="text-xl" />
                                             </div>
-
-                                            <Form.Item
-                                                label={
+                                            <div>
+                                                <h2 className="text-xl font-black text-[#071C50] tracking-tight leading-none mb-1.5">
+                                                    Schedule Interview
+                                                </h2>
+                                                <div className="flex items-center gap-2">
                                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                        Name
+                                                        Assignment:
                                                     </span>
-                                                }
-                                            >
-                                                <Input
-                                                    prefix={
-                                                        <UserOutlined className="text-gray-300" />
-                                                    }
-                                                    value={
-                                                        selectedApplication.interviewer_name
-                                                    }
-                                                    disabled
-                                                    className="h-12 border-gray-200 bg-white font-bold text-gray-500 rounded-xl shadow-sm"
-                                                />
-                                            </Form.Item>
-                                            <Form.Item
-                                                label={
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                        Email
-                                                    </span>
-                                                }
-                                            >
-                                                <Input
-                                                    prefix={
-                                                        <MailOutlined className="text-gray-300" />
-                                                    }
-                                                    value={
-                                                        selectedApplication.interviewer_email
-                                                    }
-                                                    disabled
-                                                    className="h-12 border-gray-200 bg-white font-bold text-gray-500 rounded-xl shadow-sm"
-                                                />
-                                            </Form.Item>
-                                        </div>
-
-                                        {/* Candidate Module */}
-                                        <div className="space-y-6 bg-indigo-50/20 p-8 rounded-[32px] border border-indigo-50/50">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-50">
-                                                    <UserOutlined />
-                                                </div>
-                                                <h3 className="text-[10px] font-black text-[#071C50] uppercase tracking-widest m-0">
-                                                    Candidate
-                                                </h3>
-                                            </div>
-
-                                            <Form.Item
-                                                label={
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                        Name
-                                                    </span>
-                                                }
-                                            >
-                                                <Input
-                                                    prefix={
-                                                        <UserOutlined className="text-gray-300" />
-                                                    }
-                                                    value={
-                                                        selectedApplication.candidate_name
-                                                    }
-                                                    disabled
-                                                    className="h-12 border-gray-100 bg-white font-bold text-slate-600 rounded-xl"
-                                                />
-                                            </Form.Item>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <Form.Item
-                                                    label={
-                                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                            Phone
-                                                        </span>
-                                                    }
-                                                >
-                                                    <Input
-                                                        prefix={
-                                                            <PhoneOutlined className="text-gray-300 text-[10px]" />
-                                                        }
-                                                        value={
-                                                            selectedApplication.candidate_contact
-                                                        }
-                                                        disabled
-                                                        className="h-10 border-gray-100 bg-white font-bold text-slate-600 text-xs rounded-lg"
-                                                    />
-                                                </Form.Item>
-                                                <Form.Item
-                                                    label={
-                                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                            Email
-                                                        </span>
-                                                    }
-                                                >
-                                                    <Input
-                                                        prefix={
-                                                            <MailOutlined className="text-gray-300 text-[10px]" />
-                                                        }
-                                                        value={
-                                                            selectedApplication.candidate_email
-                                                        }
-                                                        disabled
-                                                        className="h-10 border-gray-100 bg-white font-bold text-slate-600 text-xs rounded-lg"
-                                                    />
-                                                </Form.Item>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Operational Details */}
-                                    <div className="space-y-8 bg-blue-600 p-10 rounded-[40px] shadow-2xl shadow-blue-100 text-white">
-                                        <div className="flex items-center gap-3">
-                                            <SettingOutlined className="text-white animate-spin-slow" />
-                                            <h3 className="text-sm font-black text-white uppercase tracking-widest m-0">
-                                                Interview Details
-                                            </h3>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            <div className="space-y-6">
-                                                <Form.Item
-                                                    label={
-                                                        <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                                                            Job
-                                                        </span>
-                                                    }
-                                                    className="mb-0"
-                                                >
-                                                    <div className="flex items-center gap-3 bg-white/10 p-4 rounded-2xl border border-white/20">
-                                                        <AuditOutlined className="text-blue-200" />
-                                                        <span className="text-white font-bold text-sm tracking-tight">
-                                                            {
-                                                                selectedApplication.job_title
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                </Form.Item>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                                                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
-                                                            Type
-                                                        </p>
-                                                        <p className="text-white font-black text-[10px] uppercase">
-                                                            {
-                                                                selectedApplication.interview_type
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                    <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-                                                        <p className="text-[8px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">
-                                                            Mode
-                                                        </p>
-                                                        <p className="text-white font-black text-[10px] uppercase">
-                                                            {
-                                                                selectedApplication.interview_mode
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-6">
-                                                <Form.Item
-                                                    name="scheduled_date"
-                                                    rules={[
+                                                    <span className="text-xs font-bold text-gray-600">
                                                         {
-                                                            required: true,
-                                                            message: "Required",
-                                                        },
-                                                    ]}
-                                                    label={
-                                                        <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                                                            Date
+                                                            selectedApplication.job_title
+                                                        }
+                                                    </span>
+                                                    {selectedApplication.is_replacement && (
+                                                        <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-purple-50 text-purple-600 border border-purple-100">
+                                                            Replacement
                                                         </span>
-                                                    }
-                                                >
-                                                    <CustomDatePicker
-                                                        placeholder="Select chronology"
-                                                        format="YYYY-MM-DD"
-                                                        className="h-12 w-full custom-date-white"
-                                                        startDate={yesterday}
-                                                        onChange={(date) =>
-                                                            setSelectedDate(
-                                                                date,
-                                                            )
-                                                        }
-                                                    />
-                                                </Form.Item>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <Form.Item
-                                                        name="from_time"
-                                                        rules={[
-                                                            {
-                                                                required: true,
-                                                                message:
-                                                                    "Required",
-                                                            },
-                                                        ]}
-                                                        label={
-                                                            <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                                                                Start Time
-                                                            </span>
-                                                        }
-                                                    >
-                                                        <TimePicker
-                                                            placeholder="00:00"
-                                                            format="HH:mm"
-                                                            className="h-12 w-full custom-time-white"
-                                                            minuteStep={5}
-                                                            onChange={(t) =>
-                                                                setFromTime(t)
-                                                            }
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() =>
+                                                setIsModalOpen(false)
+                                            }
+                                            className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all border border-gray-100"
+                                        >
+                                            <ReloadOutlined className="rotate-45 text-xs" />
+                                        </button>
+                                    </div>
+
+                                    <Form
+                                        form={form}
+                                        layout="vertical"
+                                        onFinish={handleScheduleInterview}
+                                        className="space-y-8"
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Interviewer Section */}
+                                            <div className="bg-gray-50/50 p-6 rounded-[24px] border border-gray-100">
+                                                <div className="flex items-center gap-2.5 mb-5">
+                                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-50">
+                                                        <SafetyCertificateOutlined />
+                                                    </div>
+                                                    <h3 className="text-[10px] font-black text-[#071C50] uppercase tracking-widest m-0">
+                                                        Interviewer Details
+                                                    </h3>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <Form.Item label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Full Name</span>} className="mb-0">
+                                                        <Input 
+                                                            prefix={<UserOutlined className="text-gray-300" />}
+                                                            value={selectedApplication.interviewer_name}
+                                                            disabled
+                                                            className="h-10 rounded-xl bg-white border-gray-200 font-bold text-gray-600"
                                                         />
                                                     </Form.Item>
-                                                    <Form.Item
-                                                        name="to_time"
-                                                        rules={[
-                                                            {
-                                                                required: true,
-                                                                message:
-                                                                    "Required",
-                                                            },
-                                                            {
-                                                                validator: (
-                                                                    _,
-                                                                    v,
-                                                                ) =>
-                                                                    fromTime &&
-                                                                    v &&
-                                                                    v.isAfter(
-                                                                        fromTime,
-                                                                    )
-                                                                        ? Promise.resolve()
-                                                                        : Promise.reject(
-                                                                              "Exit must follow entry",
-                                                                          ),
-                                                            },
-                                                        ]}
-                                                        label={
-                                                            <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                                                                End Time
-                                                            </span>
-                                                        }
-                                                    >
-                                                        <TimePicker
-                                                            placeholder="00:00"
-                                                            format="HH:mm"
-                                                            className="h-12 w-full custom-time-white"
-                                                            minuteStep={5}
+                                                    <Form.Item label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email Address</span>} className="mb-0">
+                                                        <Input 
+                                                            prefix={<MailOutlined className="text-gray-300" />}
+                                                            value={selectedApplication.interviewer_email}
+                                                            disabled
+                                                            className="h-10 rounded-xl bg-white border-gray-200 font-bold text-gray-600"
                                                         />
                                                     </Form.Item>
                                                 </div>
                                             </div>
+
+                                            {/* Candidate Section */}
+                                            <div className="bg-blue-50/30 p-6 rounded-[24px] border border-blue-100/50">
+                                                <div className="flex items-center gap-2.5 mb-5">
+                                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-indigo-500 shadow-sm border border-blue-50">
+                                                        <UserOutlined />
+                                                    </div>
+                                                    <h3 className="text-[10px] font-black text-[#071C50] uppercase tracking-widest m-0">
+                                                        Candidate Details
+                                                    </h3>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <Form.Item label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Full Name</span>} className="mb-0">
+                                                        <Input 
+                                                            prefix={<UserOutlined className="text-gray-300" />}
+                                                            value={selectedApplication.candidate_name}
+                                                            disabled
+                                                            className="h-10 rounded-xl bg-white border-blue-100 font-bold text-gray-600"
+                                                        />
+                                                    </Form.Item>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <Form.Item label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Phone</span>} className="mb-0">
+                                                            <Input 
+                                                                prefix={<PhoneOutlined className="text-gray-300" />}
+                                                                value={selectedApplication.candidate_contact}
+                                                                disabled
+                                                                className="h-10 rounded-xl bg-white border-blue-100 font-bold text-gray-600 text-[10px]"
+                                                            />
+                                                        </Form.Item>
+                                                        <Form.Item label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Email</span>} className="mb-0">
+                                                            <Input 
+                                                                prefix={<MailOutlined className="text-gray-300" />}
+                                                                value={selectedApplication.candidate_email}
+                                                                disabled
+                                                                className="h-10 rounded-xl bg-white border-blue-100 font-bold text-gray-600 text-[10px]"
+                                                            />
+                                                        </Form.Item>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        {selectedApplication.interview_mode ===
-                                            "online" && (
-                                            <Form.Item
-                                                name="meet_link"
-                                                label={
-                                                    <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">
-                                                        Meet Link
-                                                    </span>
-                                                }
-                                            >
-                                                <Input
-                                                    prefix={
-                                                        <LinkOutlined className="text-blue-300" />
-                                                    }
-                                                    className="h-14 bg-white/10 border-white/20 text-white placeholder-white/30 rounded-2xl"
-                                                    placeholder="https://meet.google.com/..."
-                                                />
-                                            </Form.Item>
-                                        )}
+                                        <div className="bg-white p-7 rounded-[32px] border border-gray-100 shadow-sm">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-9 h-9 rounded-xl bg-[#071C50] flex items-center justify-center text-white">
+                                                    <CalendarOutlined className="text-lg" />
+                                                </div>
+                                                <h3 className="text-xs font-black text-[#071C50] uppercase tracking-widest m-0">
+                                                    Interview Schedule
+                                                </h3>
+                                            </div>
 
-                                        <div className="pt-6 flex justify-end gap-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-5">
+                                                    <Form.Item
+                                                        name="scheduled_date"
+                                                        rules={[{ required: true, message: "Required" }]}
+                                                        label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Date</span>}
+                                                        className="mb-0"
+                                                    >
+                                                        <CustomDatePicker
+                                                            placeholder="Select Date"
+                                                            format="YYYY-MM-DD"
+                                                            // className=""
+                                                            startDate={yesterday}
+                                                            className="w-full h-12"
+                                                            popupClassName="large-calendar"
+                                                            onChange={(date) => setSelectedTime(date)}
+                                                        />
+                                                    </Form.Item>
+
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <Form.Item
+                                                            name="from_time"
+                                                            rules={[{ required: true, message: "Required" }]}
+                                                            label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Start Time</span>}
+                                                            className="mb-0"
+                                                        >
+                                                            <TimePicker
+                                                                placeholder="00:00"
+                                                                format="HH:mm"
+                                                                className="h-12 w-full custom-white-time"
+                                                                minuteStep={5}
+                                                                needConfirm={false}
+                                                                onChange={(t) => setFromTime(t)}
+                                                            />
+                                                        </Form.Item>
+                                                        <Form.Item
+                                                            name="to_time"
+                                                            rules={[
+                                                                { required: true, message: "Required" },
+                                                                {
+                                                                    validator: (_, v) =>
+                                                                        fromTime && v && v.isAfter(fromTime)
+                                                                            ? Promise.resolve()
+                                                                            : Promise.reject("Must follow start"),
+                                                                },
+                                                            ]}
+                                                            label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">End Time</span>}
+                                                            className="mb-0"
+                                                        >
+                                                            <TimePicker
+                                                                placeholder="00:00"
+                                                                format="HH:mm"
+                                                                className="h-12 w-full custom-white-time"
+                                                                minuteStep={5}
+                                                                needConfirm={false}
+                                                            />
+                                                        </Form.Item>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-5">
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 leading-none">
+                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tight">Mode</span>
+                                                            <p className="mt-1 text-[11px] font-black text-[#071C50] uppercase">{selectedApplication.interview_mode}</p>
+                                                        </div>
+                                                        <div className="bg-gray-50 px-4 py-3 rounded-xl border border-gray-100 leading-none">
+                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tight">Type</span>
+                                                            <p className="mt-1 text-[11px] font-black text-[#071C50] uppercase">{selectedApplication.interview_type}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    {selectedApplication.interview_mode === "online" ? (
+                                                        <Form.Item
+                                                            name="meet_link"
+                                                            label={<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Meeting Link</span>}
+                                                            className="mb-0"
+                                                        >
+                                                            <Input
+                                                                prefix={<LinkOutlined className="text-blue-400" />}
+                                                                className="h-12 bg-white border-gray-200 text-gray-700 placeholder-gray-300 rounded-xl"
+                                                                placeholder="Paste meeting URL here"
+                                                            />
+                                                        </Form.Item>
+                                                    ) : (
+                                                        <div className="h-12 flex items-center px-4 bg-orange-50 border border-orange-100 rounded-xl">
+                                                            <p className="text-[10px] font-bold text-orange-600 m-0">In-person interview at office location</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-4 px-2">
                                             <Button
-                                                onClick={() =>
-                                                    setIsModalOpen(false)
-                                                }
-                                                className="h-16 px-10 rounded-2xl bg-white/10 hover:bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest"
+                                                onClick={() => setIsModalOpen(false)}
+                                                className="h-12 px-8 rounded-xl bg-white hover:bg-gray-50 text-gray-400 border-gray-200 font-black text-[10px] transition-all"
                                             >
                                                 Cancel
                                             </Button>
@@ -676,33 +610,59 @@ const ApplicationsToSchedule = () => {
                                                 type="primary"
                                                 htmlType="submit"
                                                 loading={btnLoading}
-                                                className="h-16 px-16 rounded-2xl bg-white text-[#1681FF] hover:scale-105 border-none font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-900 transition-all flex items-center gap-3"
+                                                className="h-12 px-12 rounded-xl bg-[#071C50] hover:bg-[#1681FF] border-none font-black text-[10px] shadow-lg shadow-blue-100 transition-all flex items-center gap-2"
                                             >
-                                                Confirm Schedule{" "}
-                                                {btnLoading ? (
-                                                    <Btnloading spincolor="blue-spinner" />
-                                                ) : (
-                                                    <CheckCircleOutlined />
-                                                )}
+                                                Confirm Schedule
+                                                {!btnLoading && <CheckCircleOutlined />}
                                             </Button>
                                         </div>
-                                    </div>
-                                </Form>
+                                    </Form>
+                                </div>
                             </div>
                         )}
                     </Modal>
                 </div>
             </div>
             <style>{`
-                .custom-date-white input { color: white !important; font-weight: 700 !important; }
-                .custom-date-white .ant-picker-suffix { color: white !important; opacity: 0.5; }
-                .custom-date-white { background: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.2) !important; border-radius: 16px !important; }
-                .custom-time-white input { color: white !important; font-weight: 700 !important; }
-                .custom-time-white .ant-picker-suffix { color: white !important; opacity: 0.5; }
-                .custom-time-white { background: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.2) !important; border-radius: 16px !important; }
-                .premium-modal-v2 .ant-modal-content { border-radius: 48px !important; padding: 40px !important; overflow: hidden !important; border: 1px solid #f3f4f6 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important; }
-                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+                .premium-schedule-modal .ant-modal-content {
+                    border-radius: 32px !important;
+                    padding: 24px !important;
+                    background: #ffffff !important;
+                    border: 1px solid #f3f4f6 !important;
+                    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.08) !important;
+                }
+                .custom-white-picker {
+                    background: #f9fafb !important;
+                    border: 1px solid #e5e7eb !important;
+                    border-radius: 12px !important;
+                }
+                .custom-white-picker input {
+                    color: #111827 !important;
+                    font-weight: 700 !important;
+                    font-size: 13px !important;
+                }
+                .custom-white-picker input::placeholder {
+                    color: #9ca3af !important;
+                }
+                .custom-white-picker .ant-picker-suffix {
+                    color: #6b7280 !important;
+                }
+                .custom-white-time {
+                    background: #f9fafb !important;
+                    border: 1px solid #e5e7eb !important;
+                    border-radius: 12px !important;
+                }
+                .custom-white-time input {
+                    color: #111827 !important;
+                    font-weight: 700 !important;
+                    font-size: 13px !important;
+                }
+                .custom-white-time input::placeholder {
+                    color: #9ca3af !important;
+                }
+                .custom-white-time .ant-picker-suffix {
+                    color: #6b7280 !important;
+                }
             `}</style>
         </Main>
     );

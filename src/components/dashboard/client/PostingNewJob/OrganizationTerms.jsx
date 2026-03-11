@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, message, Form, Input, Spin, Select, Table } from "antd";
+import {
+    Button,
+    Modal,
+    message,
+    Form,
+    Input,
+    Spin,
+    Select,
+    Table,
+    Tag,
+} from "antd";
 import { useAuth } from "../../../common/useAuth";
 import { useNavigate } from "react-router-dom";
 import Terms from "../../../../images/Client/Terms.svg";
@@ -98,6 +108,31 @@ const OrganizationTerms = ({
             key: "interest_percentage",
             render: (value) => `${value}%`,
         },
+        {
+            title: "Status",
+            key: "status",
+            render: (_, record) => {
+                if (!record.is_negotiated) {
+                    return <Tag color="default">Default</Tag>;
+                }
+                if (record.status === "accepted") {
+                    return <Tag color="success">Accepted</Tag>;
+                }
+                if (record.status === "rejected") {
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <Tag color="error">Rejected</Tag>
+                            {record.reason && (
+                                <span className="text-[10px] text-red-500 italic max-w-[150px]">
+                                    Reason: {record.reason}
+                                </span>
+                            )}
+                        </div>
+                    );
+                }
+                return <Tag color="processing">Pending</Tag>;
+            },
+        },
     ];
 
     useEffect(() => {
@@ -118,6 +153,7 @@ const OrganizationTerms = ({
                 invoice_after: lastTerm.invoice_after,
                 payment_within: lastTerm.payment_within,
                 interest_percentage: lastTerm.interest_percentage,
+                original_term_id: lastTerm.id,
             });
         }
 
@@ -524,6 +560,9 @@ const OrganizationTerms = ({
                                 },
                             ]}
                         >
+                            <Input />
+                        </Form.Item>
+                        <Form.Item name="original_term_id" hidden>
                             <Input />
                         </Form.Item>
 

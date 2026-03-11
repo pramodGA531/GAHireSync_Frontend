@@ -161,11 +161,13 @@ const Onhold = ({ selectedJob }) => {
         {
             header: "Job Title",
             accessorKey: "job_title",
+            width: 220,
             searchField: true,
         },
         {
             header: "Location",
             accessorKey: "location",
+            width: 220,
             searchField: true,
         },
         {
@@ -182,11 +184,13 @@ const Onhold = ({ selectedJob }) => {
         {
             header: "Job Location Status",
             accessorKey: "location_status",
+            width: 180,
             searchField: true,
         },
         {
             header: "Action",
             accessorKey: "action",
+            width: 120,
             cell: ({ row }) =>
                 row.original.job_status === "opened" ? (
                     <Button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, message, Spin, Table, Card, Typography } from "antd";
+import { Form, message, Spin, Table, Card, Typography, Tag } from "antd";
 import { useAuth } from "../../../common/useAuth";
 import {
     CalendarOutlined,
@@ -100,17 +100,27 @@ const OrganizationTerms = () => {
             title: "Status",
             dataIndex: "is_negotiated",
             key: "is_negotiated",
-            render: (neg) => (
-                <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        neg
-                            ? "bg-amber-100 text-amber-600"
-                            : "bg-gray-100 text-gray-400"
-                    }`}
-                >
-                    {neg ? "Negotiated" : "Standard"}
-                </span>
-            ),
+            render: (neg, record) => {
+                if (!neg) {
+                    return <Tag color="default">Standard</Tag>;
+                }
+                if (record.status === "accepted") {
+                    return <Tag color="success">Accepted</Tag>;
+                }
+                if (record.status === "rejected") {
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <Tag color="error">Rejected</Tag>
+                            {record.reason && (
+                                <span className="text-[10px] text-red-500 italic max-w-[150px]">
+                                    Reason: {record.reason}
+                                </span>
+                            )}
+                        </div>
+                    );
+                }
+                return <Tag color="processing">Pending</Tag>;
+            },
         },
     ];
 

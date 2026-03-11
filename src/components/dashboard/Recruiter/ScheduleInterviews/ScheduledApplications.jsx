@@ -146,6 +146,11 @@ const ScheduledApplications = () => {
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <GlobalOutlined />{" "}
                         {row.original.job_location || "Global Hub"}
+                        {row.original.is_replacement && (
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[7px] font-black uppercase tracking-widest bg-purple-50 text-purple-600 border border-purple-100">
+                                Replacement
+                            </span>
+                        )}
                     </span>
                 </div>
             ),
@@ -155,14 +160,21 @@ const ScheduledApplications = () => {
             header: "Candidate",
             searchField: true,
             width: 200,
-            cell: ({ getValue }) => (
+            cell: ({ getValue, row }) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-[#071C50] font-black text-[10px]">
                         {getValue()?.[0]}
                     </div>
-                    <span className="text-[#071C50] font-bold text-xs tracking-tight">
-                        {getValue()}
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="text-[#071C50] font-bold text-xs tracking-tight">
+                            {getValue()}
+                        </span>
+                        {row.original.is_replacement && (
+                            <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-purple-50 text-purple-600 border border-purple-100 w-fit">
+                                Replacement
+                            </span>
+                        )}
+                    </div>
                 </div>
             ),
         },

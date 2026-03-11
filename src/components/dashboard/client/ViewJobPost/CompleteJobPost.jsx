@@ -209,6 +209,14 @@ const CompleteJobPost = () => {
                         <p className="text-3xl">Job Post Details</p>
                         <div className="flex items-center justify-end">
                             <button
+                                onClick={() =>
+                                    Navigate(`/client/job-calendar/${id}`)
+                                }
+                                className="text-md border-2 p-2 m-2 mt-0 border-[#1681FF] text-[#1681FF] hover:bg-[#1681FF] hover:text-white rounded-md cursor-pointer transition-colors"
+                            >
+                                View Calendar
+                            </button>
+                            <button
                                 onClick={handleChangeInterviewer}
                                 className="text-md border-2 p-2 m-2 mt-0 border-gray-400 hover:border-blue-400 hover:text-blue-500 rounded-md cursor-pointer"
                             >
@@ -244,9 +252,7 @@ const CompleteJobPost = () => {
                 >
                     <div style={{ maxHeight: 400, overflowY: "auto" }}>
                         <div className="mb-6 p-4 rounded-lg ">
-                            <p className="mb-2 font-semibold ">
-                                Designation
-                            </p>
+                            <p className="mb-2 font-semibold ">Designation</p>
                             <Select
                                 className="w-full"
                                 value={designationFilter}

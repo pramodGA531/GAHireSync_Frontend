@@ -46,94 +46,38 @@ const AllInvoices = () => {
             .then((response) => response.json())
             .then((data) => {
                 if (data.invoices) {
-                    console.log("data.invoice", data.invoices);
                     setInvoices(data.invoices);
-                } else {
-                    // message.error("No invoices found or error fetching data.");
                 }
             })
             .catch((error) => {
-                // message.error("Error fetching invoices.");
                 console.error("Error fetching invoices:", error);
             })
             .finally(() => {
-                setLoading(false); // This ensures loading is set to false after the fetch completes
+                setLoading(false);
             });
     };
 
     // Function to download the invoice as PDF
-    const downloadInvoice = (htmlContent, invoiceId) => {
-        // Create a wrapper to hold the content
-        const container = document.createElement("div");
-        container.style.position = "absolute";
-        container.style.left = "-9999px";
-        container.style.top = "0";
-        container.style.width = "800px"; // Fixed width for A4 consistency
-        container.style.zIndex = "-1";
-        container.className = "p-8 bg-white"; // Ensure some base styling
-        document.body.appendChild(container);
+    const downloadInvoice = (htmlContent, invoiceCode) => {
+        const invoiceElement = document.createElement("div");
+        invoiceElement.innerHTML = htmlContent;
+        document.body.appendChild(invoiceElement); // Append to body to ensure rendering
 
-        // 1. Clone all styles from the current document head
-        // This ensures fully accurate styling matching the app
-        const styles = document.head.querySelectorAll(
-            'style, link[rel="stylesheet"]',
-        );
-        styles.forEach((styleNode) => {
-            container.appendChild(styleNode.cloneNode(true));
-        });
-
-        // 2. Add extra specific print overrides
-        const extraStyle = document.createElement("style");
-        extraStyle.innerHTML = `
-            body {
-                font-family: 'Inter', sans-serif;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            /* Start of Fallback Tailwind for basic layout if local styles miss */
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            .items-center { align-items: center; }
-            .text-right { text-align: right; }
-            .font-bold { font-weight: 700; }
-            .text-gray-500 { color: #6b7280; }
-            .text-sm { font-size: 0.875rem; }
-            .p-4 { padding: 1rem; }
-            .mb-4 { margin-bottom: 1rem; }
-            .border-b { border-bottom-width: 1px; }
-            /* End fallback */
-        `;
-        container.appendChild(extraStyle);
-
-        // 3. Insert the content
-        const contentDiv = document.createElement("div");
-        contentDiv.innerHTML = htmlContent;
-        container.appendChild(contentDiv);
-
-        // Use html2pdf.js to convert the HTML to PDF
         const options = {
-            margin: 0.5, // Margin for the PDF
-            filename: `invoice_${invoiceId}.pdf`, // The file name
-            image: { type: "jpeg", quality: 0.98 }, // Image settings
-            html2canvas: { scale: 2, useCORS: true, logging: false }, // Rendering canvas scale (higher for better quality)
-            jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, // Paper size and orientation
+            margin: 0.5,
+            filename: `Invoice_${invoiceCode || "invoice"}.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
         };
 
-        // Small delay to ensure styles apply
-        setTimeout(() => {
-            html2pdf()
-                .from(container)
-                .set(options)
-                .save()
-                .then(() => {
-                    document.body.removeChild(container); // Clean up
-                })
-                .catch((err) => {
-                    console.error("PDF generation failed:", err);
-                    document.body.removeChild(container); // Clean up even on error
-                    message.error("Failed to generate PDF. Please try again.");
-                });
-        }, 500);
+        html2pdf()
+            .from(invoiceElement)
+            .set(options)
+            .save()
+            .then(() => {
+                document.body.removeChild(invoiceElement); // Cleanup
+            });
     };
 
     // const viewInvoice = (htmlContent) => {
@@ -285,21 +229,14 @@ const AllInvoices = () => {
                 const record = row.original;
                 return (
                     <div>
-                        {/* <Button
-            type="primary"
-            size="small"
-            style={{ marginRight: 8 }}
-            onClick={() => viewInvoice(record.html)}
-          >
-            View
-          </Button> */}
-                        {/* Download Invoice Button */}
-
                         <img
                             style={{ width: "150px", cursor: "pointer" }}
                             src={downloadinvoicebut}
                             onClick={() =>
-                                downloadInvoice(record.html, record.id)
+                                downloadInvoice(
+                                    record.html,
+                                    record.invoice_code,
+                                )
                             }
                         />
                     </div>
@@ -395,35 +332,40 @@ const AllInvoices = () => {
                 </div>
                 <Modal
                     title="Update Invoice Status"
-                    visible={updateModalVisible}
+                    open={updateModalVisible}
                     onCancel={() => setUpdateModalVisible(false)}
                     footer={[
-                        <Button
+                        <button
                             key="cancel"
+                            className="bg-red-500 text-white px-4 py-2 rounded-md m-2"
                             onClick={() => setUpdateModalVisible(false)}
                         >
                             Cancel
-                        </Button>,
-                        <Button key="update" onClick={handleUpdateInvoice}>
+                        </button>,
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded-md m-2"
+                        key="update" onClick={handleUpdateInvoice}>
                             update
-                        </Button>,
+                        </button>,
                     ]}
                 >
                     <Input
                         placeholder="Enter Payment Method"
                         value={payment_method}
+                        style={{ marginTop: "20px", height:"40px",width: "100%" }}
                         onChange={(e) => setPayment_method(e.target.value)}
                         required
                     />
+                    
                     <Input
                         placeholder="Enter Transaction Id"
                         value={transactionId}
+                        style={{ marginTop: "20px",height:"40px", width: "100%" }}
                         onChange={(e) => setTransactionId(e.target.value)}
                         required
                     />
                     <Select
                         placeholder="Update Status"
-                        style={{ marginTop: "20px", width: "100%" }}
+                        style={{ marginTop: "20px",height:"40px", width: "100%" }}
                         onChange={(value) => setNewStatus(value)}
                         required
                     >

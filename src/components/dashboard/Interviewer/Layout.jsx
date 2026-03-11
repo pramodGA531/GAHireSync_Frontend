@@ -38,6 +38,22 @@ const Main = ({
         }
     };
 
+    const markAsVisited = async (categories) => {
+        try {
+            await fetch(`${apiurl}/update-notification-visited/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category: categories }),
+            });
+            fetchBadges();
+        } catch (error) {
+            console.error("Error marking notifications as visited:", error);
+        }
+    };
+
     const markAsSeen = async (categories) => {
         try {
             await fetch(`${apiurl}/update-notification-seen/`, {
@@ -60,9 +76,15 @@ const Main = ({
         if (!token) return;
         const path = location.pathname;
 
-        if (path.startsWith("/interviewer/jobinterviews")) {
-            markAsSeen(["assign_interviewer"]);
-        }
+        const timer = setTimeout(() => {
+            if (path.startsWith("/interviewer/jobinterviews")) {
+                markAsVisited(["assign_interviewer"]);
+            } else if (path.startsWith("/interviewer/interviews")) {
+                markAsVisited(["schedule_interview", "feedback_pending"]);
+            }
+        }, 1500);
+
+        return () => clearTimeout(timer);
     }, [location.pathname, token]);
 
     useEffect(() => {
@@ -78,7 +100,7 @@ const Main = ({
                 label: "Dashboard",
                 logo: dashboard,
                 active_logo: dashboard_active,
-                tooltip:"view dashboard and analytics",
+                tooltip: "view dashboard and analytics",
                 path: "/",
             },
             {
@@ -86,7 +108,7 @@ const Main = ({
                 label: "Interviews",
                 logo: interview,
                 active_logo: interview_active,
-                tooltip:"view upcoming and completed interviews",
+                tooltip: "view upcoming and completed interviews",
                 badge:
                     badgesData &&
                     (badgesData.assign_job > 0 ||
@@ -104,6 +126,12 @@ const Main = ({
                         path: "/interviewer/interviews/completed",
                         badge: false,
                     },
+                    {
+                        key: "2-3",
+                        label: "Calendar",
+                        path: "/interviewer/job-calendar",
+                        badge: false,
+                    },
                 ],
             },
             {
@@ -112,7 +140,7 @@ const Main = ({
                 logo: assigned,
                 active_logo: assigned_active,
                 path: "/interviewer/jobinterviews",
-                tooltip:"view assigned interviews",
+                tooltip: "view assigned interviews",
                 badge: badgesData && badgesData.new_jobs > 0 ? true : false,
             },
         ],

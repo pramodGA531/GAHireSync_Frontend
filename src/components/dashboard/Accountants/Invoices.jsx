@@ -1,64 +1,72 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, message, Modal, Input, Select } from "antd";
+import { Table, Button, message, Modal, Input, Select, Tag, Space, Card, Dropdown, Menu } from "antd";
 import Main from "./Layout";
 import { useAuth } from "../../common/useAuth";
 import html2pdf from "html2pdf.js";
-import { Option } from "antd/es/mentions";
-import viewicon from "../../../images/invoice/view.svg";
+import { 
+    SearchOutlined, 
+    DownloadOutlined, 
+    EyeOutlined, 
+    FilterOutlined, 
+    MoreOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined
+} from "@ant-design/icons";
 import invoiceicon from "../../../images/invoice/downloadinvoicebut.svg";
-import GoBack from "../../common/Goback";
+
 const Invoices = () => {
     const { token, apiurl } = useAuth();
     const [invoices, setInvoices] = useState([]);
-    const [updateModalVisible, setUpdateModalVisible] = useState(false);
-    const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
-    const [newStatus, setNewStatus] = useState("");
-    const [transactionId, setTransactionId] = useState(null);
-    const [payment_verified, SetPayment_verified] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [filterStatus, setFilterStatus] = useState("all");
 
-    // Fetch invoices from the API
-    const fetchInvoices = () => {
-        fetch(`${apiurl}/get_invoices/`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.invoices) {
-                    setInvoices(data.invoices); // Store invoices in state
-                } else {
-                    message.error("No invoices found or error fetching data.");
-                }
-            })
-            .catch((error) => {
-                message.error("Error fetching invoices.");
-                console.error("Error fetching invoices:", error);
+    const fetchInvoices = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${apiurl}/get_invoices/`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            if (data.invoices) {
+                setInvoices(data.invoices);
+            } else {
+                message.error("No invoices found.");
+            }
+        } catch (error) {
+            message.error("Error fetching invoices.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const downloadInvoice = (htmlContent, invoiceCode) => {
+        const invoiceElement = document.createElement("div");
+        invoiceElement.innerHTML = htmlContent;
+        document.body.appendChild(invoiceElement);
+
+        const options = {
+            margin: 0.5,
+            filename: `Invoice_${invoiceCode || "invoice"}.pdf`,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        };
+
+        html2pdf()
+            .from(invoiceElement)
+            .set(options)
+            .save()
+            .then(() => {
+                document.body.removeChild(invoiceElement);
+                message.success("Invoice downloaded successfully.");
             });
     };
 
-    // Function to download the invoice as PDF
-    const downloadInvoice = (htmlContent, invoiceId) => {
-        // Create a new HTML element to pass into the html2pdf function
-        const invoiceElement = document.createElement("div");
-        invoiceElement.innerHTML = htmlContent;
-
-        // Use html2pdf.js to convert the HTML to PDF
-        const options = {
-            margin: 0.5, // Margin for the PDF
-            filename: `invoice_${invoiceId}.pdf`, // The file name
-            image: { type: "jpeg", quality: 0.98 }, // Image settings
-            html2canvas: { scale: 2 }, // Rendering canvas scale (higher for better quality)
-            jsPDF: { unit: "in", format: "letter", orientation: "portrait" }, // Paper size and orientation
-        };
-
-        html2pdf().from(invoiceElement).set(options).save(); // Trigger PDF download
-    };
-
-    // View the invoice HTML in a new window
     const viewInvoice = (htmlContent) => {
         const newWindow = window.open();
         newWindow.document.write(htmlContent);
@@ -70,16 +78,9 @@ const Invoices = () => {
     }, []);
 
     const updatePaymentVerification = async (id, verification) => {
-        // Check if both fields are provided
-        if (!id) {
-            message.error(" ID is required.");
-            return;
-        }
-
         const data = {
             invoice_id: id,
             payment_verification: verification,
-            // status: newStatus,
         };
 
         try {
@@ -87,191 +88,185 @@ const Invoices = () => {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`, // Replace with your auth token if necessary
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(data),
             });
 
             const responseData = await response.json();
+            if (!response.ok) throw new Error(responseData.error || "Update failed");
+            
+            message.success(`Payment ${verification ? "verified" : "unverified"} successfully.`);
             fetchInvoices();
-            if (!response.ok) {
-                throw new Error(responseData.error || "Something went wrong.");
-            }
-
-            // If successful, show success message
-            message.success("Invoice updated successfully.");
-
-            // Close the modal
-            setUpdateModalVisible(false);
         } catch (error) {
-            // If error occurs, show error message
             message.error(error.message);
-        } finally {
-            // setLoading(false);
         }
     };
 
     const columns = [
         {
-            title: "Invoice ID",
-            dataIndex: "id",
-            key: "id",
+            title: "Invoice Details",
+            key: "invoice_details",
+            render: (_, record) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-gray-800">{record.invoice_code}</span>
+                    <span className="text-xs text-gray-400">Agency: {record.agency_code}</span>
+                </div>
+            )
+        },
+        {
+            title: "Client",
+            dataIndex: "client_email",
+            key: "client_email",
+            render: (text) => <span className="text-gray-600 font-medium">{text}</span>
         },
         {
             title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (text) => (
-                <span
-                    style={{
-                        color: text === "Paid" ? "#4A6E98" : "#FF8082",
-                        fontWeight: "bold",
-                    }}
-                >
-                    {text}
-                </span>
+            dataIndex: "payment_status",
+            key: "payment_status",
+            render: (status) => (
+                <Tag color={status === "Paid" ? "green" : "volcano"} className="rounded-full px-4 font-bold border-none">
+                    {(status || 'Pending').toUpperCase()}
+                </Tag>
             ),
         },
         {
-            title: "Verify payment",
-            // dataIndex: "payment_verification",
-            // key: "payment_verification",
-            render: (payment_verification, record) => (
+            title: "Payment Verification",
+            dataIndex: "payment_verification",
+            key: "payment_verification",
+            render: (verified, record) => (
                 <Select
-                    defaultValue={
-                        payment_verification ? "Verified" : "Not Verified"
-                    }
-                    style={{ width: 120 }}
-                    onMouseEnter={(e) => (
-                        (e.currentTarget.style.outline = "none"),
-                        (e.currentTarget.style.border = "none"),
-                        (e.currentTarget.style.margin = "none")
-                    )}
-                    onChange={(value) => {
-                        const isVerified = value === "Verified";
-                        console.log(
-                            "here i need to send the isVerified to the backend ",
-                            isVerified,
-                            record.id,
-                        );
-                        updatePaymentVerification(record.id, isVerified);
-                    }}
-                >
-                    <Option value="Not Verified">Not Verify</Option>
-                    <Option value="Verified">Verified</Option>
-                </Select>
+                    value={verified ? "Verified" : "Not Verified"}
+                    className={`custom-select-verification ${verified ? 'verified-active' : 'pending-active'}`}
+                    style={{ width: 140 }}
+                    onChange={(value) => updatePaymentVerification(record.id, value === "Verified")}
+                    options={[
+                        { value: "Not Verified", label: "Not Verified" },
+                        { value: "Verified", label: "Verified" },
+                    ]}
+                />
             ),
         },
-
-        {
-            title: "Client Email",
-            dataIndex: "client_email",
-            key: "client_email",
-        },
-        {
-            title: "Organization Email",
-            dataIndex: "org_email",
-            key: "org_email",
-        },
-
         {
             title: "Actions",
             key: "actions",
             render: (_, record) => (
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    {/* View Invoice Button */}
-                    {/* <Button
-            type="primary"
-            size="small"
-            style={{ marginRight: 8 }}
-            onClick={() => viewInvoice(record.html)}
-          >
-            viewicon
-          </Button> */}
-                    <img
-                        src={invoiceicon}
-                        onClick={() => downloadInvoice(record.html, record.id)}
-                        style={{ cursor: "pointer", marginRight: "10px" }}
-                    ></img>
-                    <img
-                        src={viewicon}
+                <Space size="middle">
+                    <Button 
+                        type="text" 
+                        icon={<EyeOutlined className="text-blue-500" />} 
                         onClick={() => viewInvoice(record.html)}
-                        style={{
-                            marginRight: 8,
-                            width: "20px",
-                            cursor: "pointer",
-                        }}
-                    ></img>
-                    {/* Download Invoice Button */}
-
-                    {/* <Button
-            type="default"
-            size="small"
-            onClick={() => downloadInvoice(record.html, record.id)}
-          >
-            Download as PDF
-          </Button> */}
-                </div>
+                        className="hover:bg-blue-50 rounded-lg"
+                    />
+                    <Button 
+                        type="text" 
+                        icon={<DownloadOutlined className="text-indigo-500" />} 
+                        onClick={() => downloadInvoice(record.html, record.invoice_code)}
+                        className="hover:bg-indigo-50 rounded-lg"
+                    />
+                </Space>
             ),
         },
     ];
 
-    const filteredData = invoices.filter((item) =>
-        Object.values(item).some(
-            (value) =>
-                value &&
-                value
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchText.toLowerCase()),
-        ),
-    );
+    const filteredData = invoices.filter((item) => {
+        const matchesSearch = Object.values(item).some(
+            (value) => value && value.toString().toLowerCase().includes(searchText.toLowerCase())
+        );
+        const matchesStatus = filterStatus === "all" || item.payment_status === filterStatus;
+        return matchesSearch && matchesStatus;
+    });
+
     return (
         <Main defaultSelectedKey="2">
-            <div className="mt-4 -ml-2 -mb-4">
-                <GoBack />
-            </div>
-            <div>Invoices</div>
+            <div className="p-8 bg-[#F8FAFC] min-h-screen">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-2xl font-black text-[#071C50]">Invoices Management</h1>
+                        <p className="text-gray-500">View, verify and manage all outgoing client invoices.</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex-wrap">
+                        <Input
+                            placeholder="Search code, client..."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            prefix={<SearchOutlined className="text-gray-400" />}
+                            className="w-64 border-none bg-gray-50 rounded-xl hover:bg-gray-100 focus:bg-white transition-all"
+                        />
+                        <Select
+                            defaultValue="all"
+                            style={{ width: 120 }}
+                            onChange={setFilterStatus}
+                            className="premium-select"
+                            options={[
+                                { value: "all", label: "All Status" },
+                                { value: "Paid", label: "Paid" },
+                                { value: "Unpaid", label: "Unpaid" },
+                            ]}
+                        />
+                        <Button type="primary" className="bg-[#071C50] rounded-xl h-9 px-6 font-bold flex items-center gap-2">
+                            <FilterOutlined /> Filter
+                        </Button>
+                    </div>
+                </div>
 
-            <div className="invoices-table">
-                {/* <h2>All Invoices</h2> */}
-                <Input
-                    placeholder="Search"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    className="search-input"
-                    prefix={<span className="search-icon">⌕</span>}
-                    style={{ marginBottom: "20px" }}
-                />
-                {invoices.length > 0 ? (
+                <Card bordered={false} className="rounded-3xl shadow-sm border border-gray-100 p-0 overflow-hidden">
                     <Table
+                        loading={loading}
                         dataSource={filteredData}
                         columns={columns}
                         rowKey="id"
-                        pagination={false}
-                        className="candidate-table"
+                        pagination={{
+                            pageSize: 10,
+                            className: "custom-pagination px-6 py-4",
+                        }}
+                        className="premium-table"
                     />
-                ) : (
-                    <p>No invoices found.</p>
-                )}
+                </Card>
             </div>
+
+            <style jsx>{`
+                .premium-table :global(.ant-table-thead > tr > th) {
+                    background: #F8FAFC !important;
+                    color: #94A3B8 !important;
+                    font-size: 11px !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.05em !important;
+                    font-weight: 700 !important;
+                    padding: 20px 24px !important;
+                    border-bottom: 2px solid #F1F5F9 !important;
+                }
+                .premium-table :global(.ant-table-tbody > tr > td) {
+                    padding: 16px 24px !important;
+                    border-bottom: 1px solid #F8FAFC !important;
+                }
+                .premium-table :global(.ant-table-tbody > tr:hover > td) {
+                    background: #F1F5F9 !important;
+                }
+                .custom-select-verification :global(.ant-select-selector) {
+                    border-radius: 12px !important;
+                    border: 1px solid #E2E8F0 !important;
+                    font-size: 13px !important;
+                    font-weight: 600 !important;
+                }
+                .verified-active :global(.ant-select-selector) {
+                    background-color: #EFF6FF !important;
+                    color: #2563EB !important;
+                    border-color: #DBEAFE !important;
+                }
+                .pending-active :global(.ant-select-selector) {
+                    background-color: #F8FAFC !important;
+                    color: #64748B !important;
+                }
+                .premium-select :global(.ant-select-selector) {
+                    border-radius: 12px !important;
+                    background: #F9FAFB !important;
+                    border: none !important;
+                }
+            `}</style>
         </Main>
     );
 };
 
 export default Invoices;
-
-/* <div className="">
-        <h2>All Invoices</h2>
-        {invoices.length > 0 ? (
-          <Table
-            dataSource={invoices}
-            columns={columns}
-            className=""
-            rowKey="id"
-            pagination={false} // You can enable pagination if necessary
-          />
-        ) : (
-          <p>No invoices found.</p>
-        )}
-      </div>*/

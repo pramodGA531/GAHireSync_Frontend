@@ -77,6 +77,22 @@ const Layout2 = ({
         }
     }
 
+    const markAsVisited = async (categories) => {
+        try {
+            await fetch(`${apiurl}/update-notification-visited/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category: categories }),
+            });
+            fetchBadges();
+        } catch (error) {
+            console.error("Error marking notifications as visited:", error);
+        }
+    };
+
     const markAsSeen = async (categories) => {
         try {
             await fetch(`${apiurl}/update-notification-seen/`, {
@@ -114,32 +130,26 @@ const Layout2 = ({
 
         const path = location.pathname;
 
-        if (path.startsWith("/agency/jobs")) {
-            markAsSeen([
-                "create_job",
-                "edit_job",
-                "my_jobs", // Note: my_jobs might not be a notification category, but kept if it maps to one. Checking agency_views.py... my_jobs is a count, not a category.
-                // Re-checking agency_views.py ManagerAllAlerts:
-                // Categories: NEGOTIATE_TERMS, CREATE_JOB, ACCEPT_JOB_EDIT, REJECT_JOB_EDIT, PARTIAL_EDIT, CANDIDATE_JOINED, CANDIDATE_LEFT, EDIT_JOB, INVOICE_GENERATED.
-                // Badge logic sums: create_job + edit_job + my_jobs + not_assigned + closed_hold.
-                // create_job and edit_job are from notifications.
-                // my_jobs, not_assigned, closed_hold are COUNTS from DB, not notifications. NOTIFICATION logic only clears NOTIFICATIONS.
-                // So I should only mark 'create_job' and 'edit_job' as seen.
-                "create_job",
-                "edit_job",
-            ]);
-        } else if (path.startsWith("/agency/negotiations")) {
-            markAsSeen([
-                "negotiate_terms",
-                "accept_job_edit",
-                "reject_job_edit",
-                "partial_edit",
-            ]);
-        } else if (path.startsWith("/agency/reports")) {
-            markAsSeen(["invoice_generated"]);
-        } else if (path.startsWith("/agency/allclients")) {
-            markClientsAsSeen();
-        }
+        const timer = setTimeout(() => {
+            if (path.startsWith("/agency/jobs")) {
+                markAsVisited(["create_job", "edit_job"]);
+            } else if (path.startsWith("/agency/negotiations")) {
+                markAsVisited([
+                    "negotiated_terms",
+                    "accept_job_edit",
+                    "reject_job_edit",
+                    "partial_job_edit",
+                ]);
+            } else if (path.startsWith("/agency/reports")) {
+                markAsVisited(["invoice_generated"]);
+            } else if (path.startsWith("/agency/allclients")) {
+                markClientsAsSeen();
+            } else if (path.startsWith("/agency/selected-candidates")) {
+                markAsVisited(["candidate_joined", "candidate_left"]);
+            }
+        }, 1500);
+
+        return () => clearTimeout(timer);
     }, [location.pathname, token]);
 
     useEffect(() => {
@@ -170,12 +180,7 @@ const Layout2 = ({
                     " You can view, assign, approve and manage your jobs here",
                 badge:
                     badgesData &&
-                    badgesData.create_job +
-                        badgesData.edit_job +
-                        badgesData.my_jobs +
-                        badgesData.not_assigned +
-                        badgesData.closed_hold >
-                        0
+                    badgesData.create_job + badgesData.edit_job > 0
                         ? true
                         : false,
                 // children: [
@@ -232,8 +237,25 @@ const Layout2 = ({
                 label: "Recruiters",
                 logo: recruiters,
                 active_logo: recruiters_active,
-                path: "/agency/recruiters/",
+                // path: "/agency/recruiters/",
                 tooltip: "View and manage your recruiters",
+                children: [
+                    {
+                        key: "3-1",
+                        label: "Add Recruiter",
+                        path: "/agency/recruiters/",
+                    },
+                    {
+                        key: "3-2",
+                        label: "Recruiter Leaderboard",
+                        path: "/agency/leaderboard",
+                    },
+                    {
+                        key: "3-3",
+                        label: "Calendar",
+                        path: "/agency/job-calendar",
+                    },
+                ],
             },
             {
                 key: 4,
@@ -243,6 +265,11 @@ const Layout2 = ({
                 path: "/agency/selected-candidates",
                 tooltip:
                     "View and manage your selected candidates for the job posts",
+                badge:
+                    badgesData &&
+                    badgesData.candidate_joined + badgesData.candidate_left > 0
+                        ? true
+                        : false,
             },
 
             {

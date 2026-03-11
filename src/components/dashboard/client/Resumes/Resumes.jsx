@@ -95,7 +95,7 @@ const ApplicationCard = ({ item, handleCompareToggle, isCompared }) => {
     );
 };
 
-const Resumes = () => {
+const Resumes = ({ isReplacement = false }) => {
     const { apiurl, token } = useAuth();
     const [job, setJob] = useState();
     const { id } = useParams();
@@ -158,7 +158,7 @@ const Resumes = () => {
     const fetchData = async () => {
         try {
             const response = await fetch(
-                `${apiurl}/client/get-resumes/?jobid=${id}`,
+                `${apiurl}/client/get-resumes/?jobid=${id}&is_replacement=${isReplacement}`,
                 {
                     method: "GET",
                     headers: {
@@ -369,7 +369,7 @@ const Resumes = () => {
                 )}
 
                 <div className="text-[#1681FF] text-[25px] font-semibold mt-[15px]">
-                    Applications
+                    {isReplacement ? "Replacement Profiles" : "Applications"}
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

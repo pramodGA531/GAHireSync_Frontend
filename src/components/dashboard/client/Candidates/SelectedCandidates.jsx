@@ -56,8 +56,9 @@ const ClientSelectedCandidates = ({ selectedJob }) => {
     const fetchData = async () => {
         try {
             setLoading(true);
+            const url = selectedJob ? `${apiurl}/client/selected-candidates/?job_id=${selectedJob}` : `${apiurl}/client/selected-candidates/`;
             const response = await fetch(
-                `${apiurl}/client/selected-candidates/?job_id=${selectedJob}`,
+                url,
                 {
                     method: "GET",
                     headers: {

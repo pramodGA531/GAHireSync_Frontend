@@ -4,7 +4,13 @@ import Main from "../Layout";
 import searchicon from "../../../../images/agency/job-postings/searchicon.svg";
 import { message, Select, Tag, Table, Input, Modal } from "antd";
 import { useAuth } from "../../../common/useAuth";
-import { CloseOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+    CloseOutlined,
+    DeleteOutlined,
+    SearchOutlined,
+    EyeOutlined,
+    FileTextOutlined,
+} from "@ant-design/icons";
 import Pageloading from "../../../common/loading/Pageloading";
 import { useNavigate } from "react-router-dom";
 import GoBack from "../../../common/Goback";
@@ -20,6 +26,13 @@ const Candidates = () => {
     const [reason, setReason] = useState("");
     const [loading, setLoading] = useState(false);
     const [statusFilter, setStatusFilter] = useState("All");
+    const [resumeModalVisible, setResumeModalVisible] = useState(false);
+    const [currentResumeUrl, setCurrentResumeUrl] = useState("");
+
+    const handleViewResume = (url) => {
+        setCurrentResumeUrl(url);
+        setResumeModalVisible(true);
+    };
 
     useEffect(() => {
         fetchCandidatesApplications();
@@ -32,7 +45,7 @@ const Candidates = () => {
     const fetchCandidatesApplications = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${apiurl}/manger/applications`, {
+            const response = await fetch(`${apiurl}/manager/applications`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -171,6 +184,30 @@ const Candidates = () => {
             dataIndex: "application_id",
             key: "application_id",
         },
+        {
+            title: "Resume",
+            dataIndex: "resume",
+            key: "resume",
+            render: (text) =>
+                text ? (
+                    <span
+                        onClick={() => handleViewResume(`${apiurl}${text}`)}
+                        className="cursor-pointer"
+                        title="View Resume"
+                    >
+                        <FileTextOutlined
+                            style={{
+                                color: "#1890ff",
+                                fontSize: "18px",
+                                marginRight: "5px",
+                            }}
+                        />{" "}
+                        View Resume
+                    </span>
+                ) : (
+                    <span className="text-gray-400">N/A</span>
+                ),
+        },
 
         {
             title: "Application Status",
@@ -224,13 +261,13 @@ const Candidates = () => {
                                 </span>
                                 <Select
                                     mode="multiple"
-                                    style={{ width: "100%" }}
+                                    // style={{ width: "100%" }}
                                     placeholder="Select Job Titles"
                                     onChange={handleJobTitleChange}
                                     value={selectedJobs}
                                     maxTagCount={1}
                                     showArrow={true}
-                                    className="custom-select w-full md:w-[260px]"
+                                    className="custom-select w-full md:w-[300px]"
                                 >
                                     {jobTitles.map((job, index) => (
                                         <Select.Option
@@ -248,13 +285,17 @@ const Candidates = () => {
                                     Status
                                 </span>
                                 <Select
-                                    style={{ width: "100%" }}
+                                    // style={{ width: "100%" }}
                                     placeholder="Filter by Status"
                                     onChange={(val) => setStatusFilter(val)}
                                     value={statusFilter}
                                     className="custom-select w-full md:w-[200px]"
                                     options={[
                                         { label: "All Status", value: "All" },
+                                        {
+                                            label: "Pending",
+                                            value: "pending",
+                                        },
                                         {
                                             label: "Shortlisted",
                                             value: "shortlisted",
@@ -272,19 +313,27 @@ const Candidates = () => {
                                             label: "Processing",
                                             value: "processing",
                                         },
+                                        {
+                                            label: "Left",
+                                            value: "left",
+                                        },
                                     ]}
                                 />
                             </div>
 
                             <div className="flex items-center gap-2 w-full md:w-auto">
-                                <div className="flex items-center px-2.5 bg-[#1681FF] rounded-lg h-[40px] w-full md:w-auto">
-                                    <img
+                                <div className="flex items-center px-2.5 rounded-lg h-[40px] w-full md:w-auto">
+                                    {/* <img
                                         src={searchicon}
                                         alt="Search"
-                                        className="w-5 h-5 mr-2"
+                                        className="w-5 h-5 mr-2 text-black"
+                                    /> */}
+                                    <SearchOutlined
+                                        style={{ fontSize: "20px" }}
+                                        className="mr-2"
                                     />
                                     <Input
-                                        className="bg-transparent border-none outline-none text-white placeholder:text-white/80 h-full w-full md:w-[200px]"
+                                        className="bg-transparent border-none outline-none text-black placeholder:text-black/80 h-full w-full md:w-[200px]"
                                         placeholder="Search Candidates"
                                         value={searchQuery}
                                         onChange={handleSearchChange}
@@ -333,6 +382,24 @@ const Candidates = () => {
                         footer={null}
                     >
                         <p>{reason || "No reason provided."}</p>
+                    </Modal>
+
+                    <Modal
+                        title="Resume Preview"
+                        open={resumeModalVisible}
+                        onCancel={() => setResumeModalVisible(false)}
+                        footer={null}
+                        width={1000}
+                        centered
+                        bodyStyle={{ height: "80vh", padding: 0 }}
+                    >
+                        <iframe
+                            src={currentResumeUrl}
+                            title="Resume Preview"
+                            width="100%"
+                            height="100%"
+                            style={{ border: "none" }}
+                        />
                     </Modal>
                 </>
             )}

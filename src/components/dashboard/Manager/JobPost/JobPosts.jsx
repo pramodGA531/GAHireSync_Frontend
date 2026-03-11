@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 // import "./JobPost.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
 import {
@@ -32,6 +32,7 @@ import {
     Spin,
     Tag,
     Button,
+    Table,
     Modal,
     Select,
     Input,
@@ -57,6 +58,8 @@ import AppTable from "../../../common/AppTable";
 import CustomDatePicker from "../../../common/CustomDatePicker";
 import { Papa } from "papaparse";
 import GoBack from "../../../common/Goback";
+import AddRecruiters from "../Recruiter/AddRecruiters";
+import { Sparkles } from "lucide-react";
 
 const JobsDetails = ({ details, handleExportCSV }) => {
     if (!details) return null;
@@ -96,11 +99,12 @@ const stripHtml = (html) => {
     return html?.replace(/<[^>]+>/g, "");
 };
 
-const CandidateStatusBoxes = ({ counts }) => {
+const CandidateStatusBoxes = ({ counts, jobId, navigate, isClickable }) => {
     if (!counts) return null;
     const stages = [
         {
-            label: "Profiles Sent",
+            label: "Applied",
+            displayLabel: "Profiles Sent",
             color: "#EAB308",
             border: "#FEF08A",
             bg: "#FEF9C3",
@@ -108,6 +112,7 @@ const CandidateStatusBoxes = ({ counts }) => {
         },
         {
             label: "Shortlisted",
+            displayLabel: "Shortlisted",
             color: "#22C55E",
             border: "#BBF7D0",
             bg: "#F0FDF4",
@@ -115,6 +120,7 @@ const CandidateStatusBoxes = ({ counts }) => {
         },
         {
             label: "Processing",
+            displayLabel: "Processing",
             color: "#A855F7",
             border: "#E9D5FF",
             bg: "#FAF5FF",
@@ -122,6 +128,7 @@ const CandidateStatusBoxes = ({ counts }) => {
         },
         {
             label: "on-Hold",
+            displayLabel: "on-Hold",
             color: "#84CC16",
             border: "#D9F99D",
             bg: "#F7FEE7",
@@ -129,6 +136,7 @@ const CandidateStatusBoxes = ({ counts }) => {
         },
         {
             label: "Rejected",
+            displayLabel: "Rejected",
             color: "#EF4444",
             border: "#FECACA",
             bg: "#FEF2F2",
@@ -136,23 +144,50 @@ const CandidateStatusBoxes = ({ counts }) => {
         },
         {
             label: "Selected",
+            displayLabel: "Selected",
             color: "#3B82F6",
             border: "#BFDBFE",
             bg: "#EFF6FF",
             value: counts.Selected,
+        },
+        {
+            label: "Replaced",
+            displayLabel: "Replaced",
+            color: "#F97316",
+            border: "#FED7AA",
+            bg: "#FFF7ED",
+            value: counts.Replaced,
+        },
+        {
+            label: "Joined",
+            displayLabel: "Joined",
+            color: "#14B8A6",
+            border: "#99F6E4",
+            bg: "#F0FDFA",
+            value: counts.Joined,
         },
     ];
 
     return (
         <div className="flex gap-2">
             {stages.map((stage, idx) => (
-                <Tooltip key={idx} title={stage.label}>
+                <Tooltip key={idx} title={stage.displayLabel}>
                     <div
-                        className="flex items-center justify-center w-8 h-8 rounded-lg border-2 shadow-sm cursor-help"
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg border-2 shadow-sm transition-transform ${
+                            isClickable
+                                ? "cursor-pointer hover:scale-110"
+                                : "cursor-default opacity-80"
+                        }`}
                         style={{
                             borderColor: stage.border,
                             backgroundColor: stage.bg,
                         }}
+                        onClick={() =>
+                            isClickable &&
+                            navigate(
+                                `/agency/job-applicants/${jobId}/${stage.label}`,
+                            )
+                        }
                     >
                         <span
                             className="text-sm font-bold"
@@ -180,6 +215,10 @@ const CandidateStatusLegend = () => {
         { label: "Rejected", color: "#B91C1C", bg: "#FECACA" },
 
         { label: "Selected", color: "#1D4ED8", bg: "#BFDBFE" },
+
+        { label: "Replaced", color: "#C2410C", bg: "#FED7AA" },
+
+        { label: "Joined", color: "#0F766E", bg: "#99F6E4" },
     ];
 
     return (
@@ -202,17 +241,134 @@ const CandidateStatusLegend = () => {
     );
 };
 
+const AIInsightsDashboard = ({ content, loading, onBack }) => {
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm h-full">
+                <Spin
+                    indicator={
+                        <LoadingOutlined
+                            style={{ fontSize: 40, color: "#6366f1" }}
+                            spin
+                        />
+                    }
+                />
+                <div className="text-center">
+                    <Title level={4} className="!mb-1 text-indigo-900">
+                        AI Analysis in Progress
+                    </Title>
+                    <Text className="text-gray-400 font-medium">
+                        Deep diving into job logs and requirements...
+                    </Text>
+                </div>
+            </div>
+        );
+    }
+
+    if (!content) return null;
+
+    // Helper to strip markdown and format красиво
+    const sections = content
+        .split(/### |#### /)
+        .filter((s) => s.trim().length > 0);
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <Button
+                    type="text"
+                    icon={<ArrowLeftOutlined />}
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 font-medium transition-colors"
+                >
+                    Back to Overview
+                </Button>
+                <Tag
+                    color="indigo"
+                    className="m-0 border-none rounded-full px-3 py-1 text-[10px] items-center gap-1.5 hidden sm:flex"
+                >
+                    <Sparkles size={12} className="text-indigo-600" />
+                    AI AGENT ANALYSIS
+                </Tag>
+            </div>
+
+            {sections.map((section, idx) => {
+                const lines = section.trim().split("\n");
+                const title = lines[0].replace(/[:*#]/g, "").trim();
+                const body = lines.slice(1).join("\n").trim();
+
+                if (!body && idx === 0) return null; // Skip if title only (main header)
+
+                return (
+                    <div
+                        key={idx}
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-indigo-100 transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
+                            <Title
+                                level={5}
+                                className="!m-0 text-gray-800 uppercase tracking-wider text-[13px] font-bold"
+                            >
+                                {title}
+                            </Title>
+                        </div>
+                        <div className="text-gray-600 leading-relaxed text-[14px]">
+                            {body.split("\n").map((line, lidx) => {
+                                const cleanLine = line
+                                    .replace(/^[*+-]\s*/, "")
+                                    .replace(/[*_~`]/g, "")
+                                    .trim();
+                                if (!cleanLine) return null;
+                                return (
+                                    <div
+                                        key={lidx}
+                                        className="mb-3 flex gap-3 group"
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 mt-2 flex-shrink-0 group-hover:bg-indigo-400 transition-colors" />
+                                        <span>{cleanLine}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
+
+            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100 flex items-start gap-4">
+                <div className="bg-white p-2 rounded-lg shadow-sm">
+                    <Sparkles className="text-indigo-600" size={20} />
+                </div>
+                <div>
+                    <Text className="text-indigo-900 font-bold block">
+                        AI Powered Report
+                    </Text>
+                    <Text className="text-indigo-600/70 text-xs">
+                        Generated in real-time based on latest system logs.
+                    </Text>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
     const [data, setData] = useState([]);
     const [orgJobs, setOrgJobs] = useState(null);
-    const [current, setCurrent] = useState(defaultTab);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlTab = searchParams.get("tab");
+    const [current, setCurrent] = useState(urlTab || defaultTab);
     const [locationFilter, setLocationFilter] = useState("All");
     const [statusFilter, setStatusFilter] = useState("All");
     const [recruiterFilter, setRecruiterFilter] = useState("All");
 
     useEffect(() => {
-        setCurrent(defaultTab);
-    }, [defaultTab]);
+        if (urlTab) {
+            setCurrent(urlTab);
+        } else {
+            setCurrent(defaultTab);
+        }
+    }, [defaultTab, urlTab]);
     const [loading, setLoading] = useState(false);
     const [buttonLoading, setButtonLoading] = useState(false);
     const navigate = useNavigate();
@@ -227,10 +383,53 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
     const [isJdExpanded, setIsJdExpanded] = useState(false);
     const [rejectingJob, setRejectingJob] = useState(null);
     const [feedback, setFeedback] = useState("");
+    const [acceptingReplacementId, setAcceptingReplacementId] = useState(null);
+    const [isAddRecruiterModalOpen, setIsAddRecruiterModalOpen] =
+        useState(false);
+    const [canAddRecruiter, setCanAddRecruiter] = useState(true);
     const [canOpenModal, setCanOpenModal] = useState(false);
     const [showReasonBox, setShowReasonBox] = useState(false);
     const [reason, setReason] = useState("");
     const [planLimitJob, setPlanLimitJob] = useState(null);
+    const [rejectingReplacement, setRejectingReplacement] = useState(null);
+    const [replacementFeedback, setReplacementFeedback] = useState("");
+
+    // Replacement Suggestion State
+    const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+    const [
+        selectedReplacementForSuggestion,
+        setSelectedReplacementForSuggestion,
+    ] = useState(null);
+    const [selectedRecruiterForSuggestion, setSelectedRecruiterForSuggestion] =
+        useState([]);
+    const [assignLoading, setAssignLoading] = useState(false);
+
+    // AI Summary States
+    const [showAIInsights, setShowAIInsights] = useState(false);
+    const [aiSummary, setAiSummary] = useState("");
+    const [isAILoading, setIsAILoading] = useState(false);
+
+    const fetchAIJobSummary = async (jobId) => {
+        setIsAILoading(true);
+        setShowAIInsights(true); // Switch to AI view in Drawer
+        try {
+            const response = await fetch(`${apiurl}/ai/job-summary/${jobId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setAiSummary(data.summary);
+            } else {
+                message.error(data.error || "Failed to fetch AI summary");
+            }
+        } catch (error) {
+            message.error("An error occurred while fetching AI summary");
+        } finally {
+            setIsAILoading(false);
+        }
+    };
 
     // Not Assigned Jobs States
     const [recruiters, setRecruiters] = useState([]);
@@ -262,19 +461,25 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
         }
     };
 
+    const refreshCurrentTab = () => {
+        if (current === "edit_requests") {
+            fetchEditRequests();
+        } else if (current === "notapprovedjobs") {
+            fetchNotApprovedJobs();
+        } else if (current === "notassigendjobs") {
+            fetchNotAssignedJobs();
+        } else if (current === "rejected") {
+            fetchRejectedJobs();
+        } else if (current === "replacements") {
+            fetchReplacementRequests();
+        } else {
+            fetchJobPosts();
+        }
+    };
+
     useEffect(() => {
         if (token) {
-            if (current === "edit_requests") {
-                fetchEditRequests();
-            } else if (current === "notapprovedjobs") {
-                fetchNotApprovedJobs();
-            } else if (current === "notassigendjobs") {
-                fetchNotAssignedJobs();
-            } else if (current === "rejected") {
-                fetchRejectedJobs();
-            } else {
-                fetchJobPosts();
-            }
+            refreshCurrentTab();
             fetchRecruiters();
             updateState();
         }
@@ -344,19 +549,86 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
     };
 
     const items = hideTabs
-        ? [{ label: "Client Edit Requests", key: "edit_requests" }]
+        ? [
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Client Edit Requests
+                      </span>
+                  ),
+                  key: "edit_requests",
+              },
+          ]
         : [
-              { label: "All", key: "all" },
-              { label: "New", key: "notapprovedjobs" },
-              { label: "Assigned", key: "open" },
-              { label: "Under-Negotiation", key: "edit_requests" },
-              { label: "Assign JP's", key: "notassigendjobs" },
-              { label: "Closed", key: "expired" },
-              { label: "Rejected", key: "rejected" },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          All
+                      </span>
+                  ),
+                  key: "all",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          New
+                      </span>
+                  ),
+                  key: "notapprovedjobs",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Assigned
+                      </span>
+                  ),
+                  key: "open",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Under-Negotiation
+                      </span>
+                  ),
+                  key: "edit_requests",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Replacement
+                      </span>
+                  ),
+                  key: "replacements",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Assign JP's
+                      </span>
+                  ),
+                  key: "notassigendjobs",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Closed
+                      </span>
+                  ),
+                  key: "expired",
+              },
+              {
+                  label: (
+                      <span className="hover:text-blue-600 transition-colors">
+                          Rejected
+                      </span>
+                  ),
+                  key: "rejected",
+              },
           ];
 
     const handleMenuClick = (e) => {
         setCurrent(e.key);
+        setSearchParams({ tab: e.key });
     };
 
     const fetchNotApprovedJobs = async () => {
@@ -409,17 +681,36 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
 
     const fetchRecruiters = async () => {
         try {
+            const response = await fetch(`${apiurl}/manager/all-recruiters/`, {
+                method: "GET",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const resData = await response.json();
+            if (resData.data) {
+                setRecruiters(
+                    resData.data.map((r) => ({ id: r.id, name: r.name })),
+                );
+                setCanAddRecruiter(resData.can_add_recruiter);
+            }
+        } catch (error) {
+            console.error("Error fetching recruiters:", error);
+        }
+    };
+
+    const fetchAssignedRecruitersByLocation = async (locationId) => {
+        try {
             const response = await fetch(
-                `${apiurl}/agency/recruiters/?names=true`,
+                `${apiurl}/manager/job/assign-recruiter/by-location/${locationId}/`,
                 {
-                    method: "GET",
                     headers: { Authorization: `Bearer ${token}` },
                 },
             );
             const resData = await response.json();
-            setRecruiters(resData);
+            if (Array.isArray(resData)) {
+                setSelectedRecruiters(resData);
+            }
         } catch (error) {
-            console.error("Error fetching recruiters:", error);
+            console.error("Error fetching assigned recruiters:", error);
         }
     };
 
@@ -437,7 +728,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
             );
             if (response.ok) {
                 message.success("Job approved successfully");
-                fetchNotApprovedJobs();
+                refreshCurrentTab();
             }
         } catch (err) {
             message.error("Error approving job");
@@ -461,7 +752,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 message.success("Job rejected with feedback");
                 setRejectingJob(null);
                 setFeedback("");
-                fetchNotApprovedJobs();
+                refreshCurrentTab();
             }
         } catch (err) {
             message.error("Error rejecting job");
@@ -488,7 +779,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 setShowReasonBox(false);
                 setReason("");
                 setPlanLimitJob(null);
-                fetchNotApprovedJobs();
+                refreshCurrentTab();
             }
         } catch (err) {
             message.error("An error occurred while sending the reason");
@@ -498,11 +789,13 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
     const handleAssignRecruiters = (location_id) => {
         setSelectedLocationId(location_id);
         fetchRecruiters();
+        fetchAssignedRecruitersByLocation(location_id);
         setOpenAssignModal(true);
     };
 
     const assignRecruiters = async () => {
         try {
+            // First assign recruiters
             await fetch(
                 `${apiurl}/manager/job/assign-recruiter/by-location/${selectedLocationId}/`,
                 {
@@ -514,11 +807,40 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                     body: JSON.stringify({ recruiters: selectedRecruiters }),
                 },
             );
-            message.success("Job post assigned to recruiters");
+
+            // If this was triggered by a replacement acceptance, call that next
+            if (acceptingReplacementId) {
+                const response = await fetch(
+                    `${apiurl}/manager/replacement-action/`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            replacement_id: acceptingReplacementId,
+                            action: "accept",
+                        }),
+                    },
+                );
+                if (response.ok) {
+                    message.success(
+                        "Replacement accepted and recruiters assigned",
+                    );
+                } else {
+                    const data = await response.json();
+                    message.error(data.error || "Failed to accept replacement");
+                }
+                setAcceptingReplacementId(null);
+            } else {
+                message.success("Job post assigned to recruiters");
+            }
+
             setSelectedLocationId(null);
             setSelectedRecruiters([]);
             setOpenAssignModal(false);
-            fetchNotAssignedJobs();
+            refreshCurrentTab();
         } catch (err) {
             message.error("Error assigning recruiters");
         }
@@ -572,6 +894,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
             if (response.ok) {
                 message.success("Deadline updated successfully");
                 setIsModalOpen(false);
+                refreshCurrentTab();
             }
         } catch (error) {
             message.error("Error updating deadline");
@@ -591,10 +914,116 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
             if (res.error) message.error(res.error);
             else {
                 message.success(res.message);
-                fetchJobPosts();
+                refreshCurrentTab();
             }
         } catch (error) {
             message.error(error.message);
+        }
+    };
+
+    const fetchReplacementRequests = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(
+                `${apiurl}/manager/replacement-requests/`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+            const res = await response.json();
+            if (response.ok) {
+                setData(res);
+            } else {
+                message.error(
+                    res.error || "Failed to fetch replacement requests",
+                );
+            }
+        } catch (error) {
+            message.error("Failed to fetch replacement requests");
+        }
+        setLoading(false);
+    };
+
+    const handleReplacementAction = async (
+        replacementId,
+        action,
+        reason = "",
+    ) => {
+        try {
+            const response = await fetch(
+                `${apiurl}/manager/replacement-action/`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        replacement_id: replacementId,
+                        action,
+                        reason,
+                    }),
+                },
+            );
+            if (response.ok) {
+                message.success(`Replacement request ${action}ed successfully`);
+                if (action === "reject") {
+                    setRejectingReplacement(null);
+                    setReplacementFeedback("");
+                }
+                refreshCurrentTab();
+            } else {
+                const res = await response.json();
+                message.error(
+                    res.error || `Error ${action}ing replacement request`,
+                );
+            }
+        } catch (err) {
+            message.error(`Error ${action}ing replacement request`);
+        }
+    };
+
+    const handleAssignCandidate = async () => {
+        if (
+            !selectedRecruiterForSuggestion ||
+            selectedRecruiterForSuggestion.length === 0
+        ) {
+            message.error("Please select at least one recruiter");
+            return;
+        }
+        setAssignLoading(true);
+        try {
+            const response = await fetch(
+                `${apiurl}/manager/assign-replacement-candidate/`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        recruiter_ids: selectedRecruiterForSuggestion,
+                        replacement_id:
+                            selectedReplacementForSuggestion?.replacement_id,
+                    }),
+                },
+            );
+            const result = await response.json();
+            if (response.ok) {
+                message.success(result.message);
+                setIsSuggestionModalOpen(false);
+                setSelectedRecruiterForSuggestion([]);
+                refreshCurrentTab();
+            } else {
+                message.error(result.error || "Failed to assign candidate");
+            }
+        } catch (error) {
+            console.error("Error assigning candidate:", error);
+            message.error("Something went wrong");
+        } finally {
+            setAssignLoading(false);
         }
     };
 
@@ -611,7 +1040,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
             if (res.error) message.error(res.error);
             else {
                 message.success(res.message);
-                fetchJobPosts();
+                refreshCurrentTab();
             }
         } catch (error) {
             message.error(error.message);
@@ -621,9 +1050,22 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
     const filteredJobs = useMemo(() => {
         let result = data;
         if (current === "open") {
-            result = result.filter((job) => job.status === "opened");
+            result = result.filter((job) => {
+                const isExpired =
+                    job.deadline &&
+                    new Date().toISOString().split("T")[0] > job.deadline;
+                return job.status === "opened" && !isExpired;
+            });
         } else if (current === "expired") {
-            result = result.filter((job) => job.status === "closed");
+            result = result.filter((job) => {
+                const isExpired =
+                    job.deadline &&
+                    new Date().toISOString().split("T")[0] > job.deadline;
+                return (
+                    job.status === "closed" ||
+                    (job.status === "opened" && isExpired)
+                );
+            });
         }
 
         if (locationFilter !== "All") {
@@ -681,34 +1123,69 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
 
     const editRequestColumns = [
         { accessorKey: "job_id", header: "Job ID", width: 100 },
-        { accessorKey: "edit_reason", header: "Reason", width: 250 },
         {
-            accessorKey: "edit_status",
-            header: "Status",
-            width: 150,
+            accessorKey: "job_title",
+            header: "Job Role",
+            width: 200,
             cell: ({ row }) => (
-                <Tag
-                    color={
-                        row.original.edit_status === "pending"
-                            ? "orange"
-                            : "green"
+                <div
+                    onClick={() =>
+                        navigate(`/agency/postings/${row.original.real_job_id}`)
                     }
+                    className="font-semibold cursor-pointer text-[#3B82F6] hover:underline"
                 >
-                    {row.original.edit_status}
-                </Tag>
+                    {row.original.job_title}
+                </div>
             ),
         },
         {
-            accessorKey: "edited_at",
-            header: "Requested At",
-            width: 180,
-            cell: ({ row }) =>
-                row.original.edited_at
-                    ? new Date(row.original.edited_at).toLocaleString()
-                    : "-",
+            accessorKey: "vacancies",
+            header: "No. of positions",
+            width: 120,
+            cell: ({ row }) => (
+                <span className="font-bold text-gray-700">
+                    {row.original.vacancies || 0}
+                </span>
+            ),
         },
         {
-            header: "Action",
+            accessorKey: "client_name",
+            header: "Client Name",
+            width: 180,
+        },
+        {
+            header: "Job Status",
+            accessorKey: "job_status",
+            width: 120,
+            cell: ({ row }) => {
+                const status = row.original.job_status;
+                const color =
+                    status === "opened"
+                        ? "green"
+                        : status === "closed"
+                          ? "red"
+                          : status === "hold"
+                            ? "orange"
+                            : "default";
+                return (
+                    <Tag color={color} className="rounded-full px-3">
+                        {status?.toUpperCase()}
+                    </Tag>
+                );
+            },
+        },
+        {
+            accessorKey: "created_at",
+            header: "Tenure",
+            width: 120,
+            cell: ({ row }) =>
+                row.original.created_at
+                    ? new Date(row.original.created_at).toLocaleDateString()
+                    : "-",
+        },
+        { accessorKey: "edit_reason", header: "Reason", width: 250 },
+        {
+            header: "View Request",
             accessorKey: "id",
             width: 150,
             cell: ({ row }) =>
@@ -734,6 +1211,88 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                         {row.original.edit_status}
                     </Tag>
                 ),
+        },
+    ];
+
+    const replacementColumns = [
+        {
+            accessorKey: "job_title",
+            header: "Job Title",
+            searchField: true,
+            width: 250,
+        },
+        {
+            accessorKey: "organization_name",
+            header: "Client Org",
+            searchField: true,
+            width: 200,
+        },
+        {
+            accessorKey: "candidate_name",
+            header: "Candidate To Replace",
+            searchField: true,
+            width: 200,
+        },
+        {
+            accessorKey: "left_reason",
+            header: "Reason for Leaving",
+            width: 200,
+            cell: ({ row }) => (
+                <span className="text-red-500 italic text-sm">
+                    {row.original.left_reason || "N/A"}
+                </span>
+            ),
+        },
+        {
+            accessorKey: "agreed_ctc",
+            header: "Agreed CTC",
+            width: 150,
+        },
+        {
+            accessorKey: "joining_date",
+            header: "Joining Date",
+            width: 150,
+        },
+
+        {
+            header: "Actions",
+            accessorKey: "replacement_id",
+            width: 250,
+            cell: ({ row }) => {
+                const item = row.original;
+                return (
+                    <div className="flex gap-2">
+                        <button
+                            className="bg-[#10B981] rounded-lg border-none px-2 py-1 text-white hover:bg-[#059669]"
+                            onClick={() => {
+                                if (
+                                    item.suggested_candidates &&
+                                    item.suggested_candidates.length > 0
+                                ) {
+                                    setSelectedReplacementForSuggestion(item);
+                                    setIsSuggestionModalOpen(true);
+                                    setSelectedRecruiterForSuggestion(null);
+                                } else {
+                                    setAcceptingReplacementId(
+                                        item.replacement_id,
+                                    );
+                                    handleAssignRecruiters(
+                                        item.job_location_id,
+                                    );
+                                }
+                            }}
+                        >
+                            Accept
+                        </button>
+                        <button
+                            className="bg-[#EF4444] rounded-lg border-none px-2 py-1 text-white hover:bg-[#DC2626]"
+                            onClick={() => setRejectingReplacement(item)}
+                        >
+                            Reject
+                        </button>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -763,6 +1322,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
 
     const columns = useMemo(() => {
         if (current === "edit_requests") return editRequestColumns;
+        if (current === "replacements") return replacementColumns;
         if (current === "notapprovedjobs") {
             return [
                 {
@@ -877,6 +1437,16 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                     width: 200,
                 },
                 {
+                    accessorKey: "vacancies",
+                    header: "No. of Positions",
+                    width: 120,
+                    cell: ({ row }) => (
+                        <span className="font-bold text-gray-700">
+                            {row.original.vacancies || 0}
+                        </span>
+                    ),
+                },
+                {
                     accessorKey: "reason",
                     header: "Reason",
                     width: 300,
@@ -983,17 +1553,28 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 width: 120,
                 cell: ({ row }) => {
                     const status = row.getValue("status");
-                    const color =
-                        status === "opened"
-                            ? "green"
-                            : status === "closed"
-                              ? "red"
-                              : status === "hold"
-                                ? "orange"
-                                : "default";
+                    const isExpired =
+                        row.original.deadline &&
+                        new Date().toISOString().split("T")[0] >
+                            row.original.deadline;
+
+                    let displayStatus = status?.toUpperCase();
+                    let color = "default";
+
+                    if (isExpired && status === "opened") {
+                        displayStatus = "EXPIRED";
+                        color = "volcano"; // Red-orange for expired
+                    } else if (status === "opened") {
+                        color = "green";
+                    } else if (status === "closed") {
+                        color = "red";
+                    } else if (status === "hold") {
+                        color = "orange";
+                    }
+
                     return (
                         <Tag color={color} className="rounded-full px-3">
-                            {status?.toUpperCase()}
+                            {displayStatus}
                         </Tag>
                     );
                 },
@@ -1086,10 +1667,13 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
             },
             {
                 header: "Candidate Status",
-                width: 260,
+                width: 350,
                 cell: ({ row }) => (
                     <CandidateStatusBoxes
                         counts={row.original.candidate_counts}
+                        jobId={row.original.id}
+                        navigate={navigate}
+                        isClickable={current === "open"}
                     />
                 ),
             },
@@ -1142,6 +1726,32 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                     />
                 </div>
             )}
+
+            <Modal
+                title="Reject Replacement Request"
+                open={!!rejectingReplacement}
+                onOk={() =>
+                    handleReplacementAction(
+                        rejectingReplacement.replacement_id,
+                        "reject",
+                        replacementFeedback,
+                    )
+                }
+                onCancel={() => {
+                    setRejectingReplacement(null);
+                    setReplacementFeedback("");
+                }}
+                okText="Submit"
+                okButtonProps={{ disabled: !replacementFeedback.trim() }}
+            >
+                <p>Please provide a reason for rejection:</p>
+                <Input.TextArea
+                    rows={4}
+                    value={replacementFeedback}
+                    onChange={(e) => setReplacementFeedback(e.target.value)}
+                    placeholder="Enter rejection reason..."
+                />
+            </Modal>
 
             <Modal
                 title="Update Deadline"
@@ -1201,7 +1811,7 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                                     setShowReasonBox(true);
                                 }}
                             >
-                                View Reason
+                                Send Reason
                             </Button>
                             <Button
                                 type="primary"
@@ -1242,24 +1852,54 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 onCancel={() => {
                     setOpenAssignModal(false);
                     setSelectedRecruiters([]);
+                    setAcceptingReplacementId(null);
                 }}
                 okText="Submit"
                 okButtonProps={{ disabled: selectedRecruiters?.length === 0 }}
             >
-                <p>Select recruiters:</p>
-                <Select
-                    mode="multiple"
-                    style={{ width: "100%" }}
-                    placeholder="Select recruiters"
-                    value={selectedRecruiters}
-                    onChange={setSelectedRecruiters}
-                >
-                    {recruiters.map((r) => (
-                        <Select.Option key={r.id} value={r.id}>
-                            {r.name}
-                        </Select.Option>
-                    ))}
-                </Select>
+                <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center">
+                        <p className="m-0">Select recruiters:</p>
+                        {canAddRecruiter && (
+                            <Button
+                                type="link"
+                                size="small"
+                                icon={<PlusOutlined />}
+                                onClick={() => setIsAddRecruiterModalOpen(true)}
+                            >
+                                Add New Recruiter
+                            </Button>
+                        )}
+                    </div>
+                    <Select
+                        mode="multiple"
+                        style={{ width: "100%" }}
+                        placeholder="Select recruiters"
+                        value={selectedRecruiters}
+                        onChange={setSelectedRecruiters}
+                    >
+                        {recruiters.map((r) => (
+                            <Select.Option key={r.id} value={r.id}>
+                                {r.name}
+                            </Select.Option>
+                        ))}
+                    </Select>
+                </div>
+            </Modal>
+
+            <Modal
+                title="Add New Recruiter"
+                open={isAddRecruiterModalOpen}
+                onCancel={() => setIsAddRecruiterModalOpen(false)}
+                footer={null}
+                width={500}
+            >
+                <AddRecruiters
+                    onclose={() => {
+                        setIsAddRecruiterModalOpen(false);
+                        fetchRecruiters();
+                    }}
+                />
             </Modal>
 
             <Modal
@@ -1297,7 +1937,16 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                                 #{selectedJobData?.job_id}
                             </span>
                         </div>
-                        <button className="cursor-pointer hover:shadow-xl">
+                        <button
+                            className="cursor-pointer hover:shadow-xl"
+                            onClick={() => {
+                                if (showAIInsights) {
+                                    setShowAIInsights(false);
+                                } else {
+                                    fetchAIJobSummary(selectedJobData.id);
+                                }
+                            }}
+                        >
                             <svg
                                 width="173"
                                 height="32"
@@ -1382,7 +2031,10 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 }
                 placement="right"
                 width={1000}
-                onClose={() => setShowSummaryDrawer(false)}
+                onClose={() => {
+                    setShowSummaryDrawer(false);
+                    setShowAIInsights(false);
+                }}
                 open={showSummaryDrawer}
                 closeIcon={
                     <svg
@@ -1414,737 +2066,881 @@ const JobPosts = ({ defaultTab = "all", hideTabs = false }) => {
                 }}
             >
                 <div className="flex gap-8 h-full overflow-hidden p-6">
-                    {/* Main Content - Left */}
-                    <div className="flex-1 overflow-y-auto pr-4 no-scrollbar">
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <Title
-                                        level={4}
-                                        style={{ marginBottom: 8 }}
-                                    >
-                                        {selectedJobData?.job_title}
-                                    </Title>
-                                </div>
-                                {selectedJobData?.approval_status ===
-                                    "pending" && (
-                                    <div className="flex gap-2 mb-2">
-                                        <button
-                                            onClick={() => {
-                                                if (selectedJobData.can_open) {
-                                                    handleAcceptApproved(
-                                                        selectedJobData.id,
-                                                    );
-                                                } else {
-                                                    setPlanLimitJob(
-                                                        selectedJobData,
-                                                    );
-                                                    setCanOpenModal(true);
-                                                }
-                                            }}
-                                            className="px-4 py-2 text-sm font-semibold rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition shadow-sm"
-                                        >
-                                            Accept
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (selectedJobData.can_open) {
-                                                    navigate(
-                                                        `/agency/edit_job/${selectedJobData.id}`,
-                                                    );
-                                                } else {
-                                                    setPlanLimitJob(
-                                                        selectedJobData,
-                                                    );
-                                                    setCanOpenModal(true);
-                                                }
-                                            }}
-                                            className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-sm"
-                                        >
-                                            Negotiate
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                setRejectingJob(selectedJobData)
-                                            }
-                                            className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition shadow-sm"
-                                        >
-                                            Reject
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex items-center justify-between gap-2 mb-4 text-gray-800 font-semibold">
-                                <span className="flex items-center gap-2">
-                                    {" "}
-                                    <svg
-                                        width="32"
-                                        height="32"
-                                        viewBox="0 0 32 32"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <rect
-                                            width="32"
-                                            height="32"
-                                            rx="6"
-                                            fill="#1681FF"
-                                            fill-opacity="0.05"
-                                        />
-                                        <rect width="32" height="32" rx="6" />
-                                        <path
-                                            opacity="0.2"
-                                            d="M23.0295 10.2712L20.6495 23.7912C20.62 23.9584 20.5254 24.1071 20.3863 24.2045C20.2472 24.3018 20.0751 24.3399 19.9079 24.3104L9.48791 22.4704C9.14007 22.4091 8.90771 22.0775 8.96871 21.7296L11.3487 8.20962C11.3782 8.04241 11.4729 7.89376 11.6119 7.79638C11.751 7.69901 11.9231 7.66089 12.0903 7.69042L22.5103 9.53042C22.8581 9.59178 23.0905 9.92332 23.0295 10.2712Z"
-                                            fill="#1681FF"
-                                        />
-                                        <path
-                                            d="M22.6201 8.90011L12.2001 7.06011C11.504 6.93762 10.8404 7.40247 10.7177 8.09851L8.33769 21.6185C8.2789 21.953 8.35546 22.2972 8.55052 22.5752C8.74558 22.8532 9.04314 23.0424 9.37769 23.1009L19.7977 24.9409C20.1323 24.9999 20.4767 24.9235 20.7549 24.7284C21.0331 24.5333 21.2223 24.2356 21.2809 23.9009L23.6609 10.3809C23.7823 9.68461 23.3164 9.02169 22.6201 8.90011ZM20.0185 23.6801L9.59769 21.8401L11.9777 8.32011L22.3977 10.1601L20.0185 23.6801ZM12.9049 10.4337C12.9666 10.0858 13.2986 9.85379 13.6465 9.91531L20.2865 11.0873C20.6136 11.1446 20.8426 11.4427 20.8136 11.7735C20.7847 12.1044 20.5074 12.3581 20.1753 12.3577C20.1377 12.3577 20.1003 12.3544 20.0633 12.3481L13.4233 11.1753C13.0754 11.1136 12.8434 10.7816 12.9049 10.4337ZM12.4617 12.9553C12.4911 12.7881 12.5858 12.6395 12.7249 12.5421C12.864 12.4447 13.0361 12.4066 13.2033 12.4361L19.8433 13.6089C20.1729 13.664 20.4046 13.9634 20.3752 14.2963C20.3459 14.6292 20.0654 14.8835 19.7313 14.8801C19.6934 14.8802 19.6557 14.8767 19.6185 14.8697L12.9785 13.6977C12.6309 13.6352 12.3996 13.303 12.4617 12.9553ZM12.0177 15.4761C12.0806 15.1292 12.4122 14.8985 12.7593 14.9601L16.0777 15.5433C16.4047 15.6006 16.6336 15.8984 16.6048 16.2291C16.5761 16.5598 16.2993 16.8137 15.9673 16.8137C15.9297 16.8137 15.8923 16.8105 15.8553 16.8041L12.5353 16.2177C12.1877 16.1556 11.9561 15.8238 12.0177 15.4761Z"
-                                            fill="#1681FF"
-                                        />
-                                    </svg>
-                                    Job Description
-                                </span>
-                                <Button
-                                    type="link"
-                                    size="small"
-                                    className="p-0 text-gray-500 hover:text-gray-700 font-medium"
-                                    onClick={() =>
-                                        setIsJdExpanded(!isJdExpanded)
-                                    }
-                                >
-                                    {isJdExpanded ? "Show less" : "Show more"}
-                                </Button>
-                            </div>
-                            <Paragraph
-                                ellipsis={{
-                                    rows: isJdExpanded ? 1000 : 3,
-                                    expandable: false,
-                                }}
-                                className="text-gray-600 text-[14px] leading-relaxed mb-1"
-                            >
-                                {stripHtml(selectedJobData?.job_description)}
-                            </Paragraph>
-
-                            <div className="flex flex-wrap gap-2 mt-6">
-                                <Tag
-                                    icon={<EnvironmentOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.location}
-                                </Tag>
-                                <Tag
-                                    icon={<DollarCircleOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.ctc}
-                                </Tag>
-                                <Tag
-                                    icon={<ClockCircleOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.years_of_experience} exp.
-                                </Tag>
-                                <Tag
-                                    icon={<ProjectOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.job_level}
-                                </Tag>
-                                <Tag
-                                    icon={<TeamOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.vacancies} Positions
-                                </Tag>
-                                <Tag
-                                    icon={<HomeOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.job_type}
-                                </Tag>
-                                <Tag
-                                    icon={<FieldTimeOutlined />}
-                                    className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
-                                >
-                                    {selectedJobData?.rotational_shift
-                                        ? "Rotational"
-                                        : "Non-Rotational"}
-                                </Tag>
-                            </div>
-
-                            {isJdExpanded && (
-                                <>
-                                    <div className="bg-white rounded-2xl p-6 mb-6 -ml-4">
-                                        <div className="flex items-center gap-2 mb-6 text-gray-800 font-semibold">
-                                            <span className="flex items-center gap-2 -ml-2">
-                                                <svg
-                                                    width="32"
-                                                    height="32"
-                                                    viewBox="0 0 32 32"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
+                    {/* Switch between Overview and AI Insights */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar">
+                        {showAIInsights ? (
+                            <AIInsightsDashboard
+                                content={aiSummary}
+                                loading={isAILoading}
+                                onBack={() => setShowAIInsights(false)}
+                            />
+                        ) : (
+                            <div className="flex gap-8 h-full">
+                                {/* Main Content - Left */}
+                                <div className="flex-1 pr-4">
+                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <Title
+                                                    level={4}
+                                                    style={{ marginBottom: 8 }}
                                                 >
-                                                    <rect
-                                                        width="32"
-                                                        height="32"
-                                                        rx="6"
-                                                        fill="#FDF1F5"
-                                                    />
-                                                    <rect
-                                                        width="32"
-                                                        height="32"
-                                                        rx="6"
-                                                    />
-                                                    <path
-                                                        d="M10.2891 11.7101C11.0734 11.7101 11.7091 11.0744 11.7091 10.2901C11.7091 9.50587 11.0734 8.87012 10.2891 8.87012C9.5049 8.87012 8.86914 9.50587 8.86914 10.2901C8.86914 11.0744 9.5049 11.7101 10.2891 11.7101Z"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                    <path
-                                                        d="M10.2891 17.4201C11.0734 17.4201 11.7091 16.7843 11.7091 16.0001C11.7091 15.2158 11.0734 14.5801 10.2891 14.5801C9.5049 14.5801 8.86914 15.2158 8.86914 16.0001C8.86914 16.7843 9.5049 17.4201 10.2891 17.4201Z"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                    <path
-                                                        d="M10.2891 23.13C11.0734 23.13 11.7091 22.4943 11.7091 21.71C11.7091 20.9258 11.0734 20.29 10.2891 20.29C9.5049 20.29 8.86914 20.9258 8.86914 21.71C8.86914 22.4943 9.5049 23.13 10.2891 23.13Z"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                    <path
-                                                        d="M14.5996 10.29L23.1196 10.29"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                    <path
-                                                        d="M14.5996 16L23.1196 16"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                    <path
-                                                        d="M14.5996 21.71L23.1196 21.71"
-                                                        stroke="#E8618C"
-                                                        stroke-width="1.704"
-                                                        stroke-miterlimit="10"
-                                                        stroke-linecap="square"
-                                                    />
-                                                </svg>
-                                                Skill Set
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-8">
-                                            <div>
-                                                <Text className="text-gray-400 font-bold text-[10px] tracking-wider block mb-4">
-                                                    PRIMARY SKILLS
-                                                </Text>
-                                                <div className="space-y-4">
-                                                    {selectedJobData?.primary_skills?.map(
-                                                        (s, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="flex justify-between items-center group"
-                                                            >
-                                                                <Text className="text-gray-700 font-medium">
-                                                                    {
-                                                                        s.skill_name
-                                                                    }
-                                                                </Text>
-                                                                <Text className="text-gray-900 font-bold group-hover:text-indigo-600 transition-colors">
-                                                                    {
-                                                                        s.metric_value
-                                                                    }{" "}
-                                                                    <Text className="text-[10px] text-gray-400 font-normal uppercase ml-1">
-                                                                        {
-                                                                            s.metric_type
-                                                                        }
-                                                                    </Text>
-                                                                </Text>
-                                                            </div>
-                                                        ),
-                                                    )}
-                                                </div>
+                                                    {selectedJobData?.job_title}
+                                                </Title>
                                             </div>
-                                            <div>
-                                                <Text className="text-gray-400 font-bold text-[10px] tracking-wider block mb-4">
-                                                    SECONDARY SKILL
-                                                </Text>
-                                                <div className="space-y-4">
-                                                    {selectedJobData?.secondary_skills?.map(
-                                                        (s, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="flex justify-between items-center group"
-                                                            >
-                                                                <Text className="text-gray-700 font-medium">
-                                                                    {
-                                                                        s.skill_name
-                                                                    }
-                                                                </Text>
-                                                                <Text className="text-gray-900 font-bold group-hover:text-indigo-600 transition-colors">
-                                                                    {
-                                                                        s.metric_value
-                                                                    }{" "}
-                                                                    <Text className="text-[10px] text-gray-400 font-normal uppercase ml-1">
-                                                                        {
-                                                                            s.metric_type
-                                                                        }
-                                                                    </Text>
-                                                                </Text>
-                                                            </div>
-                                                        ),
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-2xl p-6 -ml-4">
-                                        <div className="flex items-center gap-2 mb-6 text-gray-800 font-semibold">
-                                            {/* <PlusOutlined /> */}
-                                            <span className="flex items-center gap-2 -ml-2 ">
-                                                <svg
-                                                    width="32"
-                                                    height="32"
-                                                    viewBox="0 0 32 32"
-                                                    fill="none"
-                                                    className="border-none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <rect
-                                                        width="32"
-                                                        height="32"
-                                                        rx="6"
-                                                        fill="#EFFCFA"
-                                                    />
-                                                    <rect
-                                                        width="32"
-                                                        height="32"
-                                                        rx="6"
-                                                    />
-                                                    <path
-                                                        d="M23.6803 16.0002C23.6803 16.3537 23.3938 16.6402 23.0403 16.6402L8.96031 16.6402C8.60685 16.6402 8.32031 16.3537 8.32031 16.0002C8.32031 15.6468 8.60685 15.3602 8.96031 15.3602L23.0403 15.3602C23.3938 15.3603 23.6803 15.6468 23.6803 16.0002ZM8.96031 11.5202L23.0403 11.5202C23.3938 11.5202 23.6803 11.2337 23.6803 10.8802C23.6803 10.5268 23.3938 10.2402 23.0403 10.2402L8.96031 10.2402C8.60685 10.2402 8.32031 10.5268 8.32031 10.8802C8.32031 11.2337 8.60685 11.5202 8.96031 11.5202ZM23.0403 20.4802L8.96031 20.4802C8.60685 20.4802 8.32031 20.7668 8.32031 21.1202C8.32031 21.4737 8.60685 21.7602 8.96031 21.7602L23.0403 21.7602C23.3938 21.7602 23.6803 21.4737 23.6803 21.1202C23.6803 20.7668 23.3938 20.4802 23.0403 20.4802Z"
-                                                        fill="#22CCB2"
-                                                    />
-                                                </svg>
-                                                Additional Details
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-                                            <div className="flex flex-col gap-1">
-                                                <Text className="text-gray-400 font-medium text-xs">
-                                                    Education
-                                                </Text>
-                                                <div className="flex gap-2 mt-1">
-                                                    {(typeof selectedJobData?.qualifications ===
-                                                    "string"
-                                                        ? selectedJobData.qualifications.split(
-                                                              ",",
-                                                          )
-                                                        : [
-                                                              selectedJobData?.qualifications ||
-                                                                  "Any",
-                                                          ]
-                                                    ).map((q, i) => (
-                                                        <Tag
-                                                            key={i}
-                                                            className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]"
-                                                        >
-                                                            <SafetyCertificateOutlined className="mr-1" />{" "}
-                                                            {q.trim()}
-                                                        </Tag>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <Text className="text-gray-400 font-medium text-xs">
-                                                    Languages specific
-                                                </Text>
-                                                <div className="flex gap-2 mt-1">
-                                                    {(typeof selectedJobData?.languages ===
-                                                    "string"
-                                                        ? selectedJobData.languages.split(
-                                                              ",",
-                                                          )
-                                                        : ["N/A"]
-                                                    ).map((l, i) => (
-                                                        <Tag
-                                                            key={i}
-                                                            className="m-0!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]"
-                                                        >
-                                                            {l.trim()}
-                                                        </Tag>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <Text className="text-gray-400 font-medium text-xs">
-                                                    Passport and visa
-                                                </Text>
-                                                <div className="flex gap-2 mt-1">
-                                                    <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
-                                                        <GlobalOutlined className="mr-1" />{" "}
-                                                        {selectedJobData?.passport_availability ||
-                                                            "Not Required"}
-                                                    </Tag>
-                                                    <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
-                                                        {selectedJobData?.visa_status ||
-                                                            "N/A"}
-                                                    </Tag>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <Text className="text-gray-400 font-medium text-xs">
-                                                    Decision Maker
-                                                </Text>
-                                                <div className="flex flex-col gap-2 mt-1">
-                                                    <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
-                                                        <UserOutlined className="mr-1" />{" "}
-                                                        {
-                                                            selectedJobData?.decision_maker
-                                                        }
-                                                    </Tag>
-                                                    <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
-                                                        <MailOutlined className="mr-1" />{" "}
-                                                        {
-                                                            selectedJobData?.decision_maker_email
-                                                        }
-                                                    </Tag>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-y-6 gap-x-12 mt-6 pt-6 border-t border-gray-50">
-                                            <div>
-                                                <Text className="text-gray-700 font-bold text-xs">
-                                                    Rotational Shifts:{" "}
-                                                    <span
-                                                        className={`ml-2 font-medium ${selectedJobData?.rotational_shift ? "text-green-600" : "text-gray-500"}`}
+                                            {selectedJobData?.approval_status ===
+                                                "pending" && (
+                                                <div className="flex gap-2 mb-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            if (
+                                                                selectedJobData.can_open
+                                                            ) {
+                                                                handleAcceptApproved(
+                                                                    selectedJobData.id,
+                                                                );
+                                                            } else {
+                                                                setPlanLimitJob(
+                                                                    selectedJobData,
+                                                                );
+                                                                setCanOpenModal(
+                                                                    true,
+                                                                );
+                                                            }
+                                                        }}
+                                                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition shadow-sm"
                                                     >
-                                                        {selectedJobData?.rotational_shift
-                                                            ? "Yes"
-                                                            : "No"}
-                                                    </span>
-                                                </Text>
-                                            </div>
-                                            <div>
-                                                <Text className="text-gray-700 font-bold text-xs">
-                                                    Bond:{" "}
-                                                    <span className="ml-2 font-medium text-gray-500">
-                                                        {selectedJobData?.bond ||
-                                                            "No-Bond"}
-                                                    </span>
-                                                </Text>
-                                            </div>
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (
+                                                                selectedJobData.can_open
+                                                            ) {
+                                                                navigate(
+                                                                    `/agency/edit_job/${selectedJobData.id}`,
+                                                                );
+                                                            } else {
+                                                                setPlanLimitJob(
+                                                                    selectedJobData,
+                                                                );
+                                                                setCanOpenModal(
+                                                                    true,
+                                                                );
+                                                            }
+                                                        }}
+                                                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-sm"
+                                                    >
+                                                        Negotiate
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            setRejectingJob(
+                                                                selectedJobData,
+                                                            )
+                                                        }
+                                                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition shadow-sm"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-2xl p-6  ">
-                                        <div className="flex gap-3 items-center mb-6 text-gray-800 font-semibold">
-                                            <ProjectOutlined />
-                                            <span>Other Benefits</span>
+                                        <div className="flex items-center justify-between gap-2 mb-4 text-gray-800 font-semibold">
+                                            <span className="flex items-center gap-2">
+                                                {" "}
+                                                <svg
+                                                    width="32"
+                                                    height="32"
+                                                    viewBox="0 0 32 32"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <rect
+                                                        width="32"
+                                                        height="32"
+                                                        rx="6"
+                                                        fill="#1681FF"
+                                                        fill-opacity="0.05"
+                                                    />
+                                                    <rect
+                                                        width="32"
+                                                        height="32"
+                                                        rx="6"
+                                                    />
+                                                    <path
+                                                        opacity="0.2"
+                                                        d="M23.0295 10.2712L20.6495 23.7912C20.62 23.9584 20.5254 24.1071 20.3863 24.2045C20.2472 24.3018 20.0751 24.3399 19.9079 24.3104L9.48791 22.4704C9.14007 22.4091 8.90771 22.0775 8.96871 21.7296L11.3487 8.20962C11.3782 8.04241 11.4729 7.89376 11.6119 7.79638C11.751 7.69901 11.9231 7.66089 12.0903 7.69042L22.5103 9.53042C22.8581 9.59178 23.0905 9.92332 23.0295 10.2712Z"
+                                                        fill="#1681FF"
+                                                    />
+                                                    <path
+                                                        d="M22.6201 8.90011L12.2001 7.06011C11.504 6.93762 10.8404 7.40247 10.7177 8.09851L8.33769 21.6185C8.2789 21.953 8.35546 22.2972 8.55052 22.5752C8.74558 22.8532 9.04314 23.0424 9.37769 23.1009L19.7977 24.9409C20.1323 24.9999 20.4767 24.9235 20.7549 24.7284C21.0331 24.5333 21.2223 24.2356 21.2809 23.9009L23.6609 10.3809C23.7823 9.68461 23.3164 9.02169 22.6201 8.90011ZM20.0185 23.6801L9.59769 21.8401L11.9777 8.32011L22.3977 10.1601L20.0185 23.6801ZM12.9049 10.4337C12.9666 10.0858 13.2986 9.85379 13.6465 9.91531L20.2865 11.0873C20.6136 11.1446 20.8426 11.4427 20.8136 11.7735C20.7847 12.1044 20.5074 12.3581 20.1753 12.3577C20.1377 12.3577 20.1003 12.3544 20.0633 12.3481L13.4233 11.1753C13.0754 11.1136 12.8434 10.7816 12.9049 10.4337ZM12.4617 12.9553C12.4911 12.7881 12.5858 12.6395 12.7249 12.5421C12.864 12.4447 13.0361 12.4066 13.2033 12.4361L19.8433 13.6089C20.1729 13.664 20.4046 13.9634 20.3752 14.2963C20.3459 14.6292 20.0654 14.8835 19.7313 14.8801C19.6934 14.8802 19.6557 14.8767 19.6185 14.8697L12.9785 13.6977C12.6309 13.6352 12.3996 13.303 12.4617 12.9553ZM12.0177 15.4761C12.0806 15.1292 12.4122 14.8985 12.7593 14.9601L16.0777 15.5433C16.4047 15.6006 16.6336 15.8984 16.6048 16.2291C16.5761 16.5598 16.2993 16.8137 15.9673 16.8137C15.9297 16.8137 15.8923 16.8105 15.8553 16.8041L12.5353 16.2177C12.1877 16.1556 11.9561 15.8238 12.0177 15.4761Z"
+                                                        fill="#1681FF"
+                                                    />
+                                                </svg>
+                                                Job Description
+                                            </span>
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                className="p-0 text-gray-500 hover:text-gray-700 font-medium"
+                                                onClick={() =>
+                                                    setIsJdExpanded(
+                                                        !isJdExpanded,
+                                                    )
+                                                }
+                                            >
+                                                {isJdExpanded
+                                                    ? "Show less"
+                                                    : "Show more"}
+                                            </Button>
                                         </div>
-                                        <Paragraph className="text-gray-600 text-[13px] leading-relaxed">
-                                            {selectedJobData?.other_benefits ||
-                                                "No additional benefits listed."}
+                                        <Paragraph
+                                            ellipsis={{
+                                                rows: isJdExpanded ? 1000 : 3,
+                                                expandable: false,
+                                            }}
+                                            className="text-gray-600 text-[14px] leading-relaxed mb-1"
+                                        >
+                                            {stripHtml(
+                                                selectedJobData?.job_description,
+                                            )}
                                         </Paragraph>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                            <div className="flex gap-3 items-center mb-6 text-gray-800 font-semibold">
-                                <TeamOutlined />
-                                <span>Profiles</span>
-                            </div>
-                            <Tabs
-                                defaultActiveKey="1"
-                                className="profiles-tabs"
-                                items={[
-                                    {
-                                        key: "1",
-                                        label: `Sent(${selectedJobData?.candidate_counts?.Applied || 0})`,
-                                        children: (
-                                            <Timeline
-                                                className="mt-6 ml-2"
-                                                items={(
-                                                    selectedJobData?.candidate_activities || [
-                                                        {
-                                                            message:
-                                                                "Recruiter shared profile",
-                                                            time: "2 days ago",
-                                                            user: "Recruiter",
-                                                        },
-                                                    ]
-                                                ).map((log, i) => ({
-                                                    dot: (
-                                                        <svg
-                                                            width="60"
-                                                            height="60"
-                                                            viewBox="0 0 20 20"
-                                                            fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                        >
-                                                            <rect
-                                                                x="0.25"
-                                                                y="0.25"
-                                                                width="19.5"
-                                                                height="19.5"
-                                                                rx="6.75"
-                                                                fill="#D5D5D5"
-                                                            />
-                                                            <rect
-                                                                x="0.25"
-                                                                y="0.25"
-                                                                width="19.5"
-                                                                height="19.5"
-                                                                rx="6.75"
-                                                                stroke="#C6C6C6"
-                                                                stroke-width="0.5"
-                                                            />
-                                                            <g clip-path="url(#clip0_2780_15557)">
-                                                                <path
-                                                                    d="M14.5937 6.65759C14.7942 6.7716 14.9607 6.93699 15.0761 7.13671C15.1914 7.33643 15.2514 7.56329 15.25 7.79392V12.0429C15.25 12.5148 14.9916 12.95 14.5745 13.1793L10.637 15.6701C10.4418 15.7773 10.2227 15.8335 10 15.8335C9.7773 15.8335 9.55821 15.7773 9.363 15.6701L5.4255 13.1793C5.22143 13.0677 5.05107 12.9034 4.93224 12.7035C4.81341 12.5036 4.75047 12.2755 4.75 12.0429V7.79334C4.75 7.32142 5.00842 6.88684 5.4255 6.65759L9.363 4.33592C9.56398 4.22511 9.78975 4.16699 10.0192 4.16699C10.2488 4.16699 10.4745 4.22511 10.6755 4.33592L14.613 6.65759H14.5937Z"
-                                                                    stroke="white"
-                                                                    stroke-linecap="round"
-                                                                    stroke-linejoin="round"
+
+                                        <div className="flex flex-wrap gap-2 mt-6">
+                                            <Tag
+                                                icon={<EnvironmentOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.location}
+                                            </Tag>
+                                            <Tag
+                                                icon={<DollarCircleOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.ctc}
+                                            </Tag>
+                                            <Tag
+                                                icon={<ClockCircleOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {
+                                                    selectedJobData?.years_of_experience
+                                                }{" "}
+                                                exp.
+                                            </Tag>
+                                            <Tag
+                                                icon={<ProjectOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.job_level}
+                                            </Tag>
+                                            <Tag
+                                                icon={<TeamOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.vacancies}{" "}
+                                                Positions
+                                            </Tag>
+                                            <Tag
+                                                icon={<HomeOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.job_type}
+                                            </Tag>
+                                            <Tag
+                                                icon={<FieldTimeOutlined />}
+                                                className="!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl"
+                                            >
+                                                {selectedJobData?.rotational_shift
+                                                    ? "Rotational"
+                                                    : "Non-Rotational"}
+                                            </Tag>
+                                        </div>
+
+                                        {isJdExpanded && (
+                                            <>
+                                                <div className="bg-white rounded-2xl p-6 mb-6 -ml-4">
+                                                    <div className="flex items-center gap-2 mb-6 text-gray-800 font-semibold">
+                                                        <span className="flex items-center gap-2 -ml-2">
+                                                            <svg
+                                                                width="32"
+                                                                height="32"
+                                                                viewBox="0 0 32 32"
+                                                                fill="none"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                            >
+                                                                <rect
+                                                                    width="32"
+                                                                    height="32"
+                                                                    rx="6"
+                                                                    fill="#FDF1F5"
+                                                                />
+                                                                <rect
+                                                                    width="32"
+                                                                    height="32"
+                                                                    rx="6"
                                                                 />
                                                                 <path
-                                                                    d="M12.0417 8.49625C12.2237 8.60125 12.3351 8.79667 12.3333 9.00725V10.9188C12.3333 11.1312 12.2184 11.3272 12.0329 11.4304L10.2829 12.5516C10.1963 12.5996 10.099 12.6248 10 12.6248C9.90101 12.6248 9.80365 12.5996 9.71708 12.5516L7.96708 11.4304C7.87592 11.3799 7.79997 11.3058 7.74713 11.2159C7.6943 11.1261 7.66651 11.0237 7.66667 10.9194V9.00725C7.66667 8.79492 7.78158 8.59892 7.9665 8.49567L9.7165 7.4515C9.89792 7.35 10.119 7.35 10.2998 7.4515L12.0498 8.49567H12.0417V8.49625Z"
-                                                                    stroke="white"
-                                                                    stroke-linecap="round"
-                                                                    stroke-linejoin="round"
+                                                                    d="M10.2891 11.7101C11.0734 11.7101 11.7091 11.0744 11.7091 10.2901C11.7091 9.50587 11.0734 8.87012 10.2891 8.87012C9.5049 8.87012 8.86914 9.50587 8.86914 10.2901C8.86914 11.0744 9.5049 11.7101 10.2891 11.7101Z"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
                                                                 />
-                                                            </g>
-                                                            <defs>
-                                                                <clipPath id="clip0_2780_15557">
-                                                                    <rect
-                                                                        width="14"
-                                                                        height="14"
-                                                                        fill="white"
-                                                                        transform="translate(3 3)"
-                                                                    />
-                                                                </clipPath>
-                                                            </defs>
-                                                        </svg>
-                                                    ),
-                                                    children: (
-                                                        <div
-                                                            key={i}
-                                                            className="flex justify-between items-center -mt-1.5 pb-4"
-                                                        >
-                                                            <Text className="text-[13px] mt-1 text-gray-700 font-medium">
-                                                                {log.message}
+                                                                <path
+                                                                    d="M10.2891 17.4201C11.0734 17.4201 11.7091 16.7843 11.7091 16.0001C11.7091 15.2158 11.0734 14.5801 10.2891 14.5801C9.5049 14.5801 8.86914 15.2158 8.86914 16.0001C8.86914 16.7843 9.5049 17.4201 10.2891 17.4201Z"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
+                                                                />
+                                                                <path
+                                                                    d="M10.2891 23.13C11.0734 23.13 11.7091 22.4943 11.7091 21.71C11.7091 20.9258 11.0734 20.29 10.2891 20.29C9.5049 20.29 8.86914 20.9258 8.86914 21.71C8.86914 22.4943 9.5049 23.13 10.2891 23.13Z"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
+                                                                />
+                                                                <path
+                                                                    d="M14.5996 10.29L23.1196 10.29"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
+                                                                />
+                                                                <path
+                                                                    d="M14.5996 16L23.1196 16"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
+                                                                />
+                                                                <path
+                                                                    d="M14.5996 21.71L23.1196 21.71"
+                                                                    stroke="#E8618C"
+                                                                    stroke-width="1.704"
+                                                                    stroke-miterlimit="10"
+                                                                    stroke-linecap="square"
+                                                                />
+                                                            </svg>
+                                                            Skill Set
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-8">
+                                                        <div>
+                                                            <Text className="text-gray-400 font-bold text-[10px] tracking-wider block mb-4">
+                                                                PRIMARY SKILLS
                                                             </Text>
-                                                            <Text className="text-[11px] mt-1 text-gray-400">
-                                                                {log.time}
+                                                            <div className="space-y-4">
+                                                                {selectedJobData?.primary_skills?.map(
+                                                                    (s, i) => (
+                                                                        <div
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="flex justify-between items-center group"
+                                                                        >
+                                                                            <Text className="text-gray-700 font-medium">
+                                                                                {
+                                                                                    s.skill_name
+                                                                                }
+                                                                            </Text>
+                                                                            <Text className="text-gray-900 font-bold group-hover:text-indigo-600 transition-colors">
+                                                                                {
+                                                                                    s.metric_value
+                                                                                }{" "}
+                                                                                <Text className="text-[10px] text-gray-400 font-normal uppercase ml-1">
+                                                                                    {
+                                                                                        s.metric_type
+                                                                                    }
+                                                                                </Text>
+                                                                            </Text>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <Text className="text-gray-400 font-bold text-[10px] tracking-wider block mb-4">
+                                                                SECONDARY SKILL
+                                                            </Text>
+                                                            <div className="space-y-4">
+                                                                {selectedJobData?.secondary_skills?.map(
+                                                                    (s, i) => (
+                                                                        <div
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="flex justify-between items-center group"
+                                                                        >
+                                                                            <Text className="text-gray-700 font-medium">
+                                                                                {
+                                                                                    s.skill_name
+                                                                                }
+                                                                            </Text>
+                                                                            <Text className="text-gray-900 font-bold group-hover:text-indigo-600 transition-colors">
+                                                                                {
+                                                                                    s.metric_value
+                                                                                }{" "}
+                                                                                <Text className="text-[10px] text-gray-400 font-normal uppercase ml-1">
+                                                                                    {
+                                                                                        s.metric_type
+                                                                                    }
+                                                                                </Text>
+                                                                            </Text>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-white rounded-2xl p-6 -ml-4">
+                                                    <div className="flex items-center gap-2 mb-6 text-gray-800 font-semibold">
+                                                        {/* <PlusOutlined /> */}
+                                                        <span className="flex items-center gap-2 -ml-2 ">
+                                                            <svg
+                                                                width="32"
+                                                                height="32"
+                                                                viewBox="0 0 32 32"
+                                                                fill="none"
+                                                                className="border-none"
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                            >
+                                                                <rect
+                                                                    width="32"
+                                                                    height="32"
+                                                                    rx="6"
+                                                                    fill="#EFFCFA"
+                                                                />
+                                                                <rect
+                                                                    width="32"
+                                                                    height="32"
+                                                                    rx="6"
+                                                                />
+                                                                <path
+                                                                    d="M23.6803 16.0002C23.6803 16.3537 23.3938 16.6402 23.0403 16.6402L8.96031 16.6402C8.60685 16.6402 8.32031 16.3537 8.32031 16.0002C8.32031 15.6468 8.60685 15.3602 8.96031 15.3602L23.0403 15.3602C23.3938 15.3603 23.6803 15.6468 23.6803 16.0002ZM8.96031 11.5202L23.0403 11.5202C23.3938 11.5202 23.6803 11.2337 23.6803 10.8802C23.6803 10.5268 23.3938 10.2402 23.0403 10.2402L8.96031 10.2402C8.60685 10.2402 8.32031 10.5268 8.32031 10.8802C8.32031 11.2337 8.60685 11.5202 8.96031 11.5202ZM23.0403 20.4802L8.96031 20.4802C8.60685 20.4802 8.32031 20.7668 8.32031 21.1202C8.32031 21.4737 8.60685 21.7602 8.96031 21.7602L23.0403 21.7602C23.3938 21.7602 23.6803 21.4737 23.6803 21.1202C23.6803 20.7668 23.3938 20.4802 23.0403 20.4802Z"
+                                                                    fill="#22CCB2"
+                                                                />
+                                                            </svg>
+                                                            Additional Details
+                                                        </span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+                                                        <div className="flex flex-col gap-1">
+                                                            <Text className="text-gray-400 font-medium text-xs">
+                                                                Education
+                                                            </Text>
+                                                            <div className="flex gap-2 mt-1">
+                                                                {(typeof selectedJobData?.qualifications ===
+                                                                "string"
+                                                                    ? selectedJobData.qualifications.split(
+                                                                          ",",
+                                                                      )
+                                                                    : [
+                                                                          selectedJobData?.qualifications ||
+                                                                              "Any",
+                                                                      ]
+                                                                ).map(
+                                                                    (q, i) => (
+                                                                        <Tag
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]"
+                                                                        >
+                                                                            <SafetyCertificateOutlined className="mr-1" />{" "}
+                                                                            {q.trim()}
+                                                                        </Tag>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <Text className="text-gray-400 font-medium text-xs">
+                                                                Languages
+                                                                specific
+                                                            </Text>
+                                                            <div className="flex gap-2 mt-1">
+                                                                {(typeof selectedJobData?.languages ===
+                                                                "string"
+                                                                    ? selectedJobData.languages.split(
+                                                                          ",",
+                                                                      )
+                                                                    : ["N/A"]
+                                                                ).map(
+                                                                    (l, i) => (
+                                                                        <Tag
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="m-0!px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]"
+                                                                        >
+                                                                            {l.trim()}
+                                                                        </Tag>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <Text className="text-gray-400 font-medium text-xs">
+                                                                Passport and
+                                                                visa
+                                                            </Text>
+                                                            <div className="flex gap-2 mt-1">
+                                                                <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
+                                                                    <GlobalOutlined className="mr-1" />{" "}
+                                                                    {selectedJobData?.passport_availability ||
+                                                                        "Not Required"}
+                                                                </Tag>
+                                                                <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
+                                                                    {selectedJobData?.visa_status ||
+                                                                        "N/A"}
+                                                                </Tag>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <Text className="text-gray-400 font-medium text-xs">
+                                                                Decision Maker
+                                                            </Text>
+                                                            <div className="flex flex-col gap-2 mt-1">
+                                                                <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
+                                                                    <UserOutlined className="mr-1" />{" "}
+                                                                    {
+                                                                        selectedJobData?.decision_maker
+                                                                    }
+                                                                </Tag>
+                                                                <Tag className="m-0 !px-3 !py-1 !bg-blue-50 !text-black !rounded-xl text-[11px]">
+                                                                    <MailOutlined className="mr-1" />{" "}
+                                                                    {
+                                                                        selectedJobData?.decision_maker_email
+                                                                    }
+                                                                </Tag>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-y-6 gap-x-12 mt-6 pt-6 border-t border-gray-50">
+                                                        <div>
+                                                            <Text className="text-gray-700 font-bold text-xs">
+                                                                Rotational
+                                                                Shifts:{" "}
+                                                                <span
+                                                                    className={`ml-2 font-medium ${selectedJobData?.rotational_shift ? "text-green-600" : "text-gray-500"}`}
+                                                                >
+                                                                    {selectedJobData?.rotational_shift
+                                                                        ? "Yes"
+                                                                        : "No"}
+                                                                </span>
                                                             </Text>
                                                         </div>
+                                                        <div>
+                                                            <Text className="text-gray-700 font-bold text-xs">
+                                                                Bond:{" "}
+                                                                <span className="ml-2 font-medium text-gray-500">
+                                                                    {selectedJobData?.bond ||
+                                                                        "No-Bond"}
+                                                                </span>
+                                                            </Text>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-white rounded-2xl p-6  ">
+                                                    <div className="flex gap-3 items-center mb-6 text-gray-800 font-semibold">
+                                                        <ProjectOutlined />
+                                                        <span>
+                                                            Other Benefits
+                                                        </span>
+                                                    </div>
+                                                    <Paragraph className="text-gray-600 text-[13px] leading-relaxed">
+                                                        {selectedJobData?.other_benefits ||
+                                                            "No additional benefits listed."}
+                                                    </Paragraph>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                                        <div className="flex gap-3 items-center mb-6 text-gray-800 font-semibold">
+                                            <TeamOutlined />
+                                            <span>Profiles</span>
+                                        </div>
+                                        <Tabs
+                                            defaultActiveKey="1"
+                                            className="profiles-tabs"
+                                            items={[
+                                                {
+                                                    key: "1",
+                                                    label: `Sent(${selectedJobData?.candidate_counts?.Applied || 0})`,
+                                                    children: (
+                                                        <Timeline
+                                                            className="mt-6 ml-2"
+                                                            items={(
+                                                                selectedJobData?.candidate_activities || [
+                                                                    {
+                                                                        message:
+                                                                            "Recruiter shared profile",
+                                                                        time: "2 days ago",
+                                                                        user: "Recruiter",
+                                                                    },
+                                                                ]
+                                                            ).map((log, i) => ({
+                                                                dot: (
+                                                                    <svg
+                                                                        width="60"
+                                                                        height="60"
+                                                                        viewBox="0 0 20 20"
+                                                                        fill="none"
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                    >
+                                                                        <rect
+                                                                            x="0.25"
+                                                                            y="0.25"
+                                                                            width="19.5"
+                                                                            height="19.5"
+                                                                            rx="6.75"
+                                                                            fill="#D5D5D5"
+                                                                        />
+                                                                        <rect
+                                                                            x="0.25"
+                                                                            y="0.25"
+                                                                            width="19.5"
+                                                                            height="19.5"
+                                                                            rx="6.75"
+                                                                            stroke="#C6C6C6"
+                                                                            stroke-width="0.5"
+                                                                        />
+                                                                        <g clip-path="url(#clip0_2780_15557)">
+                                                                            <path
+                                                                                d="M14.5937 6.65759C14.7942 6.7716 14.9607 6.93699 15.0761 7.13671C15.1914 7.33643 15.2514 7.56329 15.25 7.79392V12.0429C15.25 12.5148 14.9916 12.95 14.5745 13.1793L10.637 15.6701C10.4418 15.7773 10.2227 15.8335 10 15.8335C9.7773 15.8335 9.55821 15.7773 9.363 15.6701L5.4255 13.1793C5.22143 13.0677 5.05107 12.9034 4.93224 12.7035C4.81341 12.5036 4.75047 12.2755 4.75 12.0429V7.79334C4.75 7.32142 5.00842 6.88684 5.4255 6.65759L9.363 4.33592C9.56398 4.22511 9.78975 4.16699 10.0192 4.16699C10.2488 4.16699 10.4745 4.22511 10.6755 4.33592L14.613 6.65759H14.5937Z"
+                                                                                stroke="white"
+                                                                                stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                            />
+                                                                            <path
+                                                                                d="M12.0417 8.49625C12.2237 8.60125 12.3351 8.79667 12.3333 9.00725V10.9188C12.3333 11.1312 12.2184 11.3272 12.0329 11.4304L10.2829 12.5516C10.1963 12.5996 10.099 12.6248 10 12.6248C9.90101 12.6248 9.80365 12.5996 9.71708 12.5516L7.96708 11.4304C7.87592 11.3799 7.79997 11.3058 7.74713 11.2159C7.6943 11.1261 7.66651 11.0237 7.66667 10.9194V9.00725C7.66667 8.79492 7.78158 8.59892 7.9665 8.49567L9.7165 7.4515C9.89792 7.35 10.119 7.35 10.2998 7.4515L12.0498 8.49567H12.0417V8.49625Z"
+                                                                                stroke="white"
+                                                                                stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                            />
+                                                                        </g>
+                                                                        <defs>
+                                                                            <clipPath id="clip0_2780_15557">
+                                                                                <rect
+                                                                                    width="14"
+                                                                                    height="14"
+                                                                                    fill="white"
+                                                                                    transform="translate(3 3)"
+                                                                                />
+                                                                            </clipPath>
+                                                                        </defs>
+                                                                    </svg>
+                                                                ),
+                                                                children: (
+                                                                    <div
+                                                                        key={i}
+                                                                        className="flex justify-between items-center -mt-1.5 pb-4"
+                                                                    >
+                                                                        <Text className="text-[13px] mt-1 text-gray-700 font-medium">
+                                                                            {
+                                                                                log.message
+                                                                            }
+                                                                        </Text>
+                                                                        <Text className="text-[11px] mt-1 text-gray-400">
+                                                                            {
+                                                                                log.time
+                                                                            }
+                                                                        </Text>
+                                                                    </div>
+                                                                ),
+                                                            }))}
+                                                        />
                                                     ),
-                                                }))}
-                                            />
-                                        ),
-                                    },
-                                    { key: "2", label: "Shortlisted" },
-                                    { key: "3", label: "Processing" },
-                                    { key: "4", label: "on-Hold" },
-                                    { key: "5", label: "Rejected" },
-                                ]}
-                            />
-                        </div>
-                    </div>
+                                                },
+                                                {
+                                                    key: "2",
+                                                    label: "Shortlisted",
+                                                },
+                                                {
+                                                    key: "3",
+                                                    label: "Processing",
+                                                },
+                                                { key: "4", label: "on-Hold" },
+                                                { key: "5", label: "Rejected" },
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
 
-                    {/* Sidebar - Right */}
-                    <div className="w-80 overflow-y-auto no-scrollbar">
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <Tag className="!bg-blue-100 !text-blue-500 rounded-lg px-2 m-0 text-xs font-semibold">
-                                    Client name
-                                </Tag>
-                                <Text className="text-gray-900 font-bold uppercase text-[10px]">
-                                    {selectedJobData?.organization_name}
-                                </Text>
-                            </div>
-                            <Divider className="my-4" />
-                            <Title level={5} className="mb-4">
-                                Details
-                            </Title>
-                            <div className="space-y-5">
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Start Date
-                                    </Text>
-                                    <Text className="text-gray-700 font-bold text-xs">
-                                        {new Date(
-                                            selectedJobData?.created_at,
-                                        ).toLocaleDateString()}
-                                    </Text>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Deadline
-                                    </Text>
-                                    <Text className="text-gray-700 font-bold text-xs">
-                                        {selectedJobData?.deadline}
-                                    </Text>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Job status
-                                    </Text>
-                                    <Tag
-                                        color="green"
-                                        className="m-0 border-none rounded-full px-3 text-[10px] flex items-center gap-1"
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                        {selectedJobData?.status?.toUpperCase()}
-                                    </Tag>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Recruiting Status
-                                    </Text>
-                                    <Tag
-                                        color="orange"
-                                        className="m-0 border-none rounded-full px-3 text-[10px] flex items-center gap-1"
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                        {selectedJobData?.recruitment_status?.toUpperCase()}
-                                    </Tag>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Interview Panel
-                                    </Text>
-                                    <Avatar.Group maxCount={3} size="small">
-                                        {(
-                                            selectedJobData?.interview_panel ||
-                                            []
-                                        ).map((panel, idx) => (
-                                            <Tooltip
-                                                title={`${panel.name} (${panel.type})`}
-                                                key={idx}
-                                            >
-                                                <Avatar
-                                                    src={panel.avatar}
-                                                    className="border-2 border-white"
-                                                >
-                                                    {panel.name
-                                                        ?.charAt(0)
-                                                        .toUpperCase()}
-                                                </Avatar>
-                                            </Tooltip>
-                                        ))}
-                                    </Avatar.Group>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <Text className="text-gray-400 text-xs">
-                                        Allocated Recruiters
-                                    </Text>
-                                    <Avatar.Group maxCount={3} size="small">
-                                        {selectedJobData?.assigned_to &&
-                                            Object.values(
-                                                selectedJobData.assigned_to,
-                                            )
-                                                .flat()
-                                                .map((r, i) => (
-                                                    <Tooltip
-                                                        title={r[0]}
-                                                        key={i}
-                                                    >
-                                                        <Avatar
-                                                            src={r[2]}
-                                                            className="border-2 border-white"
-                                                        >
-                                                            {r[0]
-                                                                .charAt(0)
-                                                                .toUpperCase()}
-                                                        </Avatar>
-                                                    </Tooltip>
-                                                ))}
-                                    </Avatar.Group>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-2">
-                            <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold">
-                                <ClockCircleOutlined />
-                                <span>Job logs</span>
-                            </div>
-                            <Timeline
-                                className="custom-timeline"
-                                items={(
-                                    selectedJobData?.job_logs || [
-                                        {
-                                            message: "Job Created",
-                                            created_at:
-                                                selectedJobData?.created_at,
-                                        },
-                                    ]
-                                ).map((log, i) => ({
-                                    dot: (
-                                        <svg
-                                            width="50"
-                                            height="50"
-                                            viewBox="0 0 20 20"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <rect
-                                                x="0.25"
-                                                y="0.25"
-                                                width="19.5"
-                                                height="19.5"
-                                                rx="6.75"
-                                                fill="#D5D5D5"
-                                            />
-                                            <rect
-                                                x="0.25"
-                                                y="0.25"
-                                                width="19.5"
-                                                height="19.5"
-                                                rx="6.75"
-                                                stroke="#C6C6C6"
-                                                stroke-width="0.5"
-                                            />
-                                            <path
-                                                d="M5.99935 8.00016H9.99935M4.66602 5.3335H7.33268M5.99935 5.3335V12.6668C5.99935 12.8436 6.06959 13.0132 6.19461 13.1382C6.31964 13.2633 6.4892 13.3335 6.66602 13.3335H9.99935M9.99935 7.3335C9.99935 7.15668 10.0696 6.98712 10.1946 6.86209C10.3196 6.73707 10.4892 6.66683 10.666 6.66683H14.666C14.8428 6.66683 15.0124 6.73707 15.1374 6.86209C15.2624 6.98712 15.3327 7.15668 15.3327 7.3335V8.66683C15.3327 8.84364 15.2624 9.01321 15.1374 9.13823C15.0124 9.26326 14.8428 9.3335 14.666 9.3335H10.666C10.4892 9.3335 10.3196 9.26326 10.1946 9.13823C10.0696 9.01321 9.99935 8.84364 9.99935 8.66683V7.3335ZM9.99935 12.6668C9.99935 12.49 10.0696 12.3204 10.1946 12.1954C10.3196 12.0704 10.4892 12.0002 10.666 12.0002H14.666C14.8428 12.0002 15.0124 12.0704 15.1374 12.1954C15.2624 12.3204 15.3327 12.49 15.3327 12.6668V14.0002C15.3327 14.177 15.2624 14.3465 15.1374 14.4716C15.0124 14.5966 14.8428 14.6668 14.666 14.6668H10.666C10.4892 14.6668 10.3196 14.5966 10.1946 14.4716C10.0696 14.3465 9.99935 14.177 9.99935 14.0002V12.6668Z"
-                                                stroke="white"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-                                    ),
-                                    children: (
-                                        <div
-                                            key={i}
-                                            className="flex flex-col -mt-1 pb-4"
-                                        >
-                                            <Text className="text-[12px] text-gray-700 !mt-1 font-medium leading-tight">
-                                                {log.message}
-                                            </Text>
-                                            <Text className="text-[10px] text-gray-400 mt-1">
-                                                {new Date(
-                                                    log.created_at,
-                                                ).toLocaleString()}
+                                {/* Sidebar - Right */}
+                                <div className="w-80 overflow-y-auto no-scrollbar">
+                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <Tag className="!bg-blue-100 !text-blue-500 rounded-lg px-2 m-0 text-xs font-semibold">
+                                                Client name
+                                            </Tag>
+                                            <Text className="text-gray-900 font-bold uppercase text-[10px]">
+                                                {
+                                                    selectedJobData?.organization_name
+                                                }
                                             </Text>
                                         </div>
-                                    ),
-                                }))}
-                            />
-                        </div>
+                                        <Divider className="my-4" />
+                                        <Title level={5} className="mb-4">
+                                            Details
+                                        </Title>
+                                        <div className="space-y-5">
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Start Date
+                                                </Text>
+                                                <Text className="text-gray-700 font-bold text-xs">
+                                                    {new Date(
+                                                        selectedJobData?.created_at,
+                                                    ).toLocaleDateString()}
+                                                </Text>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Deadline
+                                                </Text>
+                                                <Text className="text-gray-700 font-bold text-xs">
+                                                    {selectedJobData?.deadline}
+                                                </Text>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Job status
+                                                </Text>
+                                                <Tag
+                                                    color="green"
+                                                    className="m-0 border-none rounded-full px-3 text-[10px] flex items-center gap-1"
+                                                >
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                    {selectedJobData?.status?.toUpperCase()}
+                                                </Tag>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Recruiting Status
+                                                </Text>
+                                                <Tag
+                                                    color="orange"
+                                                    className="m-0 border-none rounded-full px-3 text-[10px] flex items-center gap-1"
+                                                >
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                    {selectedJobData?.recruitment_status?.toUpperCase()}
+                                                </Tag>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Interview Panel
+                                                </Text>
+                                                <Avatar.Group
+                                                    maxCount={3}
+                                                    size="small"
+                                                >
+                                                    {(
+                                                        selectedJobData?.interview_panel ||
+                                                        []
+                                                    ).map((panel, idx) => (
+                                                        <Tooltip
+                                                            title={`${panel.name} (${panel.type})`}
+                                                            key={idx}
+                                                        >
+                                                            <Avatar
+                                                                src={
+                                                                    panel.avatar
+                                                                }
+                                                                className="border-2 border-white"
+                                                            >
+                                                                {panel.name
+                                                                    ?.charAt(0)
+                                                                    .toUpperCase()}
+                                                            </Avatar>
+                                                        </Tooltip>
+                                                    ))}
+                                                </Avatar.Group>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <Text className="text-gray-400 text-xs">
+                                                    Allocated Recruiters
+                                                </Text>
+                                                <Avatar.Group
+                                                    maxCount={3}
+                                                    size="small"
+                                                >
+                                                    {selectedJobData?.assigned_to &&
+                                                        Object.values(
+                                                            selectedJobData.assigned_to,
+                                                        )
+                                                            .flat()
+                                                            .map((r, i) => (
+                                                                <Tooltip
+                                                                    title={r[0]}
+                                                                    key={i}
+                                                                >
+                                                                    <Avatar
+                                                                        src={
+                                                                            r[2]
+                                                                        }
+                                                                        className="border-2 border-white"
+                                                                    >
+                                                                        {r[0]
+                                                                            .charAt(
+                                                                                0,
+                                                                            )
+                                                                            .toUpperCase()}
+                                                                    </Avatar>
+                                                                </Tooltip>
+                                                            ))}
+                                                </Avatar.Group>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-2">
+                                        <div className="flex items-center gap-2 mb-4 text-gray-900 font-bold">
+                                            <ClockCircleOutlined />
+                                            <span>Job logs</span>
+                                        </div>
+                                        <Timeline
+                                            className="custom-timeline"
+                                            items={(
+                                                selectedJobData?.job_logs || [
+                                                    {
+                                                        message: "Job Created",
+                                                        created_at:
+                                                            selectedJobData?.created_at,
+                                                    },
+                                                ]
+                                            ).map((log, i) => ({
+                                                dot: (
+                                                    <svg
+                                                        width="50"
+                                                        height="50"
+                                                        viewBox="0 0 20 20"
+                                                        fill="none"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                    >
+                                                        <rect
+                                                            x="0.25"
+                                                            y="0.25"
+                                                            width="19.5"
+                                                            height="19.5"
+                                                            rx="6.75"
+                                                            fill="#D5D5D5"
+                                                        />
+                                                        <rect
+                                                            x="0.25"
+                                                            y="0.25"
+                                                            width="19.5"
+                                                            height="19.5"
+                                                            rx="6.75"
+                                                            stroke="#C6C6C6"
+                                                            stroke-width="0.5"
+                                                        />
+                                                        <path
+                                                            d="M5.99935 8.00016H9.99935M4.66602 5.3335H7.33268M5.99935 5.3335V12.6668C5.99935 12.8436 6.06959 13.0132 6.19461 13.1382C6.31964 13.2633 6.4892 13.3335 6.66602 13.3335H9.99935M9.99935 7.3335C9.99935 7.15668 10.0696 6.98712 10.1946 6.86209C10.3196 6.73707 10.4892 6.66683 10.666 6.66683H14.666C14.8428 6.66683 15.0124 6.73707 15.1374 6.86209C15.2624 6.98712 15.3327 7.15668 15.3327 7.3335V8.66683C15.3327 8.84364 15.2624 9.01321 15.1374 9.13823C15.0124 9.26326 14.8428 9.3335 14.666 9.3335H10.666C10.4892 9.3335 10.3196 9.26326 10.1946 9.13823C10.0696 9.01321 9.99935 8.84364 9.99935 8.66683V7.3335ZM9.99935 12.6668C9.99935 12.49 10.0696 12.3204 10.1946 12.1954C10.3196 12.0704 10.4892 12.0002 10.666 12.0002H14.666C14.8428 12.0002 15.0124 12.0704 15.1374 12.1954C15.2624 12.3204 15.3327 12.49 15.3327 12.6668V14.0002C15.3327 14.177 15.2624 14.3465 15.1374 14.4716C15.0124 14.5966 14.8428 14.6668 14.666 14.6668H10.666C10.4892 14.6668 10.3196 14.5966 10.1946 14.4716C10.0696 14.3465 9.99935 14.177 9.99935 14.0002V12.6668Z"
+                                                            stroke="white"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+                                                ),
+                                                children: (
+                                                    <div
+                                                        key={i}
+                                                        className="flex flex-col -mt-1 pb-4"
+                                                    >
+                                                        <Text className="text-[12px] text-gray-700 !mt-1 font-medium leading-tight">
+                                                            {log.message}
+                                                        </Text>
+                                                        <Text className="text-[10px] text-gray-400 mt-1">
+                                                            {new Date(
+                                                                log.created_at,
+                                                            ).toLocaleString()}
+                                                        </Text>
+                                                    </div>
+                                                ),
+                                            }))}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </Drawer>
+
+            <Modal
+                title="Suggested Candidates"
+                open={isSuggestionModalOpen}
+                onCancel={() => setIsSuggestionModalOpen(false)}
+                footer={null}
+                width={800}
+            >
+                {selectedReplacementForSuggestion && (
+                    <div className="flex flex-col gap-4">
+                        <div className="flex gap-4 items-center bg-blue-50 p-4 rounded-lg">
+                            <span className="font-medium text-gray-700">
+                                Assign all candidates to:
+                            </span>
+                            <Select
+                                mode="multiple"
+                                placeholder="Select Recruiters"
+                                style={{ width: 400 }}
+                                onChange={(value) =>
+                                    setSelectedRecruiterForSuggestion(value)
+                                }
+                                options={(
+                                    selectedReplacementForSuggestion.assigned_recruiters ||
+                                    []
+                                ).map((r) => ({ label: r.name, value: r.id }))}
+                                value={selectedRecruiterForSuggestion}
+                            />
+                        </div>
+                        <Table
+                            dataSource={
+                                selectedReplacementForSuggestion.suggested_candidates
+                            }
+                            rowKey="application_id"
+                            pagination={false}
+                            columns={[
+                                {
+                                    title: "Candidate Name",
+                                    dataIndex: "candidate_name",
+                                    key: "candidate_name",
+                                },
+                                {
+                                    title: "Email",
+                                    dataIndex: "email",
+                                    key: "email",
+                                },
+                            ]}
+                        />
+
+                        <div className="flex justify-end pt-4 border-t">
+                            <Button
+                                type="primary"
+                                size="large"
+                                onClick={handleAssignCandidate}
+                                loading={assignLoading}
+                                disabled={
+                                    !selectedRecruiterForSuggestion ||
+                                    selectedRecruiterForSuggestion.length === 0
+                                }
+                                className="bg-[#10B981] hover:bg-[#059669]"
+                            >
+                                Assign All & Send Profiles
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </Main>
     );
 };

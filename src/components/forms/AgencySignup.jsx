@@ -183,8 +183,14 @@ const AgencySignUp = () => {
                 throw data;
             }
 
+            if (data.razorpay_order) {
+                message.info("Please complete the payment to proceed.");
+                handleRazorpayPayment(data);
+                return;
+            }
+
             message.success(
-                "Signup successfull, verification link sent to your email - verify and login",
+                "Signup successful, verification link sent to your email - verify and login",
             );
             navigate("/login");
         } catch (error) {
@@ -202,6 +208,75 @@ const AgencySignUp = () => {
             } else {
                 message.error("An unexpected error occurred during signup");
             }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRazorpayPayment = (data) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.onload = () => {
+            const options = {
+                key:
+                    import.meta.env.VITE_RAZORPAY_KEY_ID ||
+                    "rzp_test_your_key_id",
+                amount: data.razorpay_order.amount,
+                currency: data.razorpay_order.currency,
+                name: "GA HireSync",
+                description: "Agency Subscription Plan",
+                order_id: data.razorpay_order.id,
+                handler: async function (response) {
+                    await verifyPayment(
+                        response,
+                        data.organization_id,
+                        data.plan_id,
+                    );
+                },
+                prefill: {
+                    name: formData.username,
+                    email: formData.email,
+                    contact: formData.contact_number,
+                },
+                theme: {
+                    color: "#488CD3",
+                },
+            };
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        };
+        document.body.appendChild(script);
+    };
+
+    const verifyPayment = async (paymentResponse, orgId, planId) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${apiurl}/razorpay/verify-payment/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    razorpay_order_id: paymentResponse.razorpay_order_id,
+                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                    razorpay_signature: paymentResponse.razorpay_signature,
+                    organization_id: orgId,
+                    plan_id: planId,
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                message.success(
+                    "Payment successful! Please verify your email to login.",
+                );
+                navigate("/login");
+            } else {
+                message.error(data.error || "Payment verification failed");
+            }
+        } catch (error) {
+            message.error("Error verifying payment");
         } finally {
             setLoading(false);
         }

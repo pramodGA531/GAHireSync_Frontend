@@ -36,26 +36,26 @@ const PrevInterviewRes = ({ ApplicationId }) => {
     }, [token, ApplicationId]);
 
     const columns = [
-        {
-            title: 'Interview ID',
-            dataIndex: 'id',
-            key: 'id',
-        },
-        {
-            title: 'Interview Schedule ID',
-            dataIndex: 'interview_schedule',
-            key: 'interview_schedule',
-        },
-        {
-            title: 'Job Application ID',
-            dataIndex: 'job_application',
-            key: 'job_application',
-        },
-        {
-            title: 'Job ID',
-            dataIndex: 'job_id',
-            key: 'job_id',
-        },
+        // {
+        //     title: 'Interview ID',
+        //     dataIndex: 'id',
+        //     key: 'id',
+        // },
+        // {
+        //     title: 'Interview Schedule ID',
+        //     dataIndex: 'interview_schedule',
+        //     key: 'interview_schedule',
+        // },
+        // {
+        //     title: 'Job Application ID',
+        //     dataIndex: 'job_application',
+        //     key: 'job_application',
+        // },
+        // {
+        //     title: 'Job ID',
+        //     dataIndex: 'job_id',
+        //     key: 'job_id',
+        // },
         {
             title: 'Round Number',
             dataIndex: 'round_num',
@@ -113,7 +113,7 @@ const PrevInterviewRes = ({ ApplicationId }) => {
 
     return (
         <div>
-            <h2>Previous Interview Remarks</h2>
+            <h2 className='text-xl m-2 font-semibold'>Previous Interview Remarks</h2>
             <Table
                 columns={columns}
                 dataSource={data}

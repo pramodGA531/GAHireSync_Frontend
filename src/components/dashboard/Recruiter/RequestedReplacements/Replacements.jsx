@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
-import { message, Tag, Select } from "antd";
+import { message, Tag, Select, Modal, Button } from "antd";
 import Pageloading from "../../../common/loading/Pageloading";
 import AppTable from "../../../common/AppTable";
+import UploadData from "../AddingCandidates/UploadData";
 import {
     SyncOutlined,
     UserOutlined,
@@ -12,6 +14,7 @@ import {
     WarningOutlined,
     SafetyCertificateOutlined,
     FieldTimeOutlined,
+    SendOutlined,
 } from "@ant-design/icons";
 import GoBack from "../../../common/Goback";
 const ReplacementsRecruiter = () => {
@@ -19,6 +22,39 @@ const ReplacementsRecruiter = () => {
     const [replacements, setReplacements] = useState([]);
     const [loading, setLoading] = useState(false);
     const [statusFilter, setStatusFilter] = useState("All");
+    const [submitModalVisible, setSubmitModalVisible] = useState(false);
+    const [selectedReplacement, setSelectedReplacement] = useState(null);
+    const [selectedJobDetails, setSelectedJobDetails] = useState(null);
+    const [jobLoading, setJobLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const fetchJobDetails = async (jobId) => {
+        try {
+            setJobLoading(true);
+            const response = await fetch(
+                `${apiurl}/job-details/recruiter/${jobId}`,
+                {
+                    method: "GET",
+                    headers: { Authorization: `Bearer ${token}` },
+                },
+            );
+            if (!response.ok)
+                throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            setSelectedJobDetails(data.jd);
+        } catch (error) {
+            console.error("Error fetching job details:", error);
+            message.error("Failed to load skills assessment data.");
+        } finally {
+            setJobLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedReplacement?.assigned_job_id) {
+            fetchJobDetails(selectedReplacement.assigned_job_id);
+        }
+    }, [selectedReplacement]);
 
     const fetchData = async () => {
         try {
@@ -142,9 +178,68 @@ const ReplacementsRecruiter = () => {
             ),
         },
         {
+            accessorKey: "suggested_candidates",
+            header: "Suggested Candidates",
+            width: 300,
+            cell: ({ getValue }) => {
+                const candidates = getValue() || [];
+                return (
+                    <div className="flex flex-col gap-2">
+                        {candidates.length > 0 ? (
+                            candidates.map((cand) => (
+                                <div
+                                    key={cand.id}
+                                    className="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="text-[#071C50] font-bold text-[11px]">
+                                            {cand.candidate_name}
+                                        </span>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span
+                                                className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                                                    cand.status === "hold"
+                                                        ? "bg-orange-50 text-orange-600 border border-orange-100"
+                                                        : "bg-blue-50 text-blue-600 border border-blue-100"
+                                                }`}
+                                            >
+                                                {cand.status === "hold"
+                                                    ? "On Hold"
+                                                    : cand.status}
+                                            </span>
+                                            <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                                                Round {cand.round_num}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {(cand.status === "hold" ||
+                                        cand.status === "processing") && (
+                                        <button
+                                            onClick={() =>
+                                                navigate(
+                                                    "/recruiter/applications/to-schedule",
+                                                )
+                                            }
+                                            className="px-3 py-1 bg-[#071C50] text-white text-[9px] font-black rounded-lg uppercase tracking-tight hover:bg-[#1681FF] transition-colors"
+                                        >
+                                            Schedule
+                                        </button>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <span className="text-gray-300 text-[10px] font-bold italic">
+                                No candidates suggested yet.
+                            </span>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
             accessorKey: "replacement_status",
             header: "Status",
-            width: 160,
+            width: 140,
             cell: ({ getValue }) => (
                 <span
                     className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
@@ -155,6 +250,25 @@ const ReplacementsRecruiter = () => {
                 >
                     {getValue() || "Pending"}
                 </span>
+            ),
+        },
+        {
+            header: "Action",
+            width: 150,
+            cell: ({ row }) => (
+                <Button
+                    icon={<SendOutlined />}
+                    type="primary"
+                    size="small"
+                    className="bg-[#071C50] text-[9px] font-black rounded-lg uppercase tracking-tight hover:bg-[#1681FF]"
+                    onClick={() => {
+                        setSelectedReplacement(row.original);
+                        setSubmitModalVisible(true);
+                    }}
+                    disabled={row.original.replacement_status === "completed"}
+                >
+                    Send Profile
+                </Button>
             ),
         },
     ];
@@ -192,6 +306,15 @@ const ReplacementsRecruiter = () => {
                                 </p>
                             </div>
                         </div>
+                        <button
+                            onClick={() =>
+                                navigate("/recruiter/applications/to-schedule")
+                            }
+                            className="bg-[#071C50] text-white px-8 py-4 rounded-[24px] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-100 hover:bg-[#1681FF] transition-all flex items-center gap-3"
+                        >
+                            <CalendarOutlined className="text-lg" />
+                            Schedule Interviews
+                        </button>
                     </div>
 
                     {loading && replacements.length === 0 ? (
@@ -210,6 +333,36 @@ const ReplacementsRecruiter = () => {
                     )}
                 </div>
             </div>
+
+            <Modal
+                title={null}
+                open={submitModalVisible}
+                onCancel={() => {
+                    setSubmitModalVisible(false);
+                    setSelectedJobDetails(null);
+                    setSelectedReplacement(null);
+                }}
+                footer={null}
+                width={1000}
+                style={{ maxWidth: "95vw" }}
+                className="premium-modal-v2 no-padding-modal"
+            >
+                {selectedReplacement && (
+                    <UploadData
+                        id={selectedReplacement.assigned_job_id}
+                        replacement_id={selectedReplacement.replacement_id}
+                        setAddApplication={setSubmitModalVisible}
+                        setResume={() => {}}
+                        setDraggedId={() => {}}
+                        primary_skills={
+                            selectedJobDetails?.primary_skills || []
+                        }
+                        secondary_skills={
+                            selectedJobDetails?.secondary_skills || []
+                        }
+                    />
+                )}
+            </Modal>
         </Main>
     );
 };

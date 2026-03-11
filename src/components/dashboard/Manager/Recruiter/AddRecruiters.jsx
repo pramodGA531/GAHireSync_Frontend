@@ -30,8 +30,8 @@ const validateUsername = (_, value) => {
     }
     return Promise.reject(
         new Error(
-            "Username should contain only letters, numbers, and underscores."
-        )
+            "Username should contain only letters, numbers, and underscores.",
+        ),
     );
 };
 
@@ -98,6 +98,8 @@ const AddRecruiters = ({ onclose }) => {
                     username: values.username,
                     email: values.email,
                     alloted_to: values.alloted_to,
+                    target_in_rupees: values.target_in_rupees,
+                    target_in_positions: values.target_in_positions,
                 }),
             });
 
@@ -230,6 +232,45 @@ const AddRecruiters = ({ onclose }) => {
                         ))}
                     </Select>
                 </Form.Item>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                        name="target_in_rupees"
+                        label={
+                            <span className="font-bold text-gray-600 uppercase text-[10px] tracking-wider">
+                                Target (₹)
+                            </span>
+                        }
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please enter target amount",
+                            },
+                        ]}
+                    >
+                        <Input
+                            type="number"
+                            placeholder="e.g. 100000"
+                            prefix={<span className="text-gray-400">₹</span>}
+                            className="rounded-lg py-2"
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="target_in_positions"
+                        label={
+                            <span className="font-bold text-gray-600 uppercase text-[10px] tracking-wider">
+                                Target (Positions)
+                            </span>
+                        }
+                    >
+                        <Input
+                            type="number"
+                            placeholder="Optional"
+                            className="rounded-lg py-2"
+                        />
+                    </Form.Item>
+                </div>
 
                 <Form.Item className="mb-0 pt-4">
                     <Button

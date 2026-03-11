@@ -1,16 +1,17 @@
-import React from 'react'
-import Main from './Layout'
-import ViewTickets from '../../tickets/ViewTickets'
-import TicketMessages from '../../tickets/TicketMessages'
-import GoBack from '../../common/Goback'
+import React from "react";
+import Main from "./Layout";
+import ExternalTicketMessages from "../../tickets/ExternalTicketMessages";
+import GoBack from "../../common/Goback";
+
+/**
+ * Client-specific tickets view integrating with the External Ticket API.
+ */
 const ClientTickets = () => {
     return (
         <Main>
-
-            {/* <div className='-ml-2 mt-4'><GoBack /> </div> */}
-            <TicketMessages></TicketMessages>
+            <ExternalTicketMessages />
         </Main>
-    )
-}
+    );
+};
 
-export default ClientTickets
+export default ClientTickets;

@@ -9,6 +9,7 @@ import {
     Select,
     Image,
     Modal,
+    Checkbox,
     Table,
 } from "antd";
 import { PlusSquareOutlined } from "@ant-design/icons";
@@ -20,6 +21,7 @@ const CandidateExperience = () => {
     const [add, setAdd] = useState(false);
     const [form] = Form.useForm();
     const { Option } = Select;
+    const isWorking = Form.useWatch("is_working", form);
 
     const fetchData = async () => {
         try {
@@ -49,16 +51,18 @@ const CandidateExperience = () => {
         formData.append("job_type", values.job_type);
         formData.append("job_role", values.job_role);
 
-        if (values.to_date) {
+        if (values.to_date && !values.is_working) {
             formData.append("to_date", values.to_date.format("YYYY-MM-DD"));
+        } else {
+            formData.append("to_date", ""); // Send empty string or handle backend to accept null/blank if omitted
         }
 
-        formData.append("status", values.status);
+        formData.append("is_working", values.is_working || false);
 
         if (values.reason_for_resignation)
             formData.append(
                 "reason_for_resignation",
-                values.reason_for_resignation
+                values.reason_for_resignation,
             );
 
         const getFile = (fileList) =>
@@ -94,7 +98,7 @@ const CandidateExperience = () => {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
 
             if (!response.ok) {
@@ -139,8 +143,8 @@ const CandidateExperience = () => {
         },
         {
             title: "Status",
-            dataIndex: "status",
-            key: "status",
+            dataIndex: "is_working", // Changed from status
+            key: "is_working", // Changed from status
             onHeaderCell: () => ({
                 className: "bg-[#1681FF] text-white font-bold text-center",
             }),
@@ -336,16 +340,21 @@ const CandidateExperience = () => {
                         />
                     </Form.Item>
                     <Form.Item label="To Date" name="to_date">
-                        <CustomDatePicker style={{ width: "100%" }} />
+                        <CustomDatePicker
+                            style={{ width: "100%" }}
+                            disabled={isWorking}
+                        />
                     </Form.Item>
-                    <Form.Item
-                        label="Status"
-                        name="status"
-                        rules={[
-                            { required: true, message: "Status is required" },
-                        ]}
-                    >
-                        <Input />
+                    <Form.Item name="is_working" valuePropName="checked">
+                        <Checkbox
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    form.setFieldValue("to_date", null);
+                                }
+                            }}
+                        >
+                            Currently Working
+                        </Checkbox>
                     </Form.Item>
                     <Form.Item
                         label="Reason for Resignation"

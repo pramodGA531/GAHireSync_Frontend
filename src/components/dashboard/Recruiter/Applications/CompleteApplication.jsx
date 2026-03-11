@@ -58,10 +58,10 @@ const CompleteApplication = () => {
 
     return (
         <Main defaultSelectedKey="2" defaultSelectedChildKey="2-1">
-            <div className="mt-4 -ml-2 -mb-4">
+            {/* <div className="mt-4 -ml-2 -mb-4">
                 <GoBack />
-            </div>
-            <div className="min-h-screen bg-[#F9FAFB] p-6 md:p-8">
+            </div> */}
+            <div className="p-6 md:p-8">
                 <div className="max-w-[1400px] mx-auto">
                     {/* Header/Navigation */}
                     <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -71,7 +71,7 @@ const CompleteApplication = () => {
                                     {
                                         title: (
                                             <span
-                                                className="text-gray-400 font-bold uppercase tracking-tighter text-[10px] cursor-pointer"
+                                                className="text-gray-400  text-[10px] cursor-pointer"
                                                 onClick={() =>
                                                     navigate(
                                                         "/recruiter/postings/opened",
@@ -85,7 +85,7 @@ const CompleteApplication = () => {
                                     {
                                         title: (
                                             <span
-                                                className="text-gray-400 font-bold uppercase tracking-tighter text-[10px] cursor-pointer"
+                                                className="text-gray-400  text-[10px] cursor-pointer"
                                                 onClick={() =>
                                                     navigate(
                                                         `/recruiter/job-applications/${job_id}`,
@@ -98,7 +98,7 @@ const CompleteApplication = () => {
                                     },
                                     {
                                         title: (
-                                            <span className="text-gray-800 font-black uppercase tracking-tighter text-[10px]">
+                                            <span className="text-gray-800 text-[10px]">
                                                 Evaluation Job
                                             </span>
                                         ),
@@ -107,48 +107,48 @@ const CompleteApplication = () => {
                                 className="mb-4"
                             />
                             <div className="flex items-center gap-4">
-                                <Button
+                                {/* <Button
                                     onClick={() => navigate(-1)}
                                     icon={<ArrowLeftOutlined />}
                                     shape="circle"
                                     className="border-none bg-white shadow-sm hover:text-[#1681FF]"
-                                />
+                                /> */}
                                 <div>
-                                    <h1 className="text-3xl font-black text-[#071C50] tracking-tight">
+                                    <h1 className="text-3xl font-black text-black tracking-tight">
                                         System Job
                                     </h1>
-                                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                    <p className="text-sm text-gray-400 font-bold mt-1">
                                         Complete Candidate Insight & Historical
                                         Evaluation
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-5">
+                        {/* <div className="bg-white px-6 py-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-5">
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-[#1681FF]">
                                 <SolutionOutlined className="text-2xl" />
                             </div>
-                            <div>
+                            {/* <div>
                                 <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] leading-none mb-1">
                                     Access Level
                                 </p>
                                 <p className="text-[#071C50] font-black text-sm uppercase tracking-tighter">
                                     Authorized Recruiter
                                 </p>
-                            </div>
-                        </div>
+                            </div> 
+                        </div> */}
                     </div>
 
                     {/* Content Area */}
-                    <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+                    <div className="rounded-[40px] overflow-hidden">
                         <ViewApplication application_data={application_data} />
                     </div>
 
-                    <div className="mt-12 text-center">
+                    {/* <div className="mt-12 text-center">
                         <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">
                             End of Professional Job
                         </p>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </Main>

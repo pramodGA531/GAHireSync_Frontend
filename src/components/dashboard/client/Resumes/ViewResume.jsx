@@ -100,19 +100,19 @@ const ViewResume = ({ id, onClose }) => {
     };
 
     return (
-        <div className="p-4 h-[600px] overflow-hidden">
+        <div className="p-4 h-full lg:h-[650px] overflow-y-auto lg:overflow-hidden">
             {loading ? (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex h-full items-center justify-center min-h-[300px]">
                     <Spin tip="Loading..." />
                 </div>
             ) : (
                 data && (
-                    <div className="flex flex-row h-full gap-5">
-                        <div className="w-1/2 flex flex-col overflow-y-auto no-scrollbar pr-2">
+                    <div className="flex flex-col lg:flex-row h-full gap-5">
+                        <div className="w-full lg:w-1/2 flex flex-col lg:overflow-y-auto no-scrollbar lg:pr-2">
                             {/* Candidate Details */}
                             <div className="flex justify-between p-2.5">
                                 <div className="flex flex-col">
-                                    <span className="text-base text-[#54577A] font-semibold">
+                                    <span className="text-base text-[#54577A] font-semibold text-lg lg:text-base">
                                         {data.candidate_name}
                                     </span>
                                     <span className="text-xs font-normal text-[#54577A]">
@@ -124,27 +124,27 @@ const ViewResume = ({ id, onClose }) => {
                             {/* Details Grid */}
                             {data.current_job_type && (
                                 <div className="flex flex-wrap gap-2.5 mt-[5px] pb-2.5 mb-2.5 border-b border-[#54666929]">
-                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                         <img src={Bag} alt="" />
                                         {data.current_organization || "N/A"}
                                     </span>
-                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                         <img src={Location} alt="" />
                                         {data.current_job_location || "N/A"}
                                     </span>
-                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                         <img src={MoneyBag} alt="" />
                                         {data.current_ctc
                                             ? `${data.current_ctc} LPA`
                                             : "N/A"}
                                     </span>
                                     {data.notice_period && (
-                                        <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                        <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                             <img src={Note} alt="" />
                                             {data.notice_period} days Notice
                                         </span>
                                     )}
-                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                    <span className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                         <img src={Piechart} alt="" />
                                         {data.current_job_type || "N/A"}
                                     </span>
@@ -152,14 +152,14 @@ const ViewResume = ({ id, onClose }) => {
                             )}
 
                             <div className="flex flex-wrap gap-2.5 mt-[5px] pb-2.5 mb-2.5 border-b border-[#54666929]">
-                                <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                     <img src={MoneyBag} alt="" />
                                     Expected CTC:{" "}
                                     {data.expected_ctc
                                         ? `${data.expected_ctc} LPA`
                                         : "N/A"}
                                 </div>
-                                <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                     <img src={Experience} alt="" />
                                     Experience:{" "}
                                     {data.experience
@@ -170,7 +170,7 @@ const ViewResume = ({ id, onClose }) => {
 
                             {/* Primary Skills */}
                             <div className="mb-2.5 border-b border-[#54666929]">
-                                <div className="font-bold mb-2">
+                                <div className="font-bold mb-2 text-sm">
                                     Primary Skills
                                 </div>
                                 <div className="flex flex-row flex-wrap gap-2.5 mb-[15px]">
@@ -193,12 +193,14 @@ const ViewResume = ({ id, onClose }) => {
                                             ),
                                         )
                                     ) : (
-                                        <span>No primary skills listed.</span>
+                                        <span className="text-xs">
+                                            No primary skills listed.
+                                        </span>
                                     )}
                                 </div>
 
                                 {/* Secondary Skills */}
-                                <div className="font-bold mb-2">
+                                <div className="font-bold mb-2 text-sm">
                                     Secondary Skills
                                 </div>
                                 <div className="flex flex-row flex-wrap gap-2.5 mb-[15px]">
@@ -221,7 +223,9 @@ const ViewResume = ({ id, onClose }) => {
                                             ),
                                         )
                                     ) : (
-                                        <span>No secondary skills listed.</span>
+                                        <span className="text-xs">
+                                            No secondary skills listed.
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -229,11 +233,11 @@ const ViewResume = ({ id, onClose }) => {
                             {/* Recruiter Feedback */}
                             {data.other_details && (
                                 <div className="mb-2.5 border-b border-[#54666929]">
-                                    <div className="font-bold mb-2">
+                                    <div className="font-bold mb-2 text-sm">
                                         Recruiter Feedback
                                     </div>
                                     <div className="flex flex-wrap gap-2.5 mt-[5px] pb-2.5 mb-2.5">
-                                        <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px]">
+                                        <div className="bg-[#1681FF0D] text-[#555555] flex items-center gap-[5px] px-2.5 py-2 rounded-[30px] text-xs">
                                             {data.other_details}
                                         </div>
                                     </div>
@@ -241,11 +245,11 @@ const ViewResume = ({ id, onClose }) => {
                             )}
 
                             {/* Action Buttons */}
-                            <div className="mt-auto pt-4">
+                            <div className="mt-4 pt-4 border-t lg:border-t-0 mb-4 lg:mb-0">
                                 {data.status === "pending" ? (
-                                    <div className="flex flex-row justify-between">
+                                    <div className="flex flex-row gap-4 justify-between">
                                         <button
-                                            className="bg-[#E8618C1A] text-[#E8618C] h-10 px-2.5 rounded text-xs font-light border-none cursor-pointer hover:bg-[#E8618C33]"
+                                            className="flex-1 bg-[#E8618C1A] text-[#E8618C] h-10 px-2.5 rounded text-xs font-semibold border-none cursor-pointer hover:bg-[#E8618C33] transition-colors"
                                             onClick={() =>
                                                 openModal(
                                                     "reject",
@@ -253,11 +257,11 @@ const ViewResume = ({ id, onClose }) => {
                                                 )
                                             }
                                         >
-                                            Reject application
+                                            Reject
                                         </button>
                                         {data.next_interview ? (
                                             <button
-                                                className="bg-[#1681FF0D] text-[#1681FF] h-10 px-2.5 rounded text-xs font-light border-none cursor-pointer hover:bg-[#1681FF33]"
+                                                className="flex-1 bg-[#1681FF] text-white h-10 px-2.5 rounded text-xs font-semibold border-none cursor-pointer hover:bg-[#0066cc] transition-colors shadow-sm"
                                                 onClick={() =>
                                                     openModal(
                                                         "accept",
@@ -265,11 +269,11 @@ const ViewResume = ({ id, onClose }) => {
                                                     )
                                                 }
                                             >
-                                                Shortlist application
+                                                Shortlist
                                             </button>
                                         ) : (
                                             <button
-                                                className="bg-[#1681FF0D] text-[#1681FF] h-10 px-2.5 rounded text-xs font-light border-none cursor-pointer hover:bg-[#1681FF33]"
+                                                className="flex-1 bg-[#1681FF] text-white h-10 px-2.5 rounded text-xs font-semibold border-none cursor-pointer hover:bg-[#0066cc] transition-colors shadow-sm"
                                                 onClick={() =>
                                                     openModal(
                                                         "select",
@@ -282,7 +286,7 @@ const ViewResume = ({ id, onClose }) => {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="bg-[#1681FF0D] text-[#1681FF] h-10 px-2.5 rounded text-xs font-light flex items-center justify-center">
+                                    <div className="bg-[#1681FF0D] text-[#1681FF] h-10 px-2.5 rounded text-sm font-bold flex items-center justify-center uppercase tracking-wider">
                                         {data.status}
                                     </div>
                                 )}
@@ -290,19 +294,19 @@ const ViewResume = ({ id, onClose }) => {
                         </div>
 
                         {/* Resume Viewer */}
-                        <div className="w-1/2 h-full border-l pl-2 overflow-hidden flex flex-col">
-                            <div className="font-bold mb-2 text-lg">
+                        <div className="w-full lg:w-1/2 h-[500px] lg:h-full border-t lg:border-t-0 lg:border-l pt-4 lg:pt-0 lg:pl-4 overflow-hidden flex flex-col">
+                            <div className="font-bold mb-3 text-lg border-b pb-2">
                                 Resume Preview
                             </div>
                             {data.resume && data.status !== "rejected" ? (
-                                <div className="flex-1 overflow-hidden">
+                                <div className="flex-1 overflow-hidden rounded-lg border border-gray-100 shadow-inner">
                                     <ResumeViewer
                                         resume={data.resume}
                                         onPrintScreenAttempt={onClose}
                                     />
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center h-full text-gray-500">
+                                <div className="flex items-center justify-center h-full text-gray-500 bg-gray-50 rounded-lg">
                                     {data.status === "rejected"
                                         ? "Resume not available for rejected candidates"
                                         : "No resume available"}

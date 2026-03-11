@@ -25,6 +25,13 @@ const Main = ({ children, defaultSelectedKey }) => {
       "active_logo": invoice_active,
       "path": '/accountant/invoice'
     },
+    // {
+    //   "key": 3,
+    //   "label": "Profile",
+    //   "logo": dashboard,
+    //   "active_logo": dashboard_active,
+    //   "path": '/profile'
+    // },
   ]
 
   return (

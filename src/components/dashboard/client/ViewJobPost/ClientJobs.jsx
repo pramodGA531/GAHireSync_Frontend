@@ -45,7 +45,7 @@ const ClientJobs = () => {
                     body: JSON.stringify({
                         category: ["accept_job", "reject_job"],
                     }),
-                }
+                },
             );
             const data = await response.json();
             if (data.error) {
@@ -117,7 +117,7 @@ const ClientJobs = () => {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                }
+                },
             );
 
             const data = await response.json();
@@ -143,19 +143,19 @@ const ClientJobs = () => {
                 filtered = filtered.filter((item) =>
                     item.job_title
                         .toLowerCase()
-                        .includes(searchText.toLowerCase())
+                        .includes(searchText.toLowerCase()),
                 );
             }
 
             if (selectedCompany !== "All Companies") {
                 filtered = filtered.filter(
-                    (item) => item.company === selectedCompany
+                    (item) => item.company === selectedCompany,
                 );
             }
 
             if (selectedStatus !== "All Status") {
                 filtered = filtered.filter(
-                    (item) => item.status === selectedStatus
+                    (item) => item.status === selectedStatus,
                 );
             }
 
@@ -164,7 +164,7 @@ const ClientJobs = () => {
                 filtered = filtered.filter((item) => {
                     const closeDate = new Date(item.job_close_duration);
                     const diffDays = Math.ceil(
-                        (now - closeDate) / (1000 * 60 * 60 * 24)
+                        (now - closeDate) / (1000 * 60 * 60 * 24),
                     );
 
                     switch (selectedDateFilter) {
@@ -228,7 +228,7 @@ const ClientJobs = () => {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                }
+                },
             );
             if (response.ok) {
                 message.success("Deadline extension approved");
@@ -285,8 +285,10 @@ const ClientJobs = () => {
                         record.approval_status === "rejected"
                             ? "text-red-600 font-bold"
                             : text.toLowerCase() === "opened"
-                            ? "text-green-600"
-                            : "text-red-600"
+                              ? "text-green-600"
+                              : text.toLowerCase() === "closed"
+                                ? "text-gray-600"
+                                : "text-red-600"
                     }
                 >
                     {record.approval_status === "rejected" ? "Rejected" : text}
@@ -336,7 +338,7 @@ const ClientJobs = () => {
                             <span className="text-orange-500 font-semibold">
                                 Deadline extension requested:{" "}
                                 {new Date(
-                                    record.extended_deadline
+                                    record.extended_deadline,
                                 ).toLocaleDateString()}
                             </span>
                             <Button
@@ -377,10 +379,9 @@ const ClientJobs = () => {
                 <Pageloading />
             ) : (
                 <>
-                {/* <div className="mt-4 -ml-4"><GoBack /></div> */}
-                
+                    {/* <div className="mt-4 -ml-4"><GoBack /></div> */}
+
                     <div className="flex justify-between items-center m-2">
-                        
                         <span className="text-2xl mt-3 ml-1 font-bold ">
                             My Job Postings
                         </span>

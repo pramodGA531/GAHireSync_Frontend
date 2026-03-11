@@ -1,15 +1,11 @@
 import React from "react";
 import Main from "./Layout";
-import TicketMessages from "../../tickets/TicketMessages";
-import GoBack from "../../common/Goback";
+import ExternalTicketMessages from "../../tickets/ExternalTicketMessages";
+
 const AccountantTickets = () => {
     return (
         <Main>
-            {/* //{" "}
-            <div className="-ml-2 mt-4">
-                <GoBack />{" "}
-            </div> */}
-            <TicketMessages></TicketMessages>
+            <ExternalTicketMessages />
         </Main>
     );
 };

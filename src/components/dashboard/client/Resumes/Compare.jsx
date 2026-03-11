@@ -195,14 +195,15 @@ const Compare = () => {
 
     return (
         <Main>
-            <div className="mt-4 -ml-2 -mb-4 pl-4">
+            {/* <div className="mt-4 -ml-2 -mb-4 pl-4">
                 <GoBack />
-            </div>
+            </div> */}
+            <div className="m-4">
             <Breadcrumb
                 items={[
-                    {
-                        title: <Link to="/">Home</Link>,
-                    },
+                    // {
+                    //     title: <Link to="/">Home</Link>,
+                    // },
                     {
                         title: (
                             <Link to="/client/applications">Applications</Link>
@@ -219,7 +220,7 @@ const Compare = () => {
                         title: "Compare",
                     },
                 ]}
-            />
+            /></div>
             <div className="p-5">
                 {jobData && <JobComponent job={jobData} />}
                 <h2>Compare Applications</h2>

@@ -1,14 +1,13 @@
-import React from 'react'
-import Main from './Layout'
-import TicketMessages from '../../tickets/TicketMessages'
-import GoBack from '../../common/Goback'
+import React from "react";
+import Main from "./Layout";
+import ExternalTicketMessages from "../../tickets/ExternalTicketMessages";
+
 const ManagerTickets = () => {
     return (
         <Main>
-            {/* <div className='-ml-2 mt-4'><GoBack /> </div> */}
-            <TicketMessages></TicketMessages>
+            <ExternalTicketMessages />
         </Main>
-    )
-}
+    );
+};
 
-export default ManagerTickets
+export default ManagerTickets;

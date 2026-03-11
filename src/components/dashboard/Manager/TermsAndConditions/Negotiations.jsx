@@ -6,6 +6,7 @@ import {
     CloseCircleFilled,
     ClockCircleFilled,
     BankOutlined,
+    EyeOutlined,
 } from "@ant-design/icons";
 import Main from "../Layout";
 import { useAuth } from "../../../common/useAuth";
@@ -19,6 +20,7 @@ const SeeNegotiations = () => {
     const [data, setData] = useState([]);
     const [rejectReason, setRejectReason] = useState("");
     const [selectedRecord, setSelectedRecord] = useState(null);
+    const [viewRecord, setViewRecord] = useState(null);
     const { apiurl, token } = useAuth();
     const [loading, setLoading] = useState(false);
     const [btnloading, setBtnLoading] = useState(false);
@@ -165,6 +167,25 @@ const SeeNegotiations = () => {
         setRejectReason(e.target.value);
     };
 
+    // Helper: normalize a value to string for comparison (handles number/string type mismatches)
+    const isSame = (original, negotiated) => {
+        if (original === null || original === undefined) return true;
+        return String(original).trim() === String(negotiated).trim();
+    };
+
+    // Helper: format fee display
+    const formatFee = (record) => {
+        return record.service_fee_type === "percentage"
+            ? `${record.service_fee}%`
+            : `₹${record.service_fee}`;
+    };
+
+    const formatOriginalFee = (record) => {
+        return record.service_fee_type === "percentage"
+            ? `${record.original_terms?.service_fee}%`
+            : `₹${record.original_terms?.service_fee}`;
+    };
+
     const columns = [
         {
             accessorKey: "client_organization.client.username",
@@ -173,7 +194,6 @@ const SeeNegotiations = () => {
             cell: ({ row }) => (
                 <span className="font-bold text-[#071C50]">
                     {row.original.client_organization?.client?.username}
-                    {/* {row.getValue("client_organization.client.username")} */}
                 </span>
             ),
         },
@@ -189,9 +209,6 @@ const SeeNegotiations = () => {
                             row.original.client_organization?.client
                                 ?.name_of_organization
                         }
-                        {/* {row.getValue(
-                            "client_organization.client.name_of_organization"
-                        )} */}
                     </span>
                 </div>
             ),
@@ -199,65 +216,72 @@ const SeeNegotiations = () => {
         {
             accessorKey: "ctc_range",
             header: "CTC Range",
-            width: 120,
+            width: 160,
             cell: ({ row }) => {
-                const isChanged =
-                    row.original.original_terms?.ctc_range !==
-                    row.original.ctc_range;
+                const orig = row.original.original_terms?.ctc_range;
+                const neg = row.original.ctc_range;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`font-bold ${
-                            isChanged
-                                ? "text-red-600 underline"
-                                : "text-blue-600"
-                        }`}
-                    >
-                        {row.getValue("ctc_range")}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`font-bold text-xs ${changed ? "text-red-600" : "text-blue-600"}`}
+                        >
+                            {neg}
+                        </span>
+                        {changed && orig && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {orig}
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
         {
             accessorKey: "service_fee",
             header: "Fee",
-            width: 100,
+            width: 120,
             cell: ({ row }) => {
-                const isChanged =
-                    Number(row.original.original_terms?.service_fee) !==
-                    Number(row.original.service_fee);
+                const orig = row.original.original_terms?.service_fee;
+                const neg = row.original.service_fee;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`font-bold ${
-                            isChanged
-                                ? "text-red-600 underline"
-                                : "text-gray-700"
-                        }`}
-                    >
-                        {row.original.service_fee_type === "percentage"
-                            ? `${row.getValue("service_fee")}%`
-                            : `₹${row.getValue("service_fee")}`}
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`font-bold text-xs ${changed ? "text-red-600" : "text-gray-700"}`}
+                        >
+                            {formatFee(row.original)}
+                        </span>
+                        {changed && orig !== undefined && orig !== null && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {formatOriginalFee(row.original)}
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
         {
             accessorKey: "replacement_clause",
             header: "Replacement",
-            width: 120,
+            width: 130,
             cell: ({ row }) => {
-                const isChanged =
-                    row.original.original_terms?.replacement_clause !==
-                    row.original.replacement_clause;
+                const orig = row.original.original_terms?.replacement_clause;
+                const neg = row.original.replacement_clause;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`text-xs ${
-                            isChanged
-                                ? "text-red-500 font-bold underline"
-                                : "text-gray-500"
-                        }`}
-                    >
-                        {row.getValue("replacement_clause")} Days
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`text-xs font-bold ${changed ? "text-red-500" : "text-gray-500"}`}
+                        >
+                            {neg} Days
+                        </span>
+                        {changed && orig !== undefined && orig !== null && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {orig} Days
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
@@ -266,19 +290,22 @@ const SeeNegotiations = () => {
             header: "Invoice",
             width: 120,
             cell: ({ row }) => {
-                const isChanged =
-                    row.original.original_terms?.invoice_after !==
-                    row.original.invoice_after;
+                const orig = row.original.original_terms?.invoice_after;
+                const neg = row.original.invoice_after;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`text-xs ${
-                            isChanged
-                                ? "text-red-500 font-bold underline"
-                                : "text-gray-500"
-                        }`}
-                    >
-                        {row.getValue("invoice_after")} Days
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`text-xs font-bold ${changed ? "text-red-500" : "text-gray-500"}`}
+                        >
+                            {neg} Days
+                        </span>
+                        {changed && orig !== undefined && orig !== null && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {orig} Days
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
@@ -287,19 +314,22 @@ const SeeNegotiations = () => {
             header: "Payment",
             width: 120,
             cell: ({ row }) => {
-                const isChanged =
-                    row.original.original_terms?.payment_within !==
-                    row.original.payment_within;
+                const orig = row.original.original_terms?.payment_within;
+                const neg = row.original.payment_within;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`text-xs ${
-                            isChanged
-                                ? "text-red-500 font-bold underline"
-                                : "text-gray-500"
-                        }`}
-                    >
-                        {row.getValue("payment_within")} Days
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`text-xs font-bold ${changed ? "text-red-500" : "text-gray-500"}`}
+                        >
+                            {neg} Days
+                        </span>
+                        {changed && orig !== undefined && orig !== null && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {orig} Days
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
@@ -308,19 +338,22 @@ const SeeNegotiations = () => {
             header: "Interest",
             width: 100,
             cell: ({ row }) => {
-                const isChanged =
-                    Number(row.original.original_terms?.interest_percentage) !==
-                    Number(row.original.interest_percentage);
+                const orig = row.original.original_terms?.interest_percentage;
+                const neg = row.original.interest_percentage;
+                const changed = !isSame(orig, neg);
                 return (
-                    <span
-                        className={`font-bold ${
-                            isChanged
-                                ? "text-red-600 underline"
-                                : "text-gray-500"
-                        }`}
-                    >
-                        {row.getValue("interest_percentage")}%
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                        <span
+                            className={`font-bold text-xs ${changed ? "text-red-600" : "text-gray-500"}`}
+                        >
+                            {neg}%
+                        </span>
+                        {changed && orig !== undefined && orig !== null && (
+                            <span className="text-[10px] text-gray-400 line-through">
+                                {orig}%
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
@@ -349,7 +382,7 @@ const SeeNegotiations = () => {
         {
             accessorKey: "status",
             header: "Action / Status",
-            width: 200,
+            width: 220,
             rightSticky: true,
             cell: ({ row }) => {
                 const status = row.getValue("status");
@@ -357,8 +390,16 @@ const SeeNegotiations = () => {
 
                 if (status === "accepted") {
                     return (
-                        <div className="flex items-center gap-1.5 text-green-600 font-bold text-xs bg-green-50 px-2.5 py-1 rounded-lg w-fit">
-                            <CheckCircleFilled /> Accepted
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 text-green-600 font-bold text-xs bg-green-50 px-2.5 py-1 rounded-lg w-fit">
+                                <CheckCircleFilled /> Accepted
+                            </div>
+                            <Tooltip title="View Details">
+                                <EyeOutlined
+                                    className="text-blue-500 cursor-pointer hover:text-blue-700 text-base"
+                                    onClick={() => setViewRecord(record)}
+                                />
+                            </Tooltip>
                         </div>
                     );
                 } else if (status === "rejected") {
@@ -367,27 +408,10 @@ const SeeNegotiations = () => {
                             <div className="flex items-center gap-1.5 text-red-600 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-lg w-fit">
                                 <CloseCircleFilled /> Rejected
                             </div>
-                            <Tooltip title="View Reason">
-                                <InfoCircleOutlined
-                                    className="text-amber-500 cursor-pointer hover:text-amber-600 text-lg"
-                                    onClick={() => {
-                                        Modal.info({
-                                            title: (
-                                                <span className="font-bold">
-                                                    Rejection Reason
-                                                </span>
-                                            ),
-                                            content: (
-                                                <div className="py-4 text-gray-600 bg-gray-50 p-4 rounded-xl border border-gray-100 italic">
-                                                    "
-                                                    {record.reason ||
-                                                        "No reason provided."}
-                                                    "
-                                                </div>
-                                            ),
-                                            okText: "Close",
-                                        });
-                                    }}
+                            <Tooltip title="View Reason & Details">
+                                <EyeOutlined
+                                    className="text-blue-500 cursor-pointer hover:text-blue-700 text-base"
+                                    onClick={() => setViewRecord(record)}
                                 />
                             </Tooltip>
                         </div>
@@ -407,6 +431,12 @@ const SeeNegotiations = () => {
                             >
                                 Reject
                             </button>
+                            <Tooltip title="View Details">
+                                <EyeOutlined
+                                    className="text-blue-500 cursor-pointer hover:text-blue-700 text-base"
+                                    onClick={() => setViewRecord(record)}
+                                />
+                            </Tooltip>
                         </div>
                     );
                 }
@@ -414,12 +444,60 @@ const SeeNegotiations = () => {
         },
     ];
 
+    // Comparison rows for the detail modal
+    const comparisonFields = (record) => [
+        {
+            label: "CTC Range",
+            original: record.original_terms?.ctc_range,
+            negotiated: record.ctc_range,
+        },
+        {
+            label: "Service Fee",
+            original:
+                record.original_terms?.service_fee !== undefined
+                    ? record.service_fee_type === "percentage"
+                        ? `${record.original_terms.service_fee}%`
+                        : `₹${record.original_terms.service_fee}`
+                    : "-",
+            negotiated: formatFee(record),
+        },
+        {
+            label: "Replacement Clause",
+            original:
+                record.original_terms?.replacement_clause !== undefined
+                    ? `${record.original_terms.replacement_clause} Days`
+                    : "-",
+            negotiated: `${record.replacement_clause} Days`,
+        },
+        {
+            label: "Invoice After",
+            original:
+                record.original_terms?.invoice_after !== undefined
+                    ? `${record.original_terms.invoice_after} Days`
+                    : "-",
+            negotiated: `${record.invoice_after} Days`,
+        },
+        {
+            label: "Payment Within",
+            original:
+                record.original_terms?.payment_within !== undefined
+                    ? `${record.original_terms.payment_within} Days`
+                    : "-",
+            negotiated: `${record.payment_within} Days`,
+        },
+        {
+            label: "Interest %",
+            original:
+                record.original_terms?.interest_percentage !== undefined
+                    ? `${record.original_terms.interest_percentage}%`
+                    : "-",
+            negotiated: `${record.interest_percentage}%`,
+        },
+    ];
+
     return (
         <Main defaultSelectedKey="6" defaultSelectedChildKey="6-1">
             <div className="p-6 bg-[#F9FAFB] min-h-screen">
-                {/* <div className="-ml-6 -mt-2">
-                    <GoBack />
-                </div> */}
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-8">
                         <h1 className="text-2xl font-bold text-[#071C50]">
@@ -462,6 +540,7 @@ const SeeNegotiations = () => {
                 </div>
             </div>
 
+            {/* Rejection Reason Modal */}
             <Modal
                 title={<span className="font-bold">Rejection Reason</span>}
                 open={!!selectedRecord}
@@ -498,6 +577,176 @@ const SeeNegotiations = () => {
                         />
                     )}
                 </div>
+            </Modal>
+
+            {/* View Comparison Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#071C50]">
+                            Negotiation Details
+                        </span>
+                        {viewRecord && (
+                            <span
+                                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                    viewRecord.status === "accepted"
+                                        ? "bg-green-100 text-green-700"
+                                        : viewRecord.status === "rejected"
+                                          ? "bg-red-100 text-red-700"
+                                          : "bg-yellow-100 text-yellow-700"
+                                }`}
+                            >
+                                {viewRecord.status?.charAt(0).toUpperCase() +
+                                    viewRecord.status?.slice(1)}
+                            </span>
+                        )}
+                    </div>
+                }
+                open={!!viewRecord}
+                onCancel={() => setViewRecord(null)}
+                footer={[
+                    <button
+                        key="close"
+                        onClick={() => setViewRecord(null)}
+                        className="bg-gray-100 text-gray-700 font-semibold text-sm px-5 py-1.5 rounded cursor-pointer hover:bg-gray-200"
+                    >
+                        Close
+                    </button>,
+                ]}
+                width={600}
+                className="premium-modal"
+            >
+                {viewRecord && (
+                    <div className="py-2">
+                        {/* Client info */}
+                        <div className="mb-4 bg-blue-50 rounded-xl p-3 flex gap-3 items-center">
+                            <BankOutlined className="text-blue-400 text-lg" />
+                            <div>
+                                <p className="font-bold text-[#071C50] text-sm">
+                                    {
+                                        viewRecord.client_organization?.client
+                                            ?.username
+                                    }
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {
+                                        viewRecord.client_organization?.client
+                                            ?.name_of_organization
+                                    }
+                                </p>
+                            </div>
+                            <div className="ml-auto text-right">
+                                <p className="text-[10px] text-gray-400 uppercase font-semibold">
+                                    Requested
+                                </p>
+                                <p className="text-xs text-gray-600 font-medium">
+                                    {new Date(
+                                        viewRecord.requested_date,
+                                    ).toLocaleDateString()}{" "}
+                                    {new Date(
+                                        viewRecord.requested_date,
+                                    ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Comparison Table */}
+                        <table className="w-full text-sm border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50">
+                                    <th className="text-left text-xs font-semibold text-gray-500 uppercase py-2 px-3 border border-gray-100">
+                                        Field
+                                    </th>
+                                    <th className="text-center text-xs font-semibold text-gray-500 uppercase py-2 px-3 border border-gray-100">
+                                        Original
+                                    </th>
+                                    <th className="text-center text-xs font-semibold text-gray-500 uppercase py-2 px-3 border border-gray-100">
+                                        Negotiated
+                                    </th>
+                                    <th className="text-center text-xs font-semibold text-gray-500 uppercase py-2 px-3 border border-gray-100">
+                                        Changed
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {comparisonFields(viewRecord).map((row, i) => {
+                                    const changed = !isSame(
+                                        row.original === "-"
+                                            ? row.negotiated
+                                            : row.original,
+                                        row.negotiated,
+                                    );
+                                    return (
+                                        <tr
+                                            key={i}
+                                            className={`${changed ? "bg-red-50" : "bg-white"} hover:bg-gray-50 transition`}
+                                        >
+                                            <td className="py-2 px-3 border border-gray-100 font-medium text-gray-700 text-xs">
+                                                {row.label}
+                                            </td>
+                                            <td className="py-2 px-3 border border-gray-100 text-center text-gray-500 text-xs">
+                                                {row.original ?? "-"}
+                                            </td>
+                                            <td
+                                                className={`py-2 px-3 border border-gray-100 text-center font-bold text-xs ${changed ? "text-red-600" : "text-green-700"}`}
+                                            >
+                                                {row.negotiated ?? "-"}
+                                            </td>
+                                            <td className="py-2 px-3 border border-gray-100 text-center">
+                                                {changed ? (
+                                                    <span className="text-[10px] bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">
+                                                        Changed
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] bg-green-100 text-green-600 font-bold px-2 py-0.5 rounded-full">
+                                                        Same
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+
+                        {/* Description / Reason */}
+                        {viewRecord.description && (
+                            <div className="mt-4">
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                                    Client Note
+                                </p>
+                                <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 italic border border-gray-100">
+                                    "{viewRecord.description}"
+                                </div>
+                            </div>
+                        )}
+                        {viewRecord.status === "rejected" &&
+                            viewRecord.reason && (
+                                <div className="mt-3">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                                        Rejection Reason
+                                    </p>
+                                    <div className="bg-red-50 rounded-lg p-3 text-sm text-red-600 italic border border-red-100">
+                                        "{viewRecord.reason}"
+                                    </div>
+                                </div>
+                            )}
+                        {viewRecord.status === "accepted" &&
+                            viewRecord.accepted_date && (
+                                <div className="mt-3 text-right">
+                                    <span className="text-[10px] text-gray-400">
+                                        Accepted on{" "}
+                                        {new Date(
+                                            viewRecord.accepted_date,
+                                        ).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
+                    </div>
+                )}
             </Modal>
         </Main>
     );

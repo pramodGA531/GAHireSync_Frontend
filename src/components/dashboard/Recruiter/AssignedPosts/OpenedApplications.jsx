@@ -14,8 +14,36 @@ import {
     ArrowRightOutlined,
     InfoCircleOutlined,
 } from "@ant-design/icons";
-import { Tag, Button, Tooltip, Select } from "antd";
+import { Tag, Button, Tooltip, Select, Modal, message } from "antd";
+import { format } from "date-fns";
+import CustomDatePicker from "../../../common/CustomDatePicker";
 import GoBack from "../../../common/Goback";
+const stages = [
+    {
+        label: "Profiles Sent",
+        key: "profiles_sent",
+        color: "#F59E0B",
+        bg: "#FFFBEB",
+    },
+    {
+        label: "Shortlisted (R1)",
+        key: "shortlisted_r1",
+        color: "#22C55E",
+        bg: "#F0FDF4",
+    },
+    {
+        label: "Processing (R2+)",
+        key: "processing_r2_plus",
+        color: "#A855F7",
+        bg: "#FAF5FF",
+    },
+    { label: "on-Hold", key: "onhold", color: "#84CC16", bg: "#F7FEE7" },
+    { label: "Rejected", key: "rejected", color: "#EF4444", bg: "#FEF2F2" },
+    { label: "Selected", key: "selected", color: "#3B82F6", bg: "#EFF6FF" },
+    { label: "Replaced", key: "replaced", color: "#F97316", bg: "#FFF7ED" },
+    { label: "Joined", key: "joined", color: "#14B8A6", bg: "#F0FDFA" },
+];
+
 const OpenedApplicationsRecruiter = () => {
     const [jobList, setJobList] = useState([]);
     const { apiurl, token } = useAuth();
@@ -23,6 +51,10 @@ const OpenedApplicationsRecruiter = () => {
     const [loading, setLoading] = useState(false);
     const [locationFilter, setLocationFilter] = useState("All");
     const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedJob, setSelectedJob] = useState(null);
+    const [newDeadline, setNewDeadline] = useState(null);
+    const [buttonLoading, setButtonLoading] = useState(false);
 
     const updateState = async () => {
         try {
@@ -67,6 +99,46 @@ const OpenedApplicationsRecruiter = () => {
             console.error("Error fetching job posts:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateDeadline = async () => {
+        if (!newDeadline) {
+            message.warning("Please select a new deadline");
+            return;
+        }
+        setButtonLoading(true);
+
+        const formattedDeadline =
+            typeof newDeadline === "string"
+                ? newDeadline
+                : format(newDeadline, "yyyy-MM-dd");
+
+        try {
+            const response = await fetch(
+                `${apiurl}/manager/update-deadline/${selectedJob}/`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ new_deadline: formattedDeadline }),
+                },
+            );
+            const data = await response.json();
+            if (response.ok) {
+                message.success("Deadline updated successfully");
+                fetchJobPosts();
+                setIsModalOpen(false);
+            } else {
+                message.error(data.error || "Error updating deadline");
+            }
+        } catch (e) {
+            console.error("Error updating deadline:", e);
+            message.error("Error updating deadline");
+        } finally {
+            setButtonLoading(false);
         }
     };
 
@@ -190,39 +262,51 @@ const OpenedApplicationsRecruiter = () => {
             dateFilter: true,
             sort: true,
             width: 140,
-            cell: ({ getValue }) => (
-                <div className="flex items-center gap-2 text-gray-500 font-bold text-xs">
-                    <CalendarOutlined className="text-red-300" />
-                    <span>{getValue()}</span>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const deadline = row.original.deadline;
+                const extended = row.original.extended_deadline;
+                return (
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-gray-500 font-bold text-xs">
+                            <CalendarOutlined className="text-red-300" />
+                            <span
+                                className={
+                                    extended ? "line-through opacity-50" : ""
+                                }
+                            >
+                                {deadline}
+                            </span>
+                        </div>
+                        {extended && (
+                            <div className="flex items-center gap-2 text-blue-600 font-bold text-[10px] uppercase">
+                                <CalendarOutlined className="text-blue-400" />
+                                <span>Ext: {extended}</span>
+                            </div>
+                        )}
+                    </div>
+                );
+            },
         },
         {
             accessorKey: "stats",
-            header: "Stats",
-            width: 220,
+            header: "Application Status",
+            width: 320,
             cell: ({ row }) => (
-                <div className="flex gap-1.5">
-                    <Tooltip title="On Hold">
-                        <div className="bg-amber-50 text-amber-600 text-[10px] font-black w-8 h-8 rounded-lg border border-amber-100 flex items-center justify-center">
-                            {row.original.onhold || 0}
-                        </div>
-                    </Tooltip>
-                    <Tooltip title="Rejected">
-                        <div className="bg-red-50 text-red-600 text-[10px] font-black w-8 h-8 rounded-lg border border-red-100 flex items-center justify-center">
-                            {row.original.rejected || 0}
-                        </div>
-                    </Tooltip>
-                    <Tooltip title="Pending">
-                        <div className="bg-blue-50 text-[#1681FF] text-[10px] font-black w-8 h-8 rounded-lg border border-blue-100 flex items-center justify-center">
-                            {row.original.pending || 0}
-                        </div>
-                    </Tooltip>
-                    <Tooltip title="Selected">
-                        <div className="bg-green-50 text-green-600 text-[10px] font-black w-8 h-8 rounded-lg border border-green-100 flex items-center justify-center">
-                            {row.original.selected || 0}
-                        </div>
-                    </Tooltip>
+                <div className="flex gap-1">
+                    {stages.map((stage, i) => (
+                        <Tooltip key={i} title={stage.label}>
+                            <div
+                                className="text-[10px] font-black w-7 h-7 rounded flex items-center justify-center transition-transform hover:scale-110 cursor-help"
+                                style={{
+                                    backgroundColor: stage.bg,
+                                    color: stage.color,
+                                    border: `1px solid ${stage.color}`,
+                                }}
+                            >
+                                {row.original[stage.key] || 0}
+                            </div>
+                        </Tooltip>
+                    ))}
                 </div>
             ),
         },
@@ -274,20 +358,35 @@ const OpenedApplicationsRecruiter = () => {
             width: 180,
             cell: ({ row }) =>
                 row.original.location_status === "opened" ? (
-                    <Button
-                        type="primary"
-                        onClick={() =>
-                            navigate(
-                                `/recruiter/postings/opened/${row.original.assigned_id}`,
-                            )
-                        }
-                        className="h-9 px-4 rounded-xl bg-[#1681FF] hover:bg-[#0061D5] font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-50 border-none flex items-center gap-2"
-                    >
-                        Send Profiles{" "}
-                        <ArrowRightOutlined className="text-[8px]" />
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                        <Button
+                            type="primary"
+                            onClick={() =>
+                                navigate(
+                                    `/recruiter/postings/opened/${row.original.assigned_id}`,
+                                )
+                            }
+                            className="h-9 px-4 rounded-xl bg-[#1681FF] hover:bg-[#0061D5] font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-50 border-none flex items-center gap-2"
+                        >
+                            Send Profiles{" "}
+                            <ArrowRightOutlined className="text-[8px]" />
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setSelectedJob(row.original.job_id);
+                                setNewDeadline(
+                                    row.original.extended_deadline ||
+                                        row.original.deadline,
+                                );
+                                setIsModalOpen(true);
+                            }}
+                            className="h-8 px-4 rounded-xl bg-white text-gray-400 hover:text-blue-600 font-black text-[9px] uppercase tracking-wider border-gray-100 flex items-center gap-2"
+                        >
+                            Update Deadline
+                        </Button>
+                    </div>
                 ) : (
-                    <span className="bg-gray-100 text-gray-400 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border border-gray-200 cursor-not-allowed">
+                    <span className="bg-gray-100 text-gray-400 text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border border-gray-200 cursor-not-allowed text-center">
                         Location Closed
                     </span>
                 ),
@@ -338,40 +437,28 @@ const OpenedApplicationsRecruiter = () => {
                             <Pageloading />
                         </div>
                     ) : jobList && jobList.length > 0 ? (
-                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-4">
-                            <div className="flex flex-wrap gap-4 mb-4 px-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-amber-50 text-amber-600 text-[10px] font-black w-6 h-6 rounded-lg border border-amber-100 flex items-center justify-center">
-                                        H
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6">
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-6 pb-4 border-b border-gray-50">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mr-2">
+                                    Status Legend:
+                                </span>
+                                {stages.map((stage, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center gap-2 group cursor-default"
+                                    >
+                                        <div
+                                            className="w-3 h-3 rounded-full shadow-sm transition-transform group-hover:scale-110"
+                                            style={{
+                                                backgroundColor: stage.bg,
+                                                border: `1.5px solid ${stage.color}`,
+                                            }}
+                                        />
+                                        <span className="text-[11px] font-bold text-gray-500 transition-colors group-hover:text-gray-900">
+                                            {stage.label}
+                                        </span>
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-500">
-                                        On Hold
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-red-50 text-red-600 text-[10px] font-black w-6 h-6 rounded-lg border border-red-100 flex items-center justify-center">
-                                        R
-                                    </div>
-                                    <span className="text-xs font-semibold text-gray-500">
-                                        Rejected
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-blue-50 text-[#1681FF] text-[10px] font-black w-6 h-6 rounded-lg border border-blue-100 flex items-center justify-center">
-                                        P
-                                    </div>
-                                    <span className="text-xs font-semibold text-gray-500">
-                                        Pending
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-green-50 text-green-600 text-[10px] font-black w-6 h-6 rounded-lg border border-green-100 flex items-center justify-center">
-                                        S
-                                    </div>
-                                    <span className="text-xs font-semibold text-gray-500">
-                                        Selected
-                                    </span>
-                                </div>
+                                ))}
                             </div>
                             <AppTable
                                 data={filteredJobs}
@@ -400,6 +487,54 @@ const OpenedApplicationsRecruiter = () => {
                     )}
                 </div>
             </div>
+
+            <Modal
+                title={
+                    <div className="flex items-center gap-2 text-[#071C50] font-bold">
+                        <CalendarOutlined />
+                        <span>Update Job Deadline</span>
+                    </div>
+                }
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={[
+                    <Button
+                        key="cancel"
+                        onClick={() => setIsModalOpen(false)}
+                        className="rounded-lg font-bold"
+                    >
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="submit"
+                        type="primary"
+                        loading={buttonLoading}
+                        onClick={handleUpdateDeadline}
+                        className="rounded-lg bg-[#1681FF] font-bold"
+                    >
+                        Update Deadline
+                    </Button>,
+                ]}
+                centered
+                width={400}
+                className="custom-modal"
+            >
+                <div className="py-6 flex flex-col items-center">
+                    <p className="text-gray-500 mb-6 text-sm text-center font-medium">
+                        Select a new deadline for this job posting.
+                    </p>
+                    <CustomDatePicker
+                        style={{ width: "100%" }}
+                        onChange={setNewDeadline}
+                        startDate={new Date()}
+                        formatString="yyyy-MM-dd"
+                        size="md"
+                        defaultValue={
+                            newDeadline ? new Date(newDeadline) : null
+                        }
+                    />
+                </div>
+            </Modal>
         </Main>
     );
 };

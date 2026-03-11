@@ -12,6 +12,7 @@ import reconfirmed from "./../../../images/SideBar/organizations.svg";
 import reconfirmed_active from "./../../../images/SideBar/organizations-active.svg";
 import { message } from "antd";
 import { useAuth } from "../../common/useAuth";
+import { useLocation } from "react-router-dom";
 
 const Layout = ({
     children,
@@ -20,6 +21,7 @@ const Layout = ({
 }) => {
     const [badgesData, setBadgesData] = useState();
     const { apiurl, token } = useAuth();
+    const location = useLocation();
 
     const fetchBadges = async () => {
         try {
@@ -33,6 +35,72 @@ const Layout = ({
         }
     };
 
+    const markAsVisited = async (categories) => {
+        try {
+            await fetch(`${apiurl}/update-notification-visited/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category: categories }),
+            });
+            fetchBadges();
+        } catch (error) {
+            console.error("Error marking notifications as visited:", error);
+        }
+    };
+
+    const markAsSeen = async (categories) => {
+        try {
+            await fetch(`${apiurl}/update-notification-seen/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ category: categories }),
+            });
+            fetchBadges(); // Refresh badges after marking as seen
+        } catch (error) {
+            console.error("Error marking notifications as seen:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (!token) return;
+        const path = location.pathname;
+
+        const timer = setTimeout(() => {
+            if (path.startsWith("/recruiter/postings")) {
+                markAsVisited(["assign_job"]);
+            } else if (path.startsWith("/recruiter/applications/to-schedule")) {
+                markAsVisited([
+                    "assign_job",
+                    "shortlist_application",
+                    "promote_candidate",
+                ]);
+            } else if (
+                path.startsWith("/recruiter/applications/already-scheduled")
+            ) {
+                markAsVisited(["schedule_interview", "promote_candidate"]);
+            } else if (
+                path.startsWith("/recruiter/reconfirmation-applications")
+            ) {
+                markAsVisited([
+                    "select_candidate",
+                    "candidate_joined",
+                    "accepted_ctc",
+                    "candidate_accepted",
+                ]);
+            } else if (path.startsWith("/recruiter/replacements")) {
+                markAsVisited(["candidate_left", "candidate_rejected"]);
+            }
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, [location.pathname, token]);
+
     useEffect(() => {
         if (token) fetchBadges();
     }, [token]);
@@ -44,7 +112,8 @@ const Layout = ({
                 label: "Dashboard",
                 logo: dashboard,
                 active_logo: dashboard_active,
-                tooltip:"View your jobs, applications, replacements and reconfirmations",
+                tooltip:
+                    "View your jobs, applications, replacements and reconfirmations",
                 path: "/recruiter",
             },
             {
@@ -52,28 +121,24 @@ const Layout = ({
                 label: "Jobs",
                 logo: jobposts,
                 active_logo: jobposts_active,
-                tooltip:"View your active and closed jobs",
-                badge:
-                    badgesData &&
-                    badgesData.active_jobs + badgesData.history_jobs > 0,
+                tooltip: "View your active and closed jobs",
+                badge: badgesData?.assign_job > 0,
                 children: [
                     {
                         key: "2-1",
                         label: "Active",
                         path: "/recruiter/postings/opened",
-                        badge:
-                            badgesData && badgesData.active_jobs > 0
-                                ? true
-                                : false,
+                        badge: badgesData?.assign_job > 0,
                     },
                     {
                         key: "2-2",
                         label: "History",
                         path: "/recruiter/postings/closed",
-                        badge:
-                            badgesData && badgesData.history_jobs > 0
-                                ? true
-                                : false,
+                    },
+                    {
+                        key: "2-3",
+                        label: "Calendar",
+                        path: "/recruiter/job-calendar",
                     },
                 ],
             },
@@ -82,17 +147,22 @@ const Layout = ({
                 label: "Interviews",
                 logo: scheduled,
                 active_logo: secheduled_active,
-                tooltip:"view any new jobs and scheduled interviews",
+                tooltip: "view any new jobs and scheduled interviews",
                 badge:
                     badgesData &&
-                    badgesData.to_schedule > 0,
+                    (badgesData.shortlist_candidate > 0 ||
+                        badgesData.schedule_interview > 0 ||
+                        badgesData.promote_candidate > 0 ||
+                        badgesData.reject_candidate > 0),
                 children: [
                     {
                         key: "3-1",
                         label: "New Jobs",
                         path: "/recruiter/applications/to-schedule",
                         badge:
-                            badgesData && badgesData.to_schedule > 0
+                            badgesData &&
+                            (badgesData.shortlist_candidate > 0 ||
+                                badgesData.assign_job > 0)
                                 ? true
                                 : false,
                     },
@@ -101,7 +171,9 @@ const Layout = ({
                         label: "Scheduled",
                         path: "/recruiter/applications/already-scheduled",
                         badge:
-                            badgesData && badgesData.already_scheduled > 0
+                            badgesData &&
+                            (badgesData.schedule_interview > 0 ||
+                                badgesData.promote_candidate > 0)
                                 ? true
                                 : false,
                     },
@@ -113,8 +185,14 @@ const Layout = ({
                 logo: reconfirmed,
                 active_logo: reconfirmed_active,
                 path: "/recruiter/reconfirmation-applications",
-                badge: badgesData?.reconfirm > 0,
-                tooltip:"Confirm the candidates whether they joined in the clients organization",
+                badge:
+                    badgesData &&
+                    (badgesData.select_candidate > 0 ||
+                        badgesData.join_candidate > 0 ||
+                        badgesData.accepted_ctc > 0 ||
+                        badgesData.candidate_accepted > 0),
+                tooltip:
+                    "Confirm the candidates whether they joined in the clients organization",
             },
             {
                 key: "5",
@@ -122,8 +200,11 @@ const Layout = ({
                 logo: replacement,
                 active_logo: replacement_active,
                 path: "/recruiter/replacements",
-                tooltip:"view raised replacements by the clients",
-                badge: badgesData?.replacement > 0,
+                tooltip: "view raised replacements by the clients",
+                badge:
+                    badgesData &&
+                    (badgesData.candidate_left > 0 ||
+                        badgesData.candidate_rejected > 0),
             },
         ],
         [badgesData],

@@ -504,14 +504,14 @@ const ParticularJobEdit = () => {
                                                 >
                                                     Accept all changes
                                                 </button>
-                                                <button
+                                                {/* <button
                                                     className="bg-transparent border-2 border-[#2A8CFF] text-[#2A8CFF] px-[15px] py-2 rounded cursor-pointer hover:bg-blue-100"
                                                     onClick={() =>
                                                         setIsModalVisible(true)
                                                     }
                                                 >
                                                     Add New Changes
-                                                </button>
+                                                </button> */}
                                                 <EditChangesModal
                                                     isModalVisible={
                                                         isModalVisible

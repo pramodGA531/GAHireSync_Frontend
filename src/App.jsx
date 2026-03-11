@@ -36,6 +36,7 @@ import CandidatesCard from "./components/dashboard/Manager/managercards/Candidat
 import Candidates from "./components/dashboard/Manager/Candidates/Candidates";
 import RecTaskTracking from "./components/dashboard/Manager/JobPost/RecTaskTracking";
 import AllRecruiters from "./components/dashboard/Manager/Recruiter/AllRecruiters";
+import JobApplicantsTable from "./components/dashboard/Manager/JobPost/JobApplicantsTable";
 import ViewJobPost from "./components/common/ViewJobPost";
 import Onhold from "./components/dashboard/client/Candidates/OnHold/Onhold";
 import SelectedJobs from "./components/dashboard/Candidate/SelectedJobs/SelectedJobs";
@@ -63,6 +64,8 @@ import AdminBlogs from "./components/dashboard/Admin/Blogs/AdminBlogs";
 import InterviewCalendar from "./components/dashboard/Manager/managercards/InterviewCalendar";
 import AnimatedDiv from "./components/animation/AnimatedDiv";
 import RecruiterSummaryLayout from "./components/dashboard/Manager/Recruiter/RecruiterSummery";
+import RecruiterLeaderboard from "./components/dashboard/Manager/Recruiter/RecruiterLeaderboard";
+import ReplacementsRecruiter from "./components/dashboard/Recruiter/RequestedReplacements/Replacements";
 import LandingHome from "./components/LandingPage/LandingHome";
 import Tickets from "./components/tickets/Tickets";
 import AboutUs from "./components/LandingPage/AboutUs";
@@ -98,6 +101,11 @@ import ClosedApplicationsRecruiter from "./components/dashboard/Recruiter/Assign
 import OpenedApplicationsRecruiter from "./components/dashboard/Recruiter/AssignedPosts/OpenedApplications";
 import ApplicationsToSchedule from "./components/dashboard/Recruiter/ScheduleInterviews/ApplicationsToSchedule";
 import ScheduledApplications from "./components/dashboard/Recruiter/ScheduleInterviews/ScheduledApplications";
+import RecruiterCalendar from "./components/dashboard/Recruiter/RecruiterCalendar";
+import ManagerCalendar from "./components/dashboard/Manager/ManagerCalendar";
+import ClientCalendar from "./components/dashboard/client/ClientCalendar";
+import InterviewerCalendar from "./components/dashboard/Interviewer/InterviewerCalendar";
+import CompleteJobPostRecruiter from "./components/dashboard/Recruiter/CompleteJobPosts";
 import Recruiter from "./components/dashboard/Recruiter/Recruiter";
 import ScheduledInterviews from "./components/dashboard/Interviewer/Interviews/ScheduledInterviews";
 import CompletedInterviews from "./components/dashboard/Interviewer/Interviews/CompletedInterviews";
@@ -119,11 +127,6 @@ import EditedJobs from "./components/dashboard/Manager/TermsAndConditions/Edited
 import AccountantDashboard from "./components/dashboard/Accountants/Dashboard";
 import Invoices from "./components/dashboard/Accountants/Invoices";
 import AdminCompleteBlog from "./components/dashboard/Admin/Blogs/AdminCompleteBlog";
-import CompleteJobPostRecruiter from "./components/dashboard/Recruiter/CompleteJobPosts";
-import ReplacementsRecruiter from "./components/dashboard/Recruiter/RequestedReplacements/Replacements";
-import Footer from "./components/LandingPage/Footer";
-import JobEditRequests from "./components/dashboard/client/Approvals/JobEditRequests";
-// import CompleteJobPosts from "./components/dashboard/manager/jobpost/CompleteJobPosts";
 const App = () => {
     const now = new Date();
     const launchDate = new Date(2025, 2, 30, 10, 0, 0);
@@ -143,7 +146,7 @@ const App = () => {
                         element={<Navigate to="/coming-soon" replace />}
                     />
                 )}
-                <Route path="/footer" element={<Footer />} />
+
                 <Route path="/login" element={<Forms />} />
                 <Route path="/forgot_password" element={<ForgotPassword1 />} />
                 <Route path="/reset/:uuid/:token" element={<SetPassword />} />
@@ -171,6 +174,10 @@ const App = () => {
                     element={<LinkedinCallbackHandler />}
                 />
                 <Route path="/" element={<AuthRoute />}>
+                    <Route
+                        path="/agency/job-applicants/:jobId/:stage"
+                        element={<JobApplicantsTable />}
+                    />
                     <Route path="/" element={<MainHome />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/client/mypostings" element={<ClientJobs />} />
@@ -196,6 +203,10 @@ const App = () => {
                         element={<Resumes />}
                     />
                     <Route
+                        path="/client/get-replacement-resumes/:id"
+                        element={<Resumes isReplacement={true} />}
+                    />
+                    <Route
                         path="/client/get-resumes/compare/:id"
                         element={<Compare />}
                     />
@@ -204,12 +215,16 @@ const App = () => {
                         element={<ClientInterviewers />}
                     />
                     <Route
-                        path="/client/interviews/scheduled"
-                        element={<ScheduledInterviewsClient />}
-                    />
-                    <Route
                         path="/client/interviews/calendar"
                         element={<ClientInterviewersCalendar />}
+                    />
+                    <Route
+                        path="/client/job-calendar/:jobId"
+                        element={<ClientCalendar />}
+                    />
+                    <Route
+                        path="/client/job-calendar"
+                        element={<ClientCalendar />}
                     />
                     <Route
                         path="/client/reopen-jobslist"
@@ -339,6 +354,14 @@ const App = () => {
                         path="/agency/postings/:id"
                         element={<CompleteJobPost />}
                     />
+                    <Route
+                        path="/agency/job-calendar/:jobId"
+                        element={<ManagerCalendar />}
+                    />
+                    <Route
+                        path="/agency/job-calendar"
+                        element={<ManagerCalendar />}
+                    />
                     <Route path="/agency/edit_job/:id" element={<Editjob />} />
                     <Route
                         path="/client/edit_job/:id"
@@ -399,6 +422,10 @@ const App = () => {
                     <Route
                         path="/agency/selected-candidates"
                         element={<SelectedCandidates />}
+                    />
+                    <Route
+                        path="/agency/leaderboard"
+                        element={<RecruiterLeaderboard />}
                     />
                     <Route
                         path="/agency/recruiters/:id"
@@ -470,6 +497,22 @@ const App = () => {
                         path="/recruiter/replacements"
                         element={<ReplacementsRecruiter />}
                     />
+                    <Route
+                        path="/recruiter/job-calendar/:jobId"
+                        element={<RecruiterCalendar />}
+                    />
+                    <Route
+                        path="/recruiter/job-calendar"
+                        element={<RecruiterCalendar />}
+                    />
+                    <Route
+                        path="/interviewer/job-calendar/:jobId"
+                        element={<InterviewerCalendar />}
+                    />
+                    <Route
+                        path="/interviewer/job-calendar"
+                        element={<InterviewerCalendar />}
+                    />
 
                     <Route
                         path="resumescorecard/"
@@ -497,6 +540,7 @@ const App = () => {
                         path="/candidate/complete-application/:application_id/:job_id"
                         element={<CandidateCompleteApplication />}
                     />
+                    {/* <Route path="/candidate/info" element={<CandidateInfo />} /> */}
                     <Route
                         path="/candidate/complete-jobdetails/:job_id"
                         element={<CandidateCompleteJobPost />}

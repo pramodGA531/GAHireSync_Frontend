@@ -24,7 +24,7 @@ const CandidateDetails = () => {
 
             if (!response.ok) {
                 throw new Error(
-                    `Error ${response.status}: ${response.statusText}`
+                    `Error ${response.status}: ${response.statusText}`,
                 );
             }
 
@@ -35,9 +35,22 @@ const CandidateDetails = () => {
                 if (data.date_of_birth) {
                     data.date_of_birth = dayjs(
                         data.date_of_birth,
-                        "YYYY-MM-DD"
+                        "YYYY-MM-DD",
                     );
                 }
+                let skillsText = data.skills;
+                try {
+                    const parsed =
+                        typeof data.skills === "string"
+                            ? JSON.parse(data.skills)
+                            : data.skills;
+                    if (Array.isArray(parsed)) {
+                        skillsText = parsed.map((s) => s.label || s).join(", ");
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+                data.skills = skillsText;
                 setData(data);
             }
         } catch (e) {
@@ -61,7 +74,7 @@ const CandidateDetails = () => {
                 } else if (key === "date_of_birth" && values[key] != null) {
                     formData.append(
                         key,
-                        dayjs(values[key]).format("YYYY-MM-DD")
+                        dayjs(values[key]).format("YYYY-MM-DD"),
                     );
                 } else if (values[key] != null) {
                     formData.append(key, values[key]);
@@ -75,16 +88,20 @@ const CandidateDetails = () => {
                 body: formData,
             });
 
-            const data = await response.json();
-
-            if (data.error) {
-                message.error("Error while submitting the file");
-            } else if (data.message) {
-                message.success(data.message); // Fixed incorrect key
+            if (response.ok) {
+                message.success("Profile updated successfully!");
+                // Optionally refresh data
+                fetchData();
+            } else {
+                const data = await response.json();
+                const errorMsg =
+                    data.error ||
+                    (data.resume ? data.resume[0] : "Failed to update profile");
+                message.error(errorMsg);
             }
         } catch (e) {
-            console.log(e);
-            message.error("error occured"); // Improved error handling
+            console.error("Profile update error:", e);
+            message.error("An error occurred while updating profile");
         }
     };
 
@@ -97,14 +114,17 @@ const CandidateDetails = () => {
                 <div className="text-red-500">{message.error}</div>
             )}
             {/* <h2>Basic Details</h2> */}
-            {data && data.name && (
+            {data && (
                 <div className="block w-[95%] mx-auto p-5 rounded-lg shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] bg-white">
                     <Form
                         form={form}
                         onFinish={handleSubmit}
                         initialValues={{
                             ...data,
-                            name: data?.name?.username,
+                            name:
+                                typeof data?.name === "object"
+                                    ? data?.name?.username
+                                    : data?.name || "",
                         }}
                         layout="vertical"
                     >
@@ -126,7 +146,7 @@ const CandidateDetails = () => {
                         )}
                         {data?.resume && (
                             <a
-                                className="border-2 border-black p-1.5 rounded-md mb-2.5 inline-block text-black hover:text-blue-600 transition-colors"
+                                className="border-2 border-blue p-1.5 rounded-md mb-2.5 inline-block text-black hover:text-blue-600 transition-colors"
                                 href={`${apiurl}/${data.resume}`}
                                 target="_blank"
                             >
@@ -141,7 +161,7 @@ const CandidateDetails = () => {
                                         setFileList();
                                     }}
                                     beforeUpload={() => false} // Prevent automatic upload
-                                    accept="image/*"
+                                    accept=".doc,.pdf,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                     maxCount={1} // Allow only a single file
                                 >
                                     <Button icon={<UploadOutlined />}>
@@ -301,7 +321,7 @@ const CandidateDetails = () => {
                             className="mb-5"
                             onClick={() => {
                                 const communicationAddress = form.getFieldValue(
-                                    "communication_address"
+                                    "communication_address",
                                 );
                                 if (communicationAddress) {
                                     form.setFieldsValue({
@@ -309,7 +329,7 @@ const CandidateDetails = () => {
                                     });
                                 } else {
                                     message.error(
-                                        "Please fill the communication address first."
+                                        "Please fill the communication address first.",
                                     );
                                 }
                             }}
@@ -515,7 +535,8 @@ const CandidateDetails = () => {
                         <Form.Item label="Skills" name="skills">
                             <Input.TextArea
                                 rows={3}
-                                placeholder="e.g., React, Django, Python"
+                                placeholder="Skills will be displayed here"
+                                disabled
                             />
                         </Form.Item>
                         {/* Submit Button */}

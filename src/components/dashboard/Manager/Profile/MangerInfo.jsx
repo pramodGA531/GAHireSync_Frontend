@@ -9,7 +9,7 @@ import { useAuth } from "../../../common/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const MangerInfo = () => {
-    const { apiurl, token } = useAuth();
+    const { apiurl, token, updateUserData } = useAuth();
     const [agencyData, setAgencyData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [form] = Form.useForm();
@@ -44,8 +44,23 @@ const MangerInfo = () => {
         }
     };
     useEffect(() => {
-        fetchAgencyRequests();
+        const loadRequests = async () => {
+            await fetchAgencyRequests();
+        };
+        loadRequests();
     }, []);
+
+    useEffect(() => {
+        if (
+            agencyData &&
+            (!agencyData.target_in_amount || !agencyData.target_in_positions)
+        ) {
+            message.info(
+                "Welcome! Please set your valid target amount and positions to get started.",
+                4,
+            );
+        }
+    }, [agencyData]);
 
     const validateUsername = (_, value) => {
         if (!value || /^[a-zA-Z0-9_]+$/.test(value)) {
@@ -53,8 +68,8 @@ const MangerInfo = () => {
         }
         return Promise.reject(
             new Error(
-                "Username should contain only letters, numbers, and underscores."
-            )
+                "Username should contain only letters, numbers, and underscores.",
+            ),
         );
     };
 
@@ -85,6 +100,10 @@ const MangerInfo = () => {
             }
 
             message.success("Profile updated successfully!");
+            updateUserData({
+                target_in_amount: values.target_in_amount,
+                target_in_positions: values.target_in_positions,
+            });
             // navigate('/dashboard'); // redirect if needed
         } catch (error) {
             message.error(error.message);
@@ -250,6 +269,40 @@ const MangerInfo = () => {
                         >
                             <Input.TextArea rows={4} className="rounded-lg" />
                         </Form.Item>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Form.Item
+                                label={
+                                    <span className="font-bold text-gray-600 uppercase text-[10px] tracking-wider">
+                                        Target in Amount (₹)
+                                    </span>
+                                }
+                                name="target_in_amount"
+                                rules={[]}
+                            >
+                                <Input
+                                    type="number"
+                                    placeholder="e.g. 5000000"
+                                    className="rounded-lg py-2"
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                label={
+                                    <span className="font-bold text-gray-600 uppercase text-[10px] tracking-wider">
+                                        Target in Positions
+                                    </span>
+                                }
+                                name="target_in_positions"
+                                rules={[]}
+                            >
+                                <Input
+                                    type="number"
+                                    placeholder="e.g. 50"
+                                    className="rounded-lg py-2"
+                                />
+                            </Form.Item>
+                        </div>
 
                         <Form.Item className="mb-0 pt-4 border-t border-gray-50 mt-8">
                             <Button

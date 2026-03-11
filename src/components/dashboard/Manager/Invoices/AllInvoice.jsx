@@ -13,9 +13,9 @@ const AllInvoices = () => {
     const { token, apiurl } = useAuth();
     const [invoices, setInvoices] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [accountants, setAccountants] = useState(null);
+    const [accountants, setAccountants] = useState([]);
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const fetchInvoices = () => {
         setLoading(true);
@@ -42,20 +42,33 @@ const AllInvoices = () => {
                 setLoading(false);
             });
     };
+    useEffect(() => {
+        if (!loading && accountants.length === 0) {
+            message.warning("No accountants found");
+            message.info("To view your invoices please create an accountant");
+        }
+    }, [accountants, loading]);
 
-    const downloadInvoice = (htmlContent, invoiceId) => {
+    const downloadInvoice = (htmlContent, invoiceCode) => {
         const invoiceElement = document.createElement("div");
         invoiceElement.innerHTML = htmlContent;
+        document.body.appendChild(invoiceElement); // Append to body to ensure rendering
 
         const options = {
             margin: 0.5,
-            filename: `invoice_${invoiceId}.pdf`,
+            filename: `Invoice_${invoiceCode}.pdf`,
             image: { type: "jpeg", quality: 0.98 },
             html2canvas: { scale: 2 },
             jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
         };
 
-        html2pdf().from(invoiceElement).set(options).save();
+        html2pdf()
+            .from(invoiceElement)
+            .set(options)
+            .save()
+            .then(() => {
+                document.body.removeChild(invoiceElement); // Cleanup
+            });
     };
 
     const viewInvoice = (htmlContent) => {
@@ -69,6 +82,7 @@ const AllInvoices = () => {
     }, []);
 
     const showModal = () => {
+        // console.log("acc")
         setIsModalVisible(true);
     };
 
@@ -90,7 +104,7 @@ const AllInvoices = () => {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify(values),
-                }
+                },
             );
             const data = await response.json();
             if (data.success) {
@@ -176,7 +190,9 @@ const AllInvoices = () => {
                     <img
                         style={{ width: "150px", cursor: "pointer" }}
                         src={downloadinvoicebut}
-                        onClick={() => downloadInvoice(record.html, record.id)}
+                        onClick={() =>
+                            downloadInvoice(record.html, record.invoice_code)
+                        }
                     />
                 </div>
             ),
@@ -278,7 +294,7 @@ const AllInvoices = () => {
             )}
             <Modal
                 title="Create Accountant"
-                visible={isModalVisible}
+                open={isModalVisible}
                 onCancel={handleCancel}
                 footer={null}
             >
